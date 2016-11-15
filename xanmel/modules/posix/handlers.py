@@ -4,6 +4,6 @@ from .events import StdinInput
 
 
 class EchoHandler(BaseHandler):
-    def handle(self, event):
+    async def handle(self, event):
         if isinstance(event, StdinInput):
-            PrintStdout(message=event.properties['input']).run()
+            await PrintStdout(message='STDIN INPUT RECEIVED: ' + event.properties['input']).run()

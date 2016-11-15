@@ -3,5 +3,5 @@ class BaseHandler(object):
     def register_handler(cls, loop):
         loop.event_handlers.append(cls())
 
-    def handle(self, event):
+    async def handle(self, event):
         pass

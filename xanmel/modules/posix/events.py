@@ -1,4 +1,3 @@
-import asyncio
 import sys
 
 from xanmel.event import BaseEvent
@@ -12,5 +11,6 @@ class StdinInput(BaseEvent):
                 line = await loop.run_in_executor(None, sys.stdin.readline)
                 if line.endswith('\n'):
                     line = line[:-1]
-                print('GOT LINE', line)
+                event = cls(loop, input=line)
+                event.fire()
         loop.create_task(__process())

@@ -2,7 +2,7 @@ from xanmel.action import BaseAction
 
 
 class PrintStdout(BaseAction):
-    def run(self):
+    async def run(self):
         print(self.properties['message'])
 
 

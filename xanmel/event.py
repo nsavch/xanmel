@@ -1,3 +1,5 @@
+import asyncio
+
 from .utils import current_time
 
 
@@ -13,4 +15,4 @@ class BaseEvent(object):
 
     def fire(self):
         for i in self.loop.event_handlers:
-            i.handle(self)
+            self.loop.create_task(i.handle(self))
