@@ -1,0 +1,7 @@
+xanmel.modules.irc:
+  host: irc.quakenet.org
+  port: 6667
+  ssl: false
+  nick: xanmel
+  realname: Xanmel BOT
+  channel: '#xanmel'

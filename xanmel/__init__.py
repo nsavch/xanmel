@@ -2,8 +2,8 @@ import asyncio
 import logging.config
 import warnings
 
-from xanmel.modules.posix.events import StdinInput
-from xanmel.modules.posix.handlers import EchoHandler
+from xanmel.loader import load_modules
+
 
 warnings.simplefilter('default')
 logging.basicConfig(level=logging.DEBUG)
@@ -12,10 +12,10 @@ logger = logging.getLogger(__name__)
 
 loop = asyncio.get_event_loop()
 loop.set_debug(True)
-loop.event_handlers = []
 
 
 def main():
+    load_modules('example_config.yaml', loop)
     logger.info('Starting event loop...')
     try:
         loop.run_forever()
