@@ -1,7 +1,8 @@
 import importlib
+import inspect
+import logging
 import os
 from collections import defaultdict
-import logging
 
 import yaml
 
@@ -16,7 +17,6 @@ class Xanmel:
     """
     modules = {}
     handlers = defaultdict(list)
-    events = {}
 
     def __init__(self, loop, config_path):
         self.loop = loop
@@ -30,6 +30,15 @@ class Xanmel:
             module = getattr(module_pkg, module_name)(self, module_config)
             module.setup_event_generators()
             self.modules[module_path] = module
+            self.load_handlers(module, module_pkg_name)
+
+    def load_handlers(self, module, module_pkg_name):
+        handlers_mod = importlib.import_module(module_pkg_name + '.handlers')
+        for member_name, member in inspect.getmembers(handlers_mod, inspect.isclass):
+            if issubclass(member, Handler):
+                handler = member(module=module)
+                for event in handler.events:
+                    self.handlers[event].append(handler)
 
 
 class Module:
@@ -55,14 +64,23 @@ class Module:
         pass
 
 
-class Event(object):
+class Event:
     def __init__(self, module, **kwargs):
         self.module = module
         self.properties = kwargs
         self.timestamp = current_time()
 
+    @classmethod
+    def get_name(cls):
+        return '%s.%s' % (inspect.getmodule(cls).__name__, cls.__name__)
+
     def fire(self):
-        logger.info('Firing event %s(%r)' % (self.__class__.__name__, self.properties))
+        logger.info('Firing event %s', self)
+        for i in self.module.xanmel.handlers[self.get_name()]:
+            i.handle(self)
+
+    def __str__(self):
+        return '%s(%r)' % (self.get_name(), self.properties)
 
 
 class Action:
@@ -76,7 +94,7 @@ class Action:
 
 
 class Handler:
-    listen_to_events = []
+    events = []
 
     def __init__(self, module):
         self.module = module
