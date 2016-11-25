@@ -2,8 +2,7 @@ import asyncio
 import logging.config
 import warnings
 
-from xanmel.loader import load_modules
-
+from xanmel.base_classes import Xanmel
 
 warnings.simplefilter('default')
 logging.basicConfig(level=logging.DEBUG)
@@ -15,8 +14,9 @@ loop.set_debug(True)
 
 
 def main():
-    load_modules('example_config.yaml', loop)
     logger.info('Starting event loop...')
+    xanmel = Xanmel(loop=loop, config_path='example_config.yaml')
+    xanmel.load_modules()
     try:
         loop.run_forever()
     except KeyboardInterrupt:
