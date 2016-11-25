@@ -17,6 +17,7 @@ class Xanmel:
     """
     modules = {}
     handlers = defaultdict(list)
+    actions = {}
 
     def __init__(self, loop, config_path):
         self.loop = loop
@@ -31,6 +32,7 @@ class Xanmel:
             module.setup_event_generators()
             self.modules[module_path] = module
             self.load_handlers(module, module_pkg_name)
+            self.load_actions(module, module_pkg_name)
 
     def load_handlers(self, module, module_pkg_name):
         handlers_mod = importlib.import_module(module_pkg_name + '.handlers')
@@ -39,6 +41,13 @@ class Xanmel:
                 handler = member(module=module)
                 for event in handler.events:
                     self.handlers[event].append(handler)
+
+    def load_actions(self, module, module_pkg_name):
+        actions_mod = importlib.import_module(module_pkg_name + '.actions')
+        for member_name, member in inspect.getmembers(actions_mod, inspect.isclass):
+            if issubclass(member, Action):
+                action = member(module=module)
+                self.actions[action.get_name()] = action
 
 
 class Module:
@@ -64,32 +73,33 @@ class Module:
         pass
 
 
-class Event:
+class GetNameMixin:
+    @classmethod
+    def get_name(cls):
+        return '%s.%s' % (inspect.getmodule(cls).__name__, cls.__name__)
+
+
+class Event(GetNameMixin):
     def __init__(self, module, **kwargs):
         self.module = module
         self.properties = kwargs
         self.timestamp = current_time()
 
-    @classmethod
-    def get_name(cls):
-        return '%s.%s' % (inspect.getmodule(cls).__name__, cls.__name__)
-
     def fire(self):
         logger.info('Firing event %s', self)
         for i in self.module.xanmel.handlers[self.get_name()]:
-            i.handle(self)
+            self.module.loop.create_task(i.handle(self))
 
     def __str__(self):
         return '%s(%r)' % (self.get_name(), self.properties)
 
 
-class Action:
+class Action(GetNameMixin):
     # TODO: include list of required/optional properties
-    def __init__(self, module, **kwargs):
+    def __init__(self, module):
         self.module = module
-        self.properties = kwargs
 
-    def run(self):
+    async def run(self, **kwargs):
         raise NotImplementedError()
 
 
@@ -98,6 +108,10 @@ class Handler:
 
     def __init__(self, module):
         self.module = module
+
+    async def run_action(self, action, **kwargs):
+        action = self.module.xanmel.actions[action]
+        await action.run(**kwargs)
 
     async def handle(self, event):
         pass
