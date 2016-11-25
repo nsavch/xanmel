@@ -1,8 +1,13 @@
 import importlib
 import os
 from collections import defaultdict
+import logging
 
 import yaml
+
+from xanmel.utils import current_time
+
+logger = logging.getLogger(__name__)
 
 
 class Xanmel:
@@ -24,7 +29,6 @@ class Xanmel:
             module_pkg = importlib.import_module(module_pkg_name)
             module = getattr(module_pkg, module_name)(self, module_config)
             module.setup_event_generators()
-            module.setup_event_handlers()
             self.modules[module_path] = module
 
 
@@ -49,6 +53,16 @@ class Module:
 
     def setup_event_generators(self):
         pass
+
+
+class Event(object):
+    def __init__(self, module, **kwargs):
+        self.module = module
+        self.properties = kwargs
+        self.timestamp = current_time()
+
+    def fire(self):
+        logger.info('Firing event %s(%r)' % (self.__class__.__name__, self.properties))
 
 
 class Action:

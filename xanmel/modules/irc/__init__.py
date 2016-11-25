@@ -3,6 +3,7 @@ import asyncio
 import bottom
 
 from xanmel.base_classes import Module
+from .events import *
 
 
 class IRCModule(Module):
@@ -38,7 +39,18 @@ class IRCModule(Module):
         self.loop.create_task(self.client.connect())
 
     async def process_message(self, target, message, **kwargs):
-        print(target, message)
+        if target == self.config['nick']:
+            PrivateMessage(self, message=message, **kwargs).fire()
+        elif target == self.config['channel']:
+            is_mention = False
+            for i in self.config['mention_delimeters']:
+                if message.startswith(self.config['nick'] + i):
+                    is_mention = True
+                    message = message[len(self.config['nick'] + i):].lstrip()
+            if is_mention:
+                MentionMessage(self, message=message, **kwargs).fire()
+            else:
+                ChannelMessage(self, message=message, **kwargs).fire()
 
     async def send_channel_message(self, message, **kwargs):
         self.client.send('PRIVMSG', target=self.config['channel'], message=message)

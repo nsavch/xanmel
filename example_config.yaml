@@ -6,3 +6,4 @@ xanmel.modules.irc.IRCModule:
   realname: Xanmel BOT
   channel: '#xanmel'
   greeting: HELLO WORLD!
+  mention_delimeters: [' ', ':', ',']
