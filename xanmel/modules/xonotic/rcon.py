@@ -18,11 +18,15 @@ class RconServer:
         _, self.command_protocol = await self.loop.create_datagram_endpoint(
             RconProtocol, remote_addr=(self.server_address, self.server_port))
         self.command_protocol.received_callback = self.receive_command_response
+        self.command_protocol.password = self.password
+        self.command_protocol.secure = self.secure
 
         _, self.log_protocol = await self.loop.create_datagram_endpoint(
             RconProtocol, remote_addr=(self.server_address, self.server_port)
         )
         self.log_protocol.received_callback = self.receive_log_response
+        self.log_protocol.password = self.password
+        self.log_protocol.secure = self.secure
         self.log_protocol.subscribe_to_log()
 
     def receive_command_response(self, data, addr):
@@ -45,7 +49,8 @@ class RconServer:
 
 class RconProtocol(asyncio.DatagramProtocol):
     transport = None
-    password = 'password'
+    password = None
+    secure = RCON_SECURE_TIME
     local_port = None
     local_host = None
     received_callback = None
@@ -65,11 +70,11 @@ class RconProtocol(asyncio.DatagramProtocol):
 
     def send(self, command):
         msg = None
-        if self.transport.secure == RCON_SECURE_CHALLENGE:
+        if self.secure == RCON_SECURE_CHALLENGE:
             raise NotImplementedError()
-        elif self.transport.secure == RCON_SECURE_TIME:
+        elif self.secure == RCON_SECURE_TIME:
             msg = rcon_secure_time_packet(self.password, command)
-        elif self.transport.secure == RCON_NOSECURE:
+        elif self.secure == RCON_NOSECURE:
             msg = rcon_nosecure_packet(self.password, command)
         self.transport.sendto(msg)
 
