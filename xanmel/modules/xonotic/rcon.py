@@ -64,7 +64,14 @@ class RconProtocol(asyncio.DatagramProtocol):
         self.send("sv_cmd addtolist log_dest_udp %s:%s" % (self.local_host, self.local_port))
 
     def send(self, command):
-        self.transport.sendto(rcon_secure_time_packet(self.password, command))
+        msg = None
+        if self.transport.secure == RCON_SECURE_CHALLENGE:
+            raise NotImplementedError()
+        elif self.transport.secure == RCON_SECURE_TIME:
+            msg = rcon_secure_time_packet(self.password, command)
+        elif self.transport.secure == RCON_NOSECURE:
+            msg = rcon_nosecure_packet(self.password, command)
+        self.transport.sendto(msg)
 
 
 if __name__ == '__main__':
