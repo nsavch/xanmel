@@ -1,6 +1,3 @@
-# This file was copied from XRcon project https://github.com/bacher09/xrcon/
-# Python-2 compatibility stuff was removed
-
 import asyncio
 from xanmel.modules.xonotic.rcon_utils import *
 
