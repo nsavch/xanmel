@@ -9,11 +9,9 @@ logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger(__name__)
 
 
-loop = asyncio.get_event_loop()
-loop.set_debug(True)
-
-
 def main():
+    loop = asyncio.get_event_loop()
+    loop.set_debug(True)
     logger.info('Starting event loop...')
     xanmel = Xanmel(loop=loop, config_path='example_config.yaml')
     xanmel.load_modules()

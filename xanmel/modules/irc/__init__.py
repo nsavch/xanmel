@@ -54,3 +54,6 @@ class IRCModule(Module):
 
     async def send_channel_message(self, message, **kwargs):
         self.client.send('PRIVMSG', target=self.config['channel'], message=message)
+
+    def teardown(self):
+        self.loop.run_until_complete(self.client.disconnect())

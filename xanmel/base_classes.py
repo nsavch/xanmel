@@ -4,6 +4,7 @@ import logging
 import os
 from collections import defaultdict
 
+import asyncio
 import yaml
 
 from xanmel.utils import current_time
@@ -29,10 +30,10 @@ class Xanmel:
             module_pkg_name, module_name = module_path.rsplit('.', 1)
             module_pkg = importlib.import_module(module_pkg_name)
             module = getattr(module_pkg, module_name)(self, module_config)
-            module.setup_event_generators()
             self.modules[module_path] = module
             self.load_handlers(module, module_pkg_name)
             self.load_actions(module, module_pkg_name)
+            self.setup_event_generators(module)
 
     def load_handlers(self, module, module_pkg_name):
         handlers_mod = importlib.import_module(module_pkg_name + '.handlers')
@@ -48,6 +49,15 @@ class Xanmel:
             if issubclass(member, Action):
                 action = member(module=module)
                 self.actions[action.get_name()] = action
+
+    def setup_event_generators(self, module):
+        module.setup_event_generators()
+
+    def teardown(self):
+        for i in self.modules.values():
+            i.teardown()
+        for task in asyncio.Task.all_tasks():
+            task.cancel()
 
 
 class Module:
@@ -70,6 +80,9 @@ class Module:
         self.loop = xanmel.loop
 
     def setup_event_generators(self):
+        pass
+
+    def teardown(self):
         pass
 
 

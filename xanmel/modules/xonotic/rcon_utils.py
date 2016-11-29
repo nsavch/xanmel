@@ -30,6 +30,7 @@ RCON_NOSECURE = 0
 RCON_SECURE_TIME = 1
 RCON_SECURE_CHALLENGE = 2
 
+
 def ensure_bytes(something):
     if not isinstance(something, bytes):
         return str(something).encode('ascii')
