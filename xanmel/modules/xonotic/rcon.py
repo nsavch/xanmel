@@ -75,6 +75,7 @@ def rcon_protocol_factory(password, secure, received_callback=None, connection_m
                     received_callback(decoded, addr)
 
         def subscribe_to_log(self):
+            # TODO: is there a way to minimize amount of data which gets pushed to log_dest_udp?
             self.send("sv_cmd addtolist log_dest_udp %s:%s" % (self.local_host, self.local_port))
             self.send("sv_logscores_console 0")
             self.send("sv_logscores_bots 1")

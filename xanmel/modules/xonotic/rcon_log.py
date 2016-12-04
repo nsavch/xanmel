@@ -3,7 +3,6 @@ import logging
 
 from .events import *
 
-
 logger = logging.getLogger(__name__)
 
 
@@ -23,28 +22,34 @@ class BaseParser:
             return []
         if not self.is_multiline:
             line = lines[0]
-            if line.startswith(b':' + self.key + b':'):
-                self.process(line[2 + len(self.key):])
+            if line.startswith(self.key):
+                try:
+                    self.process(line[len(self.key):])
+                except:
+                    logger.warning('Exception during parsing line %r', line, exc_info=True)
                 return lines[1:]
             else:
                 return lines
         else:
             if self.started:
                 line = lines.pop(0)
-                while not line.startswith(b':' + self.terminator):
+                while not line.startswith(self.terminator):
                     self.data.append(line)
                     if len(lines) == 0:
                         return []
                     else:
                         line = lines.pop(0)
-                self.process(self.data)
+                try:
+                    self.process(self.data)
+                except:
+                    logger.warning('Exception during parsing multiline %r', self.data, exc_info=True)
                 self.finished = True
                 return lines
             else:
                 line = lines[0]
-                if line.startswith(b':' + self.key + b':'):
+                if line.startswith(self.key):
                     self.started = True
-                    self.data.append(line[2 + len(self.key):])
+                    self.data.append(line[len(self.key):])
                     return self.parse(lines[1:])
                 else:
                     return lines
@@ -54,30 +59,69 @@ class BaseParser:
 
 
 class JoinParser(BaseParser):
-    key = b'join'
+    key = b':join:'
 
     def process(self, data):
         fields = data.split(b':')
         if len(fields) != 4:
             logger.debug('Invalid join entry: %r', data)
             return
-        _, id, ip, nick = fields
-        Join(self.rcon_server.module, player_id=id, player_ip=ip, player_nick=nick).fire()
+        # TODO: find proper namings for number1 and number2
+        number1, number2, ip, nick = fields
+        Join(self.rcon_server.module,
+             number1=int(number1),
+             number2=int(number2),
+             ip=ip,
+             nick=nick).fire()
 
 
 class PartParser(BaseParser):
-    key = b'part'
+    key = b':part:'
+
+    def process(self, data):
+        Part(self.rcon_server.module, number1=int(data)).fire()
 
 
 class TeamParser(BaseParser):
     # TODO: figure out what is that?
-    key = b'team'
+    key = b':team:'
+
+    def process(self, data):
+        pass
 
 
 class ScoresParser(BaseParser):
-    key = b'scores'
+    key = b':scores:'
     is_multiline = True
-    terminator = 'end'
+    terminator = b':end'
+
+    def process(self, lines):
+        gt_map = lines[0].split(b':')[0]
+        rows = lines[2:]
+        gt, map = gt_map.split(b'_')
+        scores = []
+        for i in rows:
+            fields = i.split(b':')
+            stats = fields[3].split(b',')
+
+            row_data = dict(
+                score=int(stats[0]),
+                kills=int(stats[1]),
+                deaths=int(stats[2]),
+                suicides=int(stats[3]),
+                field4=fields[4],  # TODO: wtf is this field?
+                field5=fields[5],  # TODO: wtf is this field?
+                field6=fields[6],  # TODO: wtf is this field?
+                nick=fields[7],
+            )
+            scores.append(row_data)
+        scores.sort(key=lambda x: x['score'], reverse=True)
+
+        GameEnded(self.rcon_server.module,
+                  gt=gt,
+                  map=map,
+                  scores=scores
+                  ).fire()
 
 
 class RconLogParser:
@@ -85,7 +129,7 @@ class RconLogParser:
         JoinParser,
         PartParser,
         # TeamParser,
-        # ScoresParser
+        ScoresParser
     ]
 
     def __init__(self, rcon_server):
@@ -108,9 +152,12 @@ class RconLogParser:
                     self.current = parser.parse(self.current)
                     if parser.is_multiline and parser.started and (not parser.finished):
                         if len(self.current) != 0:
-                            logger.warning('A multi-line parser %r did not finished but left some lines %r', parser, self.current)
+                            logger.warning('A multi-line parser %r did not finished but left some lines %r', parser,
+                                           self.current)
                 if previous_length == len(self.current):
-                    self.current.pop(0)
+                    line = self.current.pop(0)
+                    if line:
+                        logger.debug('Unparsed log line %r', line)
                 previous_length = len(self.current)
 
     def parse_join(self, line):
