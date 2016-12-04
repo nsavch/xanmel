@@ -8,5 +8,7 @@ xanmel.modules.irc.IRCModule:
   greeting: HELLO WORLD!
   mention_delimeters: [' ', ':', ',']
 xanmel.modules.xonotic.XonoticModule:
-  server_ip: 127.0.0.1
-  server_port: 26005
+  servers:
+    - server_ip: 127.0.0.1
+      server_port: 26005
+      password: password

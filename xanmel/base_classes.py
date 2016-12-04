@@ -102,6 +102,7 @@ class Event(GetNameMixin):
         logger.info('Firing event %s', self)
         for i in self.module.xanmel.handlers[self.get_name()]:
             self.module.loop.create_task(i.handle(self))
+        logger.debug('Finished handling event %s', self)
 
     def __str__(self):
         return '%s(%r)' % (self.get_name(), self.properties)
