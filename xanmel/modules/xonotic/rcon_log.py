@@ -1,4 +1,3 @@
-import re
 import logging
 
 from .events import *
@@ -124,12 +123,40 @@ class ScoresParser(BaseParser):
                   ).fire()
 
 
+class GameStartedParser(BaseParser):
+    key = b':gamestart:'
+
+    def process(self, data):
+        gt_map = data.split(b':')[0]
+        gt, map = gt_map.split(b'_')
+        GameStarted(self.rcon_server.module, gt=gt, map=map).fire()
+
+
+class NameChangeParser(BaseParser):
+    key = b':name:'
+
+    def process(self, data):
+        # TODO: figure out what the number here means
+        number, name = data.split(b':')
+        NameChange(self.rcon_server.module, number=number, name=name).fire()
+
+
+class ChatMessageParser(BaseParser):
+    key = b'\x01'
+
+    def process(self, data):
+        ChatMessage(self.rcon_server.module, message=data).fire()
+
+
 class RconLogParser:
     parsers = [
         JoinParser,
         PartParser,
         # TeamParser,
-        ScoresParser
+        ScoresParser,
+        GameStartedParser,
+        NameChangeParser,
+        ChatMessageParser
     ]
 
     def __init__(self, rcon_server):
