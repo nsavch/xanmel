@@ -27,6 +27,10 @@ class IRCModule(Module):
         for future in pending:
             future.cancel()
         if self.config.get('greeting'):
+            test = b'^xE20Tri^xF40flu^xFB0ope^xCB0raz^xAF1ine^7\xee\x83\x81\xee\x83\x82\xee\x83\x83\xee\x83\x84\xe2\x97\x86\xf0\x9f\x8c\x8f\xf0\x9f\x8c\x8e'
+            from xanmel.modules.xonotic.colors import Color
+            self.client.send('PRIVMSG', target=self.config['channel'],
+                             message=Color.dp_to_irc(test).decode('utf8'))
             self.client.send('PRIVMSG', target=self.config['channel'], message=self.config['greeting'])
 
     async def pong(self, message, **kwargs):

@@ -4,6 +4,27 @@ from .events import *
 
 logger = logging.getLogger(__name__)
 
+GAME_TYPES = {
+    'as': 'assault',
+    'ca': 'clan arena',
+    'cq': 'conquest',
+    'ctf': 'capture the flag',
+    'cts': 'race cts',
+    'dom': 'domination',
+    'dm': 'deathmatch',
+    'ft': 'freezetag',
+    'inf': 'infection',
+    'inv': 'invasion',
+    'jb': 'jailbreak',
+    'ka': 'keepaway',
+    'kh': 'key hunt',
+    'lms': 'last man standing',
+    'nb': 'nexball',
+    'ons': 'onslaught',
+    'rc': 'race',
+    'tdm': 'team deathmatch',
+}
+
 
 class BaseParser:
     key = b''
