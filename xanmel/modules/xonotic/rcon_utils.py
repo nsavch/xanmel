@@ -33,7 +33,7 @@ RCON_SECURE_CHALLENGE = 2
 
 def ensure_bytes(something):
     if not isinstance(something, bytes):
-        return str(something).encode('ascii')
+        return str(something).encode('utf8')
     return something
 
 

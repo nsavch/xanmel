@@ -28,8 +28,21 @@ class Color:
         return cls.irc_regex.sub(b'', text)
 
     @classmethod
+    def dp_to_none(cls, text):
+        def __repl(matchobj):
+            if matchobj.group(0) == b'^^':
+                return b'^'
+            else:
+                return b''
+        return cls.dp_regex.sub(__repl, cls.dp_char_convert(text))
+
+    @classmethod
     def irc_to_dp(cls, text):
-        return b''
+        def __repl(matchobj):
+            if matchobj.group(2):
+                return cls.from_irc(matchobj.group(2)).dp()
+            return b'^7'
+        return cls.irc_regex.sub(__repl, text)
 
     @classmethod
     def dp_to_irc(cls, text):
@@ -39,7 +52,7 @@ class Color:
             else:
                 return cls.from_dp(matchobj.group(0)).irc()
 
-        return cls.dp_regex.sub(__repl, cls.dp_char_convert(text) + b'\x0f')
+        return cls.dp_regex.sub(__repl, cls.dp_char_convert(text)) + b'\x0f'
 
     def irc(self):
         if self.bright:
@@ -67,6 +80,51 @@ class Color:
         if not out:
             return b'\x0f'
         return b'\3' + out
+
+    def to12bit(self):
+        if self.bright:
+            m = 15
+        else:
+            m = 5
+        r = m * ~~(self.code & self.RED)
+        g = m * ~~(self.code & self.GREEN)
+        b = m * ~~(self.code & self.BLUE)
+        return '%x%x%x' % (r, g, b)
+
+    def dp(self):
+        if not self.code:
+            return b''
+        if self.bright:
+            return {
+                5: b'^6',
+                6: b'^5',
+            }.get(self.code, ('^%s' % self.code).encode('ascii'))
+        else:
+            return ('^x%s' % self.to12bit()).encode('ascii')
+
+    @classmethod
+    def from_irc(cls, color):
+        color = int(color)
+        args = {
+            14: (cls.BLACK, cls.BRIGHT),
+            1: (cls.BLACK, cls.DARK),
+            4: (cls.RED, cls.BRIGHT),
+            5: (cls.RED, cls.DARK),
+            9: (cls.GREEN, cls.BRIGHT),
+            3: (cls.GREEN, cls.DARK),
+            8: (cls.YELLOW, cls.BRIGHT),
+            7: (cls.YELLOW, cls.DARK),
+            12: (cls.BLUE, cls.BRIGHT),
+            2: (cls.BLUE, cls.DARK),
+            13: (cls.MAGENTA, cls.BRIGHT),
+            6: (cls.MAGENTA, cls.DARK),
+            11: (cls.CYAN, cls.BRIGHT),
+            10: (cls.CYAN, cls.DARK),
+            0: (cls.WHITE, cls.BRIGHT),
+            15: (cls.WHITE, cls.DARK)
+
+        }.get(color, (cls.NOCOLOR, cls.DARK))
+        return cls(*args)
 
     @classmethod
     def from_dp(cls, color):

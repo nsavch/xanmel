@@ -89,6 +89,7 @@ class JoinParser(BaseParser):
         # TODO: find proper namings for number1 and number2
         number1, number2, ip, nick = fields
         Join(self.rcon_server.module,
+             server=self.rcon_server,
              number1=int(number1),
              number2=int(number2),
              ip=ip,
@@ -99,7 +100,7 @@ class PartParser(BaseParser):
     key = b':part:'
 
     def process(self, data):
-        Part(self.rcon_server.module, number1=int(data)).fire()
+        Part(self.rcon_server.module, server=self.rcon_server, number1=int(data)).fire()
 
 
 class TeamParser(BaseParser):
@@ -111,6 +112,7 @@ class TeamParser(BaseParser):
 
 
 class ScoresParser(BaseParser):
+    # TODO: currently only dm scores are supported.
     key = b':scores:'
     is_multiline = True
     terminator = b':end'
@@ -138,6 +140,7 @@ class ScoresParser(BaseParser):
         scores.sort(key=lambda x: x['score'], reverse=True)
 
         GameEnded(self.rcon_server.module,
+                  server=self.rcon_server,
                   gt=gt,
                   map=map,
                   scores=scores
@@ -150,7 +153,7 @@ class GameStartedParser(BaseParser):
     def process(self, data):
         gt_map = data.split(b':')[0]
         gt, map = gt_map.split(b'_')
-        GameStarted(self.rcon_server.module, gt=gt, map=map).fire()
+        GameStarted(self.rcon_server.module, server=self.rcon_server, gt=gt, map=map).fire()
 
 
 class NameChangeParser(BaseParser):
@@ -159,14 +162,14 @@ class NameChangeParser(BaseParser):
     def process(self, data):
         # TODO: figure out what the number here means
         number, name = data.split(b':')
-        NameChange(self.rcon_server.module, number=number, name=name).fire()
+        NameChange(self.rcon_server.module, server=self.rcon_server, number=number, name=name).fire()
 
 
 class ChatMessageParser(BaseParser):
     key = b'\x01'
 
     def process(self, data):
-        ChatMessage(self.rcon_server.module, message=data).fire()
+        ChatMessage(self.rcon_server.module, server=self.rcon_server, message=data).fire()
 
 
 class RconLogParser:
