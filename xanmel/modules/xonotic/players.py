@@ -46,10 +46,11 @@ class PlayerManager:
         self.players_by_number1 = {}
         self.players_by_number2 = {}
 
-    def name_change(self, number2, new_nickname):
-        player = self.players_by_number2[number2]
+    def name_change(self, number1, new_nickname):
+        player = self.players_by_number1[number1]
+        old_nickname = player.nickname
         player.nickname = new_nickname
-        return player
+        return old_nickname, player
 
     def __str__(self):
         return repr(list(self.players_by_number1.items()))

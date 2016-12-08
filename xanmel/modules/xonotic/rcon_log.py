@@ -170,7 +170,10 @@ class NameChangeParser(BaseParser):
     def process(self, data):
         # TODO: figure out what the number here means
         number, name = data.split(b':')
-        NameChange(self.rcon_server.module, server=self.rcon_server, number=number, name=name).fire()
+        old_nickname, player = self.rcon_server.players.name_change(int(number), name)
+
+        NameChange(self.rcon_server.module, server=self.rcon_server, player=player,
+                   old_nickname=old_nickname).fire()
 
 
 class ChatMessageParser(BaseParser):

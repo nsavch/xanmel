@@ -49,3 +49,14 @@ class PartHandler(Handler):
             'max': event.properties['server'].players.max
         }
         await self.run_action('xanmel.modules.irc.actions.ChannelMessage', message=message)
+
+
+class NameChangeHandler(Handler):
+    events = ['xanmel.modules.xonotic.events.NameChange']
+
+    async def handle(self, event):
+        message = '\00312*\x0f %(name)s is known as %(new_name)s' % {
+            'name': Color.dp_to_irc(event.properties['old_nickname']).decode('utf8'),
+            'new_name': Color.dp_to_irc(event.properties['player'].nickname).decode('utf8')
+        }
+        await self.run_action('xanmel.modules.irc.actions.ChannelMessage', message=message)
