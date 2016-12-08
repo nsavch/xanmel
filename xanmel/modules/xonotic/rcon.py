@@ -1,8 +1,9 @@
 import asyncio
 import socket
 
-from xanmel.modules.xonotic.rcon_log import RconLogParser
-from xanmel.modules.xonotic.rcon_utils import *
+from .rcon_log import RconLogParser
+from .rcon_utils import *
+from .players import PlayerManager
 
 
 class RconServer:
@@ -19,6 +20,7 @@ class RconServer:
         self.command_response = b''
         self.players = {}
         self.log_parser = RconLogParser(self)
+        self.players = PlayerManager()
 
     async def connect_cmd(self):
         rcon_command_protocol = rcon_protocol_factory(self.password,
@@ -26,6 +28,7 @@ class RconServer:
                                                       self.receive_command_response)
         _, self.command_protocol = await self.loop.create_datagram_endpoint(
             rcon_command_protocol, remote_addr=(self.server_address, self.server_port))
+        # TODO: get maximum number of players
 
     async def connect_log(self):
         rcon_log_protocol = rcon_protocol_factory(self.password,

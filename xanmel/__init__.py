@@ -4,6 +4,7 @@ import logging
 import os
 from collections import defaultdict
 
+import geoip2.database
 import asyncio
 import yaml
 
@@ -22,6 +23,7 @@ class Xanmel:
 
     def __init__(self, loop, config_path):
         self.loop = loop
+        self.geoip = geoip2.database.Reader('GeoLite2-City.mmdb')
         with open(os.path.expanduser(config_path), 'r') as config_file:
             self.config = yaml.load(config_file)
 

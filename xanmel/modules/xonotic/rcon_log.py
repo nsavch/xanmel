@@ -83,9 +83,6 @@ class JoinParser(BaseParser):
 
     def process(self, data):
         fields = data.split(b':')
-        if len(fields) != 4:
-            logger.debug('Invalid join entry: %r', data)
-            return
         # TODO: find proper namings for number1 and number2
         number1, number2, ip, nick = fields
         Join(self.rcon_server.module,
