@@ -7,11 +7,7 @@ class XonoticModule(Module):
         super(XonoticModule, self).__init__(xanmel, config)
         self.servers = []
         for server in config['servers']:
-            self.servers.append(
-                RconServer(self,
-                           server['server_ip'],
-                           server['server_port'],
-                           server['password']))
+            self.servers.append(RconServer(self, server))
         for i in self.servers:
             self.loop.create_task(i.connect_cmd())
             self.loop.create_task(i.connect_log())

@@ -9,6 +9,8 @@ xanmel.modules.irc.IRCModule:
   mention_delimeters: [' ', ':', ',']
 xanmel.modules.xonotic.XonoticModule:
   servers:
-    - server_ip: 127.0.0.1
-      server_port: 26005
-      password: password
+    - rcon_ip: 127.0.0.1
+      rcon_port: 26005
+      public_ip: 99.99.99.99
+      public_port: 26005
+      rcon_password: password

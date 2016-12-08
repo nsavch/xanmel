@@ -148,8 +148,8 @@ class GameStartedParser(BaseParser):
     key = b':gamestart:'
 
     def process(self, data):
-        gt_map = data.split(b':')[0]
-        gt, map = gt_map.split(b'_')
+        gt_map = data.split(b':')[0].decode('utf8')
+        gt, map = gt_map.split('_')
         GameStarted(self.rcon_server.module, server=self.rcon_server, gt=gt, map=map).fire()
 
 

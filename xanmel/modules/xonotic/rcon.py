@@ -7,13 +7,14 @@ from .players import PlayerManager
 
 
 class RconServer:
-    def __init__(self, module, server_address, server_port, password, secure=RCON_SECURE_TIME):
+    def __init__(self, module, config):
         self.module = module
         self.loop = module.loop
-        self.server_address = server_address
-        self.server_port = server_port
-        self.password = password
-        self.secure = secure
+        self.config = config
+        self.server_address = config['rcon_ip']
+        self.server_port = config['rcon_port']
+        self.password = config['rcon_password']
+        self.secure = config.get('rcon_secure', RCON_SECURE_TIME)
         self.command_protocol = None
         self.log_protocol = None
         self.command_lock = asyncio.Lock()

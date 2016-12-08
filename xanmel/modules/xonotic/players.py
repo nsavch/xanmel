@@ -16,6 +16,10 @@ class PlayerManager:
         self.players_by_number2 = {}
         self.max = 0
 
+    @property
+    def current(self):
+        return len(self.players_by_number2)
+
     def add(self, player):
         self.players_by_number1[player.number1] = player
         self.players_by_number2[player.number2] = player
