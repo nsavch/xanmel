@@ -13,7 +13,7 @@ def main():
     loop = asyncio.get_event_loop()
     loop.set_debug(True)
     logger.info('Starting event loop...')
-    xanmel = Xanmel(loop=loop, config_path='example_config.yaml')
+    xanmel = Xanmel(loop=loop, config_path='/etc/xanmel_config.yaml')
     xanmel.load_modules()
     try:
         loop.run_forever()
