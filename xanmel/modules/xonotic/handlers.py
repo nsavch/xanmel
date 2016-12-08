@@ -1,4 +1,4 @@
-from xanmel.base_classes import Handler
+from xanmel import Handler
 
 from .colors import Color
 

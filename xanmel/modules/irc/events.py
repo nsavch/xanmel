@@ -1,4 +1,4 @@
-from xanmel.base_classes import Event
+from xanmel import Event
 
 
 class ChannelMessage(Event):

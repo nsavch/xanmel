@@ -1,4 +1,4 @@
-from xanmel.base_classes import Module
+from xanmel import Module
 from xanmel.modules.xonotic.rcon import RconServer
 
 

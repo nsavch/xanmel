@@ -1,4 +1,4 @@
-from xanmel.base_classes import Action
+from xanmel import Action
 
 
 class ChannelMessage(Action):

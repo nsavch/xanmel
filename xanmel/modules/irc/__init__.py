@@ -2,7 +2,7 @@ import asyncio
 
 import bottom
 
-from xanmel.base_classes import Module
+from xanmel import Module
 from .events import *
 
 

@@ -2,7 +2,7 @@ import asyncio
 import pytest
 import yaml
 
-from xanmel.base_classes import Xanmel
+from xanmel.__init__ import Xanmel
 
 
 @pytest.fixture

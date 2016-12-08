@@ -1,6 +1,6 @@
 import logging
 
-from xanmel.base_classes import Handler
+from xanmel import Handler
 
 logger = logging.getLogger(__name__)
 
