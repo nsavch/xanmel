@@ -31,7 +31,7 @@ class RconServer:
                                                       self.receive_command_response)
         _, self.command_protocol = await self.loop.create_datagram_endpoint(
             rcon_command_protocol, remote_addr=(self.server_address, self.server_port))
-        # TODO: get maximum number of players
+        await self.update_server_status()
 
     async def connect_log(self):
         rcon_log_protocol = rcon_protocol_factory(self.password,
@@ -53,6 +53,15 @@ class RconServer:
 
     def send(self, command):
         self.command_protocol.send(command)
+
+    async def update_server_status(self):
+        status_output = await self.execute('status 1')
+        for i in status_output.split(b'\n'):
+            if not i.strip():
+                continue
+            if i.startswith(b'players'):
+                m = re.match(rb'players:\s*(\d+)\s*active\s*\((\d+)\s*max', i)
+                self.players.max = int(m.group(2))
 
     async def execute(self, command, timeout=1):
         await self.command_lock.acquire()
