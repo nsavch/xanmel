@@ -102,7 +102,6 @@ class Event(GetNameMixin):
         logger.info('Firing event %s', self)
         for i in self.module.xanmel.handlers[self.get_name()]:
             self.module.loop.create_task(i.handle(self))
-        logger.debug('Finished handling event %s', self)
 
     def __str__(self):
         return '%s(%r)' % (self.get_name(), self.properties)
@@ -117,7 +116,7 @@ class Action(GetNameMixin):
         raise NotImplementedError()
 
 
-class Handler:
+class Handler(GetNameMixin):
     events = []
 
     def __init__(self, module):
@@ -129,3 +128,6 @@ class Handler:
 
     async def handle(self, event):
         pass
+
+    def __str__(self):
+        return self.get_name()

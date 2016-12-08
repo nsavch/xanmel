@@ -45,6 +45,9 @@ class RconServer:
     def subscribe_to_log(self, proto):
         proto.subscribe_to_log()
 
+    def send(self, command):
+        self.command_protocol.send(command)
+
     async def execute(self, command, timeout=1):
         await self.command_lock.acquire()
         self.command_response = b''
