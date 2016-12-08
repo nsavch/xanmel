@@ -22,6 +22,8 @@ class RconServer:
         self.players = {}
         self.log_parser = RconLogParser(self)
         self.players = PlayerManager()
+        self.current_map = ''
+        self.current_gt = ''
 
     async def connect_cmd(self):
         rcon_command_protocol = rcon_protocol_factory(self.password,

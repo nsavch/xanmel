@@ -1,6 +1,7 @@
 import logging
 
 from .events import *
+from .players import Player
 
 logger = logging.getLogger(__name__)
 
@@ -85,19 +86,27 @@ class JoinParser(BaseParser):
         fields = data.split(b':')
         # TODO: find proper namings for number1 and number2
         number1, number2, ip, nick = fields
-        Join(self.rcon_server.module,
-             server=self.rcon_server,
-             number1=int(number1),
-             number2=int(number2),
-             ip=ip,
-             nick=nick).fire()
+        player = self.rcon_server.players.join(Player(
+            nickname=nick,
+            number1=int(number1),
+            number2=int(number2),
+            ip_address=ip
+        ))
+        Join(self.rcon_server.module, server=self.rcon_server, player=player,
+             current=self.rcon_server.players.current).fire()
 
 
 class PartParser(BaseParser):
     key = b':part:'
 
     def process(self, data):
-        Part(self.rcon_server.module, server=self.rcon_server, number1=int(data)).fire()
+        try:
+            player = self.rcon_server.players.part(int(data))
+        except KeyError:
+            pass
+        else:
+            Part(self.rcon_server.module, server=self.rcon_server, player=player,
+                 current=self.rcon_server.players.current).fire()
 
 
 class TeamParser(BaseParser):
@@ -150,6 +159,8 @@ class GameStartedParser(BaseParser):
     def process(self, data):
         gt_map = data.split(b':')[0].decode('utf8')
         gt, map = gt_map.split('_')
+        self.rcon_server.current_map = map
+        self.rcon_server.current_gt = gt
         GameStarted(self.rcon_server.module, server=self.rcon_server, gt=gt, map=map).fire()
 
 
