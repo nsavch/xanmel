@@ -50,7 +50,7 @@ class Xanmel:
         for member_name, member in inspect.getmembers(actions_mod, inspect.isclass):
             if issubclass(member, Action):
                 action = member(module=module)
-                self.actions[action.get_name()] = action
+                self.actions[member] = action
 
     def setup_event_generators(self, module):
         module.setup_event_generators()
@@ -102,7 +102,7 @@ class Event(GetNameMixin):
 
     def fire(self):
         logger.info('Firing event %s', self)
-        for i in self.module.xanmel.handlers[self.get_name()]:
+        for i in self.module.xanmel.handlers[type(self)]:
             self.module.loop.create_task(i.handle(self))
 
     def __str__(self):

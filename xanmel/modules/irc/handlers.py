@@ -1,14 +1,16 @@
 import logging
 
 from xanmel import Handler
+from .events import *
+from .actions import ChannelMessage
 
 logger = logging.getLogger(__name__)
 
 
 class MentionMessageHandler(Handler):
-    events = ['xanmel.modules.irc.events.MentionMessage']
+    events = [MentionMessage]
 
     async def handle(self, event):
-        await self.run_action('xanmel.modules.irc.actions.ChannelMessage',
+        await self.run_action(ChannelMessage,
                               message="%s: You said '%s'" % (event.properties['nick'],
                                                              event.properties['message']))

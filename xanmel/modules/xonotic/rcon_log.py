@@ -124,6 +124,7 @@ class ScoresParser(BaseParser):
     terminator = b':end'
 
     def process(self, lines):
+        print(lines)
         gt_map = lines[0].split(b':')[0]
         rows = lines[2:]
         gt, map = gt_map.split(b'_')
@@ -138,8 +139,8 @@ class ScoresParser(BaseParser):
                 deaths=int(stats[2]),
                 suicides=int(stats[3]),
                 field4=fields[4],  # TODO: wtf is this field?
-                field5=fields[5],  # TODO: wtf is this field?
-                field6=fields[6],  # TODO: wtf is this field?
+                team_id=fields[5],
+                number1=fields[6],
                 nick=fields[7],
             )
             scores.append(row_data)

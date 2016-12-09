@@ -1,5 +1,4 @@
 import asyncio
-import socket
 
 from .rcon_log import RconLogParser
 from .rcon_utils import *
@@ -55,6 +54,7 @@ class RconServer:
         self.command_protocol.send(command)
 
     async def update_server_status(self):
+        # TODO: clean up "zombie" players
         status_output = await self.execute('status 1')
         for i in status_output.split(b'\n'):
             if not i.strip():
