@@ -159,7 +159,10 @@ class ScoresParser(BaseParser):
                 stats = stats.split(b',')
                 for ix, header in enumerate(player_header):
                     if header:
-                        player_data[header] = int(stats[ix])
+                        try:
+                            player_data[header] = int(stats[ix])
+                        except ValueError:
+                            player_data[header] = stats[ix].decode('utf8')
                 players.append(player_data)
             elif row.startswith(b':teamscores'):
                 _, _, _, stats, team_id = row.split(b':')
