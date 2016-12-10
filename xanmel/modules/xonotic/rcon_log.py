@@ -38,44 +38,45 @@ class BaseParser:
         self.rcon_server = rcon_server
         self.started = False
         self.finished = False
-        self.data = []
+        self.received_eol = False
+        self.lines = []
 
-    def parse(self, lines):
-        if len(lines) == 0:
-            return []
+    def parse(self, data):
+        if b'\n' not in data:
+            return data
         if not self.is_multiline:
-            line = lines[0]
+            line, new_data = data.split(b'\n', 1)
             if line.startswith(self.key):
                 try:
                     self.process(line[len(self.key):])
                 except:
                     logger.warning('Exception during parsing line %r', line, exc_info=True)
-                return lines[1:]
+                return new_data
             else:
-                return lines
+                return data
         else:
             if self.started:
-                line = lines.pop(0)
-                while not line.startswith(self.terminator):
-                    self.data.append(line)
-                    if len(lines) == 0:
-                        return []
+                line, data = data.split(b'\n', 1)
+                while not line.startswith(self.terminator) and b'\n' in data:
+                    self.lines.append(line)
+                    if b'\n' not in data:
+                        return data
                     else:
-                        line = lines.pop(0)
+                        line, data = data.split(b'\n', 1)
                 try:
-                    self.process(self.data)
+                    self.process(self.lines)
                 except:
                     logger.warning('Exception during parsing multiline %r', self.data, exc_info=True)
                 self.finished = True
-                return lines
+                return data
             else:
-                line = lines[0]
-                if line.startswith(self.key):
+                if data.startswith(self.key):
+                    line, data = data.split(b'\n', 1)
                     self.started = True
-                    self.data.append(line[len(self.key):])
-                    return self.parse(lines[1:])
+                    self.lines.append(line[len(self.key):])
+                    return self.parse(data)
                 else:
-                    return lines
+                    return data
 
     def process(self, data):
         raise NotImplementedError
@@ -100,13 +101,11 @@ class JoinParser(BaseParser):
             m = ipv4_address.match(rest)
             if m:
                 ip = m.group(0)
-                print(ip, rest)
                 rest = rest[len(ip):]
             else:
                 m = ipv6_address_or_addrz.match(rest)
                 if m:
                     ip = m.group(0)
-                    print(ip, rest)
                     rest = rest[len(ip):]
                 else:
                     ip, rest = rest.split(b':', 1)
@@ -234,7 +233,7 @@ class NameChangeParser(BaseParser):
         number, name = data.split(b':', 1)
         try:
             old_nickname, player = self.rcon_server.players.name_change(int(number), name)
-        except IndexError:
+        except KeyError:
             pass
         else:
             NameChange(self.rcon_server.module, server=self.rcon_server, player=player,
@@ -261,11 +260,11 @@ class RconLogParser:
 
     def __init__(self, rcon_server):
         self.rcon_server = rcon_server
-        self.current = []
+        self.current = b''
         self.active_parser = None
 
     def feed(self, data):
-        self.current += data.split(b'\n')
+        self.current += data
         self.parse()
 
     def parse(self):
@@ -273,22 +272,25 @@ class RconLogParser:
             self.current = self.active_parser.parse(self.current)
         else:
             previous_length = len(self.current)
-            while len(self.current) > 0:
+            while len(self.current) > 0 and b'\n' in self.current:
                 for i in self.parsers:
                     parser = i(self.rcon_server)
                     self.current = parser.parse(self.current)
                     if parser.is_multiline and parser.started and (not parser.finished):
                         if len(self.current) != 0:
-                            logger.warning('A multi-line parser %r did not finished but left some lines %r', parser,
-                                           self.current)
+                            if b'\n' in self.current:
+                                logger.warning('A multi-line parser %r did not finished but left some lines %r', parser, self.current)
+                            else:
+                                logger.debug('Waiting for more input for parser %r', parser)
                         self.active_parser = parser
                     if parser.is_multiline and parser.finished:
                         self.active_parser = None
                 if previous_length == len(self.current):
-                    line = self.current.pop(0)
-                    if line:
-                        pass
-                        # logger.debug('Unparsed log line %r', line)
+                    if b'\n' in self.current:
+                        line, self.current = self.current.split(b'\n', 1)
+                        if line:
+                            pass
+                            # logger.debug('Unparsed log line %r', line)
                 previous_length = len(self.current)
 
     def parse_join(self, line):
