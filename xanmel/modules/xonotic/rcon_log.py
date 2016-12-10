@@ -1,5 +1,6 @@
 import logging
 
+from .colors import Color
 from .events import *
 from .players import Player
 
@@ -122,35 +123,67 @@ class ScoresParser(BaseParser):
     key = b':scores:'
     is_multiline = True
     terminator = b':end'
+    team_colors = {
+        5: Color.RED,
+        14: Color.BLUE,
+        13: Color.YELLOW,
+        10: Color.MAGENTA
+    }
+
+    def __only_alpha(self, s):
+        return bytes([i for i in s if chr(i).isalpha()]).decode('utf8')
 
     def process(self, lines):
-        print(lines)
-        gt_map = lines[0].split(b':')[0]
-        rows = lines[2:]
-        gt, map = gt_map.split(b'_')
-        scores = []
-        for i in rows:
-            fields = i.split(b':')
-            stats = fields[3].split(b',')
-
-            row_data = dict(
-                score=int(stats[0]),
-                kills=int(stats[1]),
-                deaths=int(stats[2]),
-                suicides=int(stats[3]),
-                field4=fields[4],  # TODO: wtf is this field?
-                team_id=fields[5],
-                number1=fields[6],
-                nick=fields[7],
-            )
-            scores.append(row_data)
-        scores.sort(key=lambda x: x['score'], reverse=True)
+        gt_map, game_duration = lines[0].split(b':')
+        game_duration = int(game_duration)
+        gt, map = gt_map.decode('utf8').split('_')
+        player_header = team_header = None
+        players = []
+        teams = []
+        for row in lines[1:]:
+            if row.startswith(b':labels:player'):
+                player_header = row.split(b':')[3].split(b',')
+                player_header = [self.__only_alpha(i) for i in player_header]
+            elif row.startswith(b':labels:teamscores'):
+                team_header = row.split(b':')[3].split(b',')
+                team_header = [self.__only_alpha(i) for i in team_header]
+            elif row.startswith(b':player'):
+                _, _, _, stats, time_alive, team_id, number1, nickname = row.split(b':')
+                player_data = {
+                    'nickname': nickname,
+                    'team_id': None if team_id == b'spectator' else int(team_id),
+                    'number1': int(number1)
+                }
+                stats = stats.split(b',')
+                for ix, header in enumerate(player_header):
+                    if header:
+                        player_data[header] = int(stats[ix])
+                players.append(player_data)
+            elif row.startswith(b':teamscores'):
+                _, _, _, stats, team_id = row.split(b':')
+                if not stats:
+                    continue
+                stats = stats.split(b',')
+                team_data = {
+                    'team_id': int(team_id),
+                    'color': self.team_colors.get(int(team_id), Color.NOCOLOR),
+                }
+                for ix, header in enumerate(team_header):
+                    if header:
+                        team_data[header] = int(stats[ix])
+                teams.append(team_data)
+        players.sort(key=lambda x: x['score'], reverse=True)
+        teams.sort(key=lambda x: x['score'], reverse=True)
 
         GameEnded(self.rcon_server.module,
                   server=self.rcon_server,
                   gt=gt,
                   map=map,
-                  scores=scores
+                  game_duration=game_duration,
+                  players=players,
+                  teams=teams,
+                  player_header=player_header,
+                  team_header=team_header
                   ).fire()
 
 
