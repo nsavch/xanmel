@@ -281,10 +281,14 @@ class RconLogParser:
                         if len(self.current) != 0:
                             logger.warning('A multi-line parser %r did not finished but left some lines %r', parser,
                                            self.current)
+                        self.active_parser = parser
+                    if parser.is_multiline and parser.finished:
+                        self.active_parser = None
                 if previous_length == len(self.current):
                     line = self.current.pop(0)
                     if line:
-                        logger.debug('Unparsed log line %r', line)
+                        pass
+                        # logger.debug('Unparsed log line %r', line)
                 previous_length = len(self.current)
 
     def parse_join(self, line):

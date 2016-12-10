@@ -38,10 +38,6 @@ class PlayerManager:
             old_player.nickname = player.nickname
             old_player.ip_address = player.ip_address
             old_player.join_timestamp = player.join_timestamp
-            try:
-                del self.players_by_number1[old_player.number1]
-            except IndexError:
-                pass
             self.players_by_number1[old_player.number1] = old_player
             return
         else:
