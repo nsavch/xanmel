@@ -1,4 +1,5 @@
 import logging
+import re
 
 from .colors import Color
 from .events import *
@@ -84,14 +85,36 @@ class JoinParser(BaseParser):
     key = b':join:'
 
     def process(self, data):
-        fields = data.split(b':')
+
         # TODO: find proper namings for number1 and number2
-        number1, number2, ip, nick = fields
+        number1, number2, rest = data.split(b':', 2)
+        ipv4_address = re.compile(
+            b'^(?:(?:[0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\\.){3}(?:[0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])')
+        ipv6_address_or_addrz = re.compile(
+            b'^(?:(?:[0-9A-Fa-f]{1,4}:){6}(?:[0-9A-Fa-f]{1,4}:[0-9A-Fa-f]{1,4}|(?:(?:[0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\\.){3}(?:[0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5]))|::(?:[0-9A-Fa-f]{1,4}:){5}(?:[0-9A-Fa-f]{1,4}:[0-9A-Fa-f]{1,4}|(?:(?:[0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\\.){3}(?:[0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5]))|(?:[0-9A-Fa-f]{1,4})?::(?:[0-9A-Fa-f]{1,4}:){4}(?:[0-9A-Fa-f]{1,4}:[0-9A-Fa-f]{1,4}|(?:(?:[0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\\.){3}(?:[0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5]))|(?:[0-9A-Fa-f]{1,4}:[0-9A-Fa-f]{1,4})?::(?:[0-9A-Fa-f]{1,4}:){3}(?:[0-9A-Fa-f]{1,4}:[0-9A-Fa-f]{1,4}|(?:(?:[0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\\.){3}(?:[0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5]))|(?:(?:[0-9A-Fa-f]{1,4}:){,2}[0-9A-Fa-f]{1,4})?::(?:[0-9A-Fa-f]{1,4}:){2}(?:[0-9A-Fa-f]{1,4}:[0-9A-Fa-f]{1,4}|(?:(?:[0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\\.){3}(?:[0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5]))|(?:(?:[0-9A-Fa-f]{1,4}:){,3}[0-9A-Fa-f]{1,4})?::[0-9A-Fa-f]{1,4}:(?:[0-9A-Fa-f]{1,4}:[0-9A-Fa-f]{1,4}|(?:(?:[0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\\.){3}(?:[0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5]))|(?:(?:[0-9A-Fa-f]{1,4}:){,4}[0-9A-Fa-f]{1,4})?::(?:[0-9A-Fa-f]{1,4}:[0-9A-Fa-f]{1,4}|(?:(?:[0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\\.){3}(?:[0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5]))|(?:(?:[0-9A-Fa-f]{1,4}:){,5}[0-9A-Fa-f]{1,4})?::[0-9A-Fa-f]{1,4}|(?:(?:[0-9A-Fa-f]{1,4}:){,6}[0-9A-Fa-f]{1,4})?::)(?:%25(?:[A-Za-z0-9\\-._~]|%[0-9A-Fa-f]{2})+)?')
+
+        if rest.startswith(b'bot'):
+            ip = 'bot'
+            _, rest = rest.split(b':', 1)
+        else:
+            m = ipv4_address.match(rest)
+            if m:
+                ip = m.group(0).decode('utf8')
+                rest = rest[len(ip):]
+            else:
+                m = ipv6_address_or_addrz.match(rest)
+                if m:
+                    ip = m.group(0).decode('utf8')
+                    rest = rest[len(ip):]
+                else:
+                    ip, rest = rest.split(b':', 1)
+                    ip = ip.decode('utf8')
+
         player = self.rcon_server.players.join(Player(
-            nickname=nick,
+            nickname=rest,
             number1=int(number1),
             number2=int(number2),
-            ip_address=ip.decode('utf8')
+            ip_address=ip
         ))
         if player and not player.is_bot:
             Join(self.rcon_server.module, server=self.rcon_server, player=player,
@@ -150,7 +173,7 @@ class ScoresParser(BaseParser):
                 team_header = row.split(b':')[3].split(b',')
                 team_header = [self.__only_alpha(i) for i in team_header]
             elif row.startswith(b':player'):
-                _, _, _, stats, time_alive, team_id, number1, nickname = row.split(b':')
+                _, _, _, stats, time_alive, team_id, number1, nickname = row.split(b':', 7)
                 player_data = {
                     'nickname': nickname,
                     'team_id': None if team_id == b'spectator' else int(team_id),
@@ -207,12 +230,14 @@ class NameChangeParser(BaseParser):
     key = b':name:'
 
     def process(self, data):
-        # TODO: figure out what the number here means
-        number, name = data.split(b':')
-        old_nickname, player = self.rcon_server.players.name_change(int(number), name)
-
-        NameChange(self.rcon_server.module, server=self.rcon_server, player=player,
-                   old_nickname=old_nickname).fire()
+        number, name = data.split(b':', 1)
+        try:
+            old_nickname, player = self.rcon_server.players.name_change(int(number), name)
+        except IndexError:
+            pass
+        else:
+            NameChange(self.rcon_server.module, server=self.rcon_server, player=player,
+                       old_nickname=old_nickname).fire()
 
 
 class ChatMessageParser(BaseParser):
