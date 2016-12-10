@@ -138,7 +138,7 @@ class ScoresParser(BaseParser):
     def process(self, lines):
         gt_map, game_duration = lines[0].split(b':')
         game_duration = int(game_duration)
-        gt, map = gt_map.decode('utf8').split('_')
+        gt, map = gt_map.decode('utf8').split('_', 1)
         player_header = team_header = None
         players = []
         teams = []
@@ -197,7 +197,7 @@ class GameStartedParser(BaseParser):
 
     def process(self, data):
         gt_map = data.split(b':')[0].decode('utf8')
-        gt, map = gt_map.split('_')
+        gt, map = gt_map.split('_', 1)
         self.rcon_server.current_map = map
         self.rcon_server.current_gt = gt
         GameStarted(self.rcon_server.module, server=self.rcon_server, gt=gt, map=map).fire()
