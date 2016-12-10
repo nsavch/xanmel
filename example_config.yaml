@@ -10,7 +10,11 @@ xanmel.modules.irc.IRCModule:
 xanmel.modules.xonotic.XonoticModule:
   servers:
     - rcon_ip: 127.0.0.1
-      rcon_port: 26005
-      public_ip: 99.99.99.99
-      public_port: 26005
+      rcon_port: 26000
+      public_ip: 94.23.207.83
+      public_port: 26000
       rcon_password: password
+      rcon_secure: 0
+      out_prefix: 'exe > '
+      in_prefix: ''
+      cmd_prefix: xon

@@ -91,10 +91,11 @@ class JoinParser(BaseParser):
             nickname=nick,
             number1=int(number1),
             number2=int(number2),
-            ip_address=ip
+            ip_address=ip.decode('utf8')
         ))
-        Join(self.rcon_server.module, server=self.rcon_server, player=player,
-             current=self.rcon_server.players.current).fire()
+        if player and not player.is_bot:
+            Join(self.rcon_server.module, server=self.rcon_server, player=player,
+                 current=self.rcon_server.players.current).fire()
 
 
 class PartParser(BaseParser):
@@ -106,8 +107,9 @@ class PartParser(BaseParser):
         except KeyError:
             pass
         else:
-            Part(self.rcon_server.module, server=self.rcon_server, player=player,
-                 current=self.rcon_server.players.current).fire()
+            if player and not player.is_bot:
+                Part(self.rcon_server.module, server=self.rcon_server, player=player,
+                     current=self.rcon_server.players.current).fire()
 
 
 class TeamParser(BaseParser):

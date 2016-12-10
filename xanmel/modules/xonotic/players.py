@@ -11,7 +11,7 @@ class Player:
 
     @property
     def is_bot(self):
-        return self.ip_address == 'botclient'
+        return 'bot' in self.ip_address
 
     def __str__(self):
         return repr(self.nickname)
@@ -25,13 +25,30 @@ class PlayerManager:
 
     @property
     def current(self):
-        return len(self.players_by_number2)
+        c = 0
+        for i in self.players_by_number2.values():
+            if not i.is_bot:
+                c += 1
+        return c
 
     def join(self, player):
-        self.players_by_number1[player.number1] = player
-        self.players_by_number2[player.number2] = player
-        player.join_timestamp = current_time()
-        return player
+        if player.number2 in self.players_by_number2:
+            old_player = self.players_by_number2[player.number2]
+            old_player.number1 = player.number1
+            old_player.nickname = player.nickname
+            old_player.ip_address = player.ip_address
+            old_player.join_timestamp = player.join_timestamp
+            try:
+                del self.players_by_number1[old_player.number1]
+            except IndexError:
+                pass
+            self.players_by_number1[old_player.number1] = old_player
+            return
+        else:
+            self.players_by_number1[player.number1] = player
+            self.players_by_number2[player.number2] = player
+            player.join_timestamp = current_time()
+            return player
 
     def part(self, number1):
         player = self.players_by_number1[number1]

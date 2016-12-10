@@ -13,7 +13,7 @@ class RconServer:
         self.server_address = config['rcon_ip']
         self.server_port = config['rcon_port']
         self.password = config['rcon_password']
-        self.secure = config.get('rcon_secure', RCON_SECURE_TIME)
+        self.secure = int(config.get('rcon_secure', RCON_SECURE_TIME))
         self.command_protocol = None
         self.log_protocol = None
         self.command_lock = asyncio.Lock()
@@ -56,6 +56,7 @@ class RconServer:
     async def update_server_status(self):
         # TODO: clean up "zombie" players
         status_output = await self.execute('status 1')
+        print(status_output)
         for i in status_output.split(b'\n'):
             if not i.strip():
                 continue
@@ -94,6 +95,7 @@ def rcon_protocol_factory(password, secure, received_callback=None, connection_m
 
         def subscribe_to_log(self):
             # TODO: is there a way to minimize amount of data which gets pushed to log_dest_udp?
+            print(self.local_host, self.local_port)
             self.send("sv_cmd addtolist log_dest_udp %s:%s" % (self.local_host, self.local_port))
             self.send("sv_logscores_console 0")
             self.send("sv_logscores_bots 1")
@@ -107,6 +109,7 @@ def rcon_protocol_factory(password, secure, received_callback=None, connection_m
             elif secure == RCON_SECURE_TIME:
                 msg = rcon_secure_time_packet(password, command)
             elif secure == RCON_NOSECURE:
+                print('NOSECURE')
                 msg = rcon_nosecure_packet(password, command)
             self.transport.sendto(msg)
     return RconProtocol
