@@ -113,7 +113,7 @@ class JoinParser(BaseParser):
             nickname=rest,
             number1=int(number1),
             number2=int(number2),
-            ip_address=ip.edcode('utf8')
+            ip_address=ip.decode('utf8')
         ))
         if player and not player.is_bot:
             Join(self.rcon_server.module, server=self.rcon_server, player=player,
