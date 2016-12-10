@@ -119,12 +119,13 @@ class GameEndedHandler(Handler):
             return '%d:%02d' % (seconds // 60, seconds % 60)
 
     async def handle(self, event):
+        stats_blacklist = ['dmg', 'dmgtaken', 'elo']
         messages = ['%(gametype)s on \00304%(map)s\017 ended (%(duration)s)' % {
             'gametype': GAME_TYPES[event.properties['gt']],
             'map': event.properties['map'],
             'duration': self.__format_time(event.properties['game_duration'])
         }]
-        player_header = [i for i in event.properties['player_header'] if i and i != 'score']
+        player_header = [i for i in event.properties['player_header'] if i and i != 'score' and i not in stats_blacklist]
         player_header.append('score')
         player_header.insert(0, 'player')
         if event.properties['teams']:
