@@ -79,7 +79,7 @@ class GameEndedHandler(Handler):
         for i in teams:
             res.append(
                 '%(color)s%(score)s\x0f' % {
-                    'color': Color(code=i['color']).irc().decode('utf8'),
+                    'color': Color(code=i['color'], bright=True).irc().decode('utf8'),
                     'score': i['score']
                 }
             )
@@ -100,7 +100,7 @@ class GameEndedHandler(Handler):
 
     def __output_player_table(self, color, header, table):
         maxlen = max(len(header[0]), *[self.__visible_len(i[0]) for i in table])
-        line0 = Color(code=color).irc().decode('utf8')
+        line0 = Color(code=color, bright=True).irc().decode('utf8')
         line0 += self.__pad(header[0], maxlen)
         for i in header[1:]:
             line0 += ' | ' + i
