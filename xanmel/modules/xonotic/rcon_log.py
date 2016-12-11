@@ -168,9 +168,17 @@ class ScoresParser(BaseParser):
         for row in lines[1:]:
             if row.startswith(b':labels:player'):
                 player_header = row.split(b':')[3].split(b',')
+                player_sort_column = 'score'
+                for i in player_header:
+                    if i.endswith(b'!!'):
+                        player_sort_column = self.__only_alpha(i)
                 player_header = [self.__only_alpha(i) for i in player_header]
             elif row.startswith(b':labels:teamscores'):
                 team_header = row.split(b':')[3].split(b',')
+                team_sort_column = 'score'
+                for i in team_header:
+                    if i.endswith(b'!!'):
+                        team_sort_column = self.__only_alpha(i)
                 team_header = [self.__only_alpha(i) for i in team_header]
             elif row.startswith(b':player'):
                 _, _, _, stats, time_alive, team_id, number1, nickname = row.split(b':', 7)
@@ -200,8 +208,8 @@ class ScoresParser(BaseParser):
                     if header:
                         team_data[header] = int(stats[ix])
                 teams.append(team_data)
-        players.sort(key=lambda x: x['score'], reverse=True)
-        teams.sort(key=lambda x: x['score'], reverse=True)
+        players.sort(key=lambda x: x[player_sort_column], reverse=True)
+        teams.sort(key=lambda x: x[team_sort_column], reverse=True)
 
         GameEnded(self.rcon_server.module,
                   server=self.rcon_server,
@@ -211,7 +219,9 @@ class ScoresParser(BaseParser):
                   players=players,
                   teams=teams,
                   player_header=player_header,
-                  team_header=team_header
+                  team_header=team_header,
+                  player_sort_column=player_sort_column,
+                  team_sort_column=team_sort_column
                   ).fire()
 
 

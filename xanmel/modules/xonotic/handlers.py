@@ -89,13 +89,13 @@ class NameChangeHandler(Handler):
 class GameEndedHandler(Handler):
     events = [GameEnded]
 
-    def __team_scores(self, teams):
+    def __team_scores(self, teams, team_sort_column):
         res = []
         for i in teams:
             res.append(
                 '%(color)s%(score)s\x0f' % {
                     'color': Color(code=i['color'], bright=True).irc().decode('utf8'),
-                    'score': i['score']
+                    'score': i[team_sort_column]
                 }
             )
         return res
@@ -133,6 +133,8 @@ class GameEndedHandler(Handler):
             return '%d:%02d' % (seconds // 60, seconds % 60)
 
     async def handle(self, event):
+        if not event.properties['players']:
+            return
         messages = ['%(gametype)s on \00304%(map)s\017 ended (%(duration)s)' % {
             'gametype': GAME_TYPES[event.properties['gt']],
             'map': event.properties['map'],
@@ -148,7 +150,8 @@ class GameEndedHandler(Handler):
         player_header.append('player')
         if event.properties['teams']:
             messages.append(
-                'Team scores: %s' % ':'.join(self.__team_scores(event.properties['teams']))
+                'Team scores: %s' % ':'.join(self.__team_scores(event.properties['teams'],
+                                                                event.properties['team_sort_column']))
             )
             for i in event.properties['teams']:
                 table = []
