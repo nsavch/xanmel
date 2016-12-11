@@ -270,6 +270,8 @@ class RconLogParser:
     def parse(self):
         if self.active_parser:
             self.current = self.active_parser.parse(self.current)
+            if self.active_parser.finished:
+                self.active_parser = None
         else:
             previous_length = len(self.current)
             while len(self.current) > 0 and b'\n' in self.current:
@@ -283,8 +285,6 @@ class RconLogParser:
                             else:
                                 logger.debug('Waiting for more input for parser %r', parser)
                         self.active_parser = parser
-                    if parser.is_multiline and parser.finished:
-                        self.active_parser = None
                 if previous_length == len(self.current):
                     if b'\n' in self.current:
                         line, self.current = self.current.split(b'\n', 1)
