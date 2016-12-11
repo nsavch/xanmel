@@ -1,3 +1,5 @@
+import geoip2.errors
+
 from xanmel import Handler
 
 from .colors import Color
@@ -40,7 +42,7 @@ class JoinHandler(Handler):
     async def handle(self, event):
         try:
             geo_response = self.module.xanmel.geoip.city(event.properties['player'].ip_address)
-        except ValueError:
+        except (ValueError, geoip2.errors.AddressNotFoundError):
             geo_response = None
         message = '\00309+ join\x0f: %(name)s \00303%(country)s\x0f \00304%(map)s\x0f [\00304%(current)s\x0f/\00304%(max)s\x0f]' % {
             'name': Color.dp_to_irc(event.properties['player'].nickname).decode('utf8'),
@@ -59,7 +61,7 @@ class PartHandler(Handler):
     async def handle(self, event):
         try:
             geo_response = self.module.xanmel.geoip.city(event.properties['player'].ip_address)
-        except ValueError:
+        except (ValueError, geoip2.errors.AddressNotFoundError):
             geo_response = None
         message = '\00304- part\x0f: %(name)s \00303%(country)s\x0f \00304%(map)s\x0f [\00304%(current)s\x0f/\00304%(max)s\x0f]' % {
             'name': Color.dp_to_irc(event.properties['player'].nickname).decode('utf8'),
@@ -178,9 +180,12 @@ class IRCMessageHandler(Handler):
     events = [irc_events.ChannelMessage]
 
     async def handle(self, event):
-        irc_nick = event.properties['nick']
-        message = event.properties['message']
+        irc_nick = Color.irc_to_none(event.properties['nick'].encode('utf8')).decode('utf8')
+        message = Color.irc_to_none(event.properties['message'].encode('utf8')).decode('utf8')
         for server in self.module.servers:
             if message.startswith(server.config['in_prefix']):
-                with server.sv_adminnick('[IRC] %s' % Color.irc_to_none(irc_nick.encode('utf8')).decode('utf8')):
-                    server.send('say ' + Color.irc_to_dp(message[len(server.config['in_prefix']):].encode('utf8')).decode('utf8'))
+                if server.config['say_type'] == 'ircmsg':
+                    server.send('sv_cmd ircmsg [IRC] %s^7: %s' % (irc_nick, message))
+                else:
+                    with server.sv_adminnick(irc_nick):
+                        server.send('say %s' % message)
