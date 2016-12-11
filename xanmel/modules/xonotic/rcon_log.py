@@ -165,17 +165,17 @@ class ScoresParser(BaseParser):
         player_header = team_header = None
         players = []
         teams = []
+        player_sort_column = 'score'
+        team_sort_column = 'score'
         for row in lines[1:]:
             if row.startswith(b':labels:player'):
                 player_header = row.split(b':')[3].split(b',')
-                player_sort_column = 'score'
                 for i in player_header:
                     if i.endswith(b'!!'):
                         player_sort_column = self.__only_alpha(i)
                 player_header = [self.__only_alpha(i) for i in player_header]
             elif row.startswith(b':labels:teamscores'):
                 team_header = row.split(b':')[3].split(b',')
-                team_sort_column = 'score'
                 for i in team_header:
                     if i.endswith(b'!!'):
                         team_sort_column = self.__only_alpha(i)
