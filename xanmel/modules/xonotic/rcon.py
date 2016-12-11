@@ -12,7 +12,7 @@ class RconServer:
         self.loop = module.loop
         self.config = config
         self.server_address = config['rcon_ip']
-        self.server_port = config['rcon_port']
+        self.server_port = int(config['rcon_port'])
         self.password = config['rcon_password']
         self.secure = int(config.get('rcon_secure', RCON_SECURE_TIME))
         self.admin_nick = ''
@@ -44,9 +44,13 @@ class RconServer:
         )
 
     def receive_command_response(self, data, addr):
+        if addr[0] != self.server_address or addr[1] != self.server_port:
+            return
         self.command_response += data
 
     def receive_log_response(self, data, addr):
+        if addr[0] != self.server_address or addr[1] != self.server_port:
+            return
         self.log_parser.feed(data)
 
     def subscribe_to_log(self, proto):
