@@ -100,12 +100,12 @@ class JoinParser(BaseParser):
         else:
             m = ipv4_address.match(rest)
             if m:
-                ip = m.group(0)
+                ip = m.group(0)[:-1]
                 rest = rest[len(ip):]
             else:
                 m = ipv6_address_or_addrz.match(rest)
                 if m:
-                    ip = m.group(0)
+                    ip = m.group(0)[:-1]
                     rest = rest[len(ip):]
                 else:
                     ip, rest = rest.split(b':', 1)
