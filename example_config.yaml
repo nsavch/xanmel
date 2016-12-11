@@ -19,3 +19,5 @@ xanmel.modules.xonotic.XonoticModule:
       in_prefix: ''
       cmd_prefix: xon
       say_type: say
+      stats_ordering: ['score', 'goals', 'faults', 'kills', 'revivals', 'deaths', 'suicides']
+      stats_blacklist: ['dmg', 'dmgtaken', 'elo']

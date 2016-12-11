@@ -101,7 +101,7 @@ class GameEndedHandler(Handler):
         return res
 
     def __visible_len(self, s):
-        return len(Color.irc_to_none(s.encode('utf8')))
+        return len(Color.irc_to_none(s.encode('utf8')).decode('utf8'))
 
     def __pad(self, s, l, t='right'):
         sl = self.__visible_len(s)
@@ -114,17 +114,16 @@ class GameEndedHandler(Handler):
                 return ' ' * (l - sl) + s
 
     def __output_player_table(self, color, header, table):
-        maxlen = max(len(header[0]), *[self.__visible_len(i[0]) for i in table])
         line0 = Color(code=color, bright=True).irc().decode('utf8')
-        line0 += self.__pad(header[0], maxlen)
-        for i in header[1:]:
-            line0 += ' | ' + i
+        for i in header:
+            line0 += ' | ' + i.upper()
         line0 += '\x0f'
         yield line0
         for row in table:
-            line = self.__pad(row[0], maxlen)
-            for ix, col in enumerate(row[1:]):
-                line += ' | ' + self.__pad(str(col), len(header[ix+1]), 'left')
+            line = ''
+            for ix, col in enumerate(row[:-1]):
+                line += ' | ' + self.__pad(str(col), len(header[ix]), 'left')
+            line += ' | ' + row[-1]
             yield line
 
     def __format_time(self, seconds):
@@ -134,15 +133,19 @@ class GameEndedHandler(Handler):
             return '%d:%02d' % (seconds // 60, seconds % 60)
 
     async def handle(self, event):
-        stats_blacklist = ['dmg', 'dmgtaken', 'elo']
         messages = ['%(gametype)s on \00304%(map)s\017 ended (%(duration)s)' % {
             'gametype': GAME_TYPES[event.properties['gt']],
             'map': event.properties['map'],
             'duration': self.__format_time(event.properties['game_duration'])
         }]
-        player_header = [i for i in event.properties['player_header'] if i and i != 'score' and i not in stats_blacklist]
-        player_header.append('score')
-        player_header.insert(0, 'player')
+        player_header = []
+        for i in event.properties['server'].config['stats_ordering']:
+            if i in event.properties['player_header']:
+                player_header.append(i)
+        for i in event.properties['player_header']:
+            if i and i not in player_header and i not in event.properties['server'].config['stats_blacklist']:
+                player_header.append(i)
+        player_header.append('player')
         if event.properties['teams']:
             messages.append(
                 'Team scores: %s' % ':'.join(self.__team_scores(event.properties['teams']))
@@ -151,20 +154,22 @@ class GameEndedHandler(Handler):
                 table = []
                 for player in event.properties['players']:
                     if player['team_id'] == i['team_id']:
-                        row = [Color.dp_to_irc(player['nickname']).decode('utf8')]
-                        for col in player_header[1:]:
+                        row = []
+                        for col in player_header[:-1]:
                             row.append(player[col])
+                        row.append(Color.dp_to_irc(player['nickname']).decode('utf8'))
                         table.append(row)
                 messages += list(self.__output_player_table(i['color'], player_header, table))
         else:
             table = []
             for player in event.properties['players']:
                 if player['team_id']:
-                    row = [Color.dp_to_irc(player['nickname']).decode('utf8')]
-                    for col in player_header[1:]:
+                    row = []
+                    for col in player_header[:-1]:
                         row.append(player[col])
+                    row.append(Color.dp_to_irc(player['nickname']).decode('utf8'))
                     table.append(row)
-            messages += list(self.__output_player_table(Color.NOCOLOR, player_header, table))
+            messages += list(self.__output_player_table(Color.CYAN, player_header, table))
         spectators = []
         for i in event.properties['players']:
             if i['team_id'] is None:
