@@ -4,6 +4,7 @@ from .colors import Color
 from .events import *
 from .rcon_log import GAME_TYPES
 from xanmel.modules.irc.actions import ChannelMessage, ChannelMessages
+import xanmel.modules.irc.events as irc_events
 
 
 class ChatMessageHandler(Handler):
@@ -171,3 +172,15 @@ class GameEndedHandler(Handler):
 
         await self.run_action(ChannelMessages, messages=messages,
                               prefix=event.properties['server'].config['out_prefix'])
+
+
+class IRCMessageHandler(Handler):
+    events = [irc_events.ChannelMessage]
+
+    async def handle(self, event):
+        irc_nick = event.properties['nick']
+        message = event.properties['message']
+        for server in self.module.servers:
+            if message.startswith(server.config['in_prefix']):
+                with server.sv_adminnick('[IRC] %s' % Color.irc_to_none(irc_nick.encode('utf8')).decode('utf8')):
+                    server.send('say ' + Color.irc_to_dp(message[len(server.config['in_prefix']):].encode('utf8')).decode('utf8'))

@@ -1,4 +1,5 @@
 import asyncio
+from contextlib import contextmanager
 
 from .rcon_log import RconLogParser
 from .rcon_utils import *
@@ -14,6 +15,7 @@ class RconServer:
         self.server_port = config['rcon_port']
         self.password = config['rcon_password']
         self.secure = int(config.get('rcon_secure', RCON_SECURE_TIME))
+        self.admin_nick = ''
         self.command_protocol = None
         self.log_protocol = None
         self.command_lock = asyncio.Lock()
@@ -49,6 +51,12 @@ class RconServer:
 
     def subscribe_to_log(self, proto):
         proto.subscribe_to_log()
+
+    @contextmanager
+    def sv_adminnick(self, new_nick):
+        self.send('sv_adminnick "%s"' % new_nick)
+        yield
+        self.send('sv_adminnick "%s"' % self.admin_nick)
 
     def send(self, command):
         self.command_protocol.send(command)
