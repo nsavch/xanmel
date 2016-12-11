@@ -57,7 +57,7 @@ class BaseParser:
         else:
             if self.started:
                 line, data = data.split(b'\n', 1)
-                while not line.startswith(self.terminator) and b'\n' in data:
+                while not line.startswith(self.terminator):
                     self.lines.append(line)
                     if b'\n' not in data:
                         return data
@@ -66,7 +66,7 @@ class BaseParser:
                 try:
                     self.process(self.lines)
                 except:
-                    logger.warning('Exception during parsing multiline %r', self.data, exc_info=True)
+                    logger.warning('Exception during parsing multiline %r', self.lines, exc_info=True)
                 self.finished = True
                 return data
             else:
