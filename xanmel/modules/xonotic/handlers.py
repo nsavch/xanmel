@@ -37,11 +37,16 @@ class JoinHandler(Handler):
     events = [Join]
 
     async def handle(self, event):
-        message = '\00309+ join\x0f: %(name)s \00304%(map)s\x0f [\00304%(current)s\x0f/\00304%(max)s\x0f]' % {
+        try:
+            geo_response = self.module.xanmel.geoip.city(event.properties['player'].ip_address)
+        except ValueError:
+            geo_response = None
+        message = '\00309+ join\x0f: %(name)s \00303%(country)s\x0f \00304%(map)s\x0f [\00304%(current)s\x0f/\00304%(max)s\x0f]' % {
             'name': Color.dp_to_irc(event.properties['player'].nickname).decode('utf8'),
             'map': event.properties['server'].current_map,
             'current': event.properties['current'],
-            'max': event.properties['server'].players.max
+            'max': event.properties['server'].players.max,
+            'country': geo_response.country.name if geo_response else 'Unknown'
         }
         await self.run_action(ChannelMessage, message=message,
                               prefix=event.properties['server'].config['out_prefix'])
@@ -51,11 +56,16 @@ class PartHandler(Handler):
     events = [Part]
 
     async def handle(self, event):
-        message = '\00304- part\x0f: %(name)s \00304%(map)s\x0f [\00304%(current)s\x0f/\00304%(max)s\x0f]' % {
+        try:
+            geo_response = self.module.xanmel.geoip.city(event.properties['player'].ip_address)
+        except ValueError:
+            geo_response = None
+        message = '\00304- part\x0f: %(name)s \00303%(country)s\x0f \00304%(map)s\x0f [\00304%(current)s\x0f/\00304%(max)s\x0f]' % {
             'name': Color.dp_to_irc(event.properties['player'].nickname).decode('utf8'),
             'map': event.properties['server'].current_map,
             'current': event.properties['current'],
-            'max': event.properties['server'].players.max
+            'max': event.properties['server'].players.max,
+            'country': geo_response.country.name if geo_response else 'Unknown'
         }
         await self.run_action(ChannelMessage, message=message,
                               prefix=event.properties['server'].config['out_prefix'])
