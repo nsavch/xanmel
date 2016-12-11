@@ -19,8 +19,10 @@ class GameStartedHandler(Handler):
     events = [GameStarted]
 
     async def handle(self, event):
+        if event.properties['server'].players.current == 0:
+            return
         message = 'Playing \00310%(gametype)s\x0f on \00304%(map)s\x0f [%(current)s/%(max)s]; join now: \2xonotic +connect %(sv_ip)s:%(sv_port)s' % {
-            'gametype': event.properties['gt'],
+            'gametype': GAME_TYPES[event.properties['gt']],
             'map': event.properties['map'],
             'current': event.properties['server'].players.current,
             'max': event.properties['server'].players.max,
