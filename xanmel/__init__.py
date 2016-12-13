@@ -253,7 +253,14 @@ class ConnectChildrenMeta(type):
 class ChatCommand(metaclass=ConnectChildrenMeta):
     parent = None
     prefix = ''
+    help_args = ''
     help_text = ''
+
+    def format_help(self):
+        if self.help_args:
+            return '%s %s: %s' % (self.prefix, self.help_args, self.help_text)
+        else:
+            return '%s: %s' % (self.prefix, self.help_text)
 
     async def run(self, user, message, is_private=False):
         await user.reply('Command "%s" not implemented' % message, is_private)
@@ -266,6 +273,7 @@ class HelpCommands(CommandContainer):
 class Help(ChatCommand):
     parent = HelpCommands
     prefix = 'help'
+    help_args = '[CMDNAME] [SUBCMDNAME]'
     help_text = 'Provide useful and friendly help'
 
     async def run(self, user, message, is_private=False):
@@ -298,9 +306,9 @@ class Help(ChatCommand):
                                 }
                             ]
                         else:
-                            reply = ['%s %s: %s' % (prefix, child_prefix, child.children[child_prefix].help_text)]
+                            reply = ['%s %s' % (prefix, child.children[child_prefix].format_help())]
                 else:
-                    reply = ['%s: %s' % (prefix, child.help_text)]
+                    reply = [child.format_help()]
         else:
             reply = ['Available commands: ' + ', '.join(sorted(root_cmd.children.keys()))]
         for i in reply:
