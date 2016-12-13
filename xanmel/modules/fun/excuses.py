@@ -1,7 +1,7 @@
 what_happened = [
     'your aim was off because of',
-    'you was an easy target because of',
-    "you couldn't hit a shit because of",
+    'you were an easy target because of',
+    "you couldn't hit shit because of",
     "the reason of your misfortune was the",
     "you couldn't do better due to",
 ]
