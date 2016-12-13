@@ -9,7 +9,7 @@ logger = logging.getLogger(__name__)
 
 
 class FunCommands(CommandContainer):
-    pass
+    help_text = 'Fun commands'
 
 
 class Excuse(ChatCommand):

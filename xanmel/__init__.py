@@ -25,6 +25,7 @@ class Xanmel:
         self.loop = loop
         self.geoip = geoip2.database.Reader('GeoLite2-City.mmdb')
         self.cmd_root = CommandRoot(self)
+        self.cmd_root.register_container(HelpCommands(), prefix='')
         with open(os.path.expanduser(config_path), 'r') as config_file:
             self.config = yaml.load(config_file)
 
@@ -168,12 +169,13 @@ class ChatUser:
 
 
 class CommandRoot:
-
     def __init__(self, xanmel):
         self.xanmel = xanmel
         self.children = {}
 
     def register_container(self, container, prefix):
+        container.root = self
+        container.prefix = prefix
         if not prefix:
             for i in container.children.values():
                 if i.prefix not in self.children:
@@ -182,8 +184,6 @@ class CommandRoot:
                     logger.info('Prefix %s already registered. Skipping command %s', i.prefix, i)
         else:
             if prefix not in self.children:
-                container.root = self
-                container.prefix = prefix
                 self.children[prefix] = container
             else:
                 logger.info('Prefix %s already registered. Skipping command container %s', prefix, container)
@@ -192,7 +192,11 @@ class CommandRoot:
         message = message.lstrip()
         prefix = message.split(' ', 1)[0]
         if prefix not in self.children:
-            await user.reply('Unknown command. Use "%s: help" to list available commands' % user.botnick, is_private)
+            if is_private:
+                reply = 'Unknown command. Use "help" to list available commands'
+            else:
+                reply = 'Unknown command. Use "%s: help" to list available commands' % user.botnick
+            await user.reply(reply, is_private)
         else:
             child = self.children[prefix]
             await child.run(user, message[len(prefix):], is_private)
@@ -203,6 +207,7 @@ class CommandContainer:
     children_classes = None
     prefix = ''
     properties = None
+    help_text = ''
 
     def __init__(self, **kwargs):
         self.properties = kwargs
@@ -218,8 +223,13 @@ class CommandContainer:
             return
         prefix = message.split(' ', 1)[0]
         if prefix not in self.children:
-            await user.reply('Unknown command %s %s. Use "%s: help %s" to list available commands' %
-                             (self.prefix, message, user.botnick, self.prefix), is_private)
+            if is_private:
+                reply = 'Unknown command %s %s. Use "help %s" to list available commands' % \
+                        (self.prefix, prefix, self.prefix)
+            else:
+                reply = 'Unknown command %s %s. Use "%s: help %s" to list available commands' % \
+                        (self.prefix, prefix, user.botnick, self.prefix)
+            await user.reply(reply, is_private)
         else:
             child = self.children[prefix]
             await child.run(user, message[len(prefix):], is_private)
@@ -247,3 +257,60 @@ class ChatCommand(metaclass=ConnectChildrenMeta):
 
     async def run(self, user, message, is_private=False):
         await user.reply('Command "%s" not implemented' % message, is_private)
+
+
+class HelpCommands(CommandContainer):
+    help_text = 'Commands for getting help'
+
+
+class Help(ChatCommand):
+    parent = HelpCommands
+    prefix = 'help'
+    help_text = 'Provide useful and friendly help'
+
+    async def run(self, user, message, is_private=False):
+        if is_private:
+            help_base = 'help'
+        else:
+            help_base = '%s: help' % user.botnick
+        root_cmd = self.parent.root
+        message = message.strip()
+        if message:
+            prefix = message.split(' ', 1)[0]
+            if prefix not in root_cmd.children:
+                reply = ['Unknown command %s. Use "%s" to list available commands' % (prefix, help_base)]
+            else:
+                child = root_cmd.children[prefix]
+                if isinstance(child, CommandContainer):
+                    rest = message[len(prefix):].strip()
+                    if not rest:
+                        reply = ['%s: %s' % (prefix, child.help_text),
+                                 'Available commands: ' + ', '.join(sorted(child.children.keys()))]
+                    else:
+                        child_prefix = rest.split(' ', 1)[0]
+                        if child_prefix not in child.children:
+                            reply = [
+                                'Unknown command %(prefix)s %(child_prefix)s. Use "%(help_base)s %(prefix)s" to list '
+                                'available commands' % {
+                                    'prefix': prefix,
+                                    'child_prefix': child_prefix,
+                                    'help_base': help_base
+                                }
+                            ]
+                        else:
+                            reply = ['%s %s: %s' % (prefix, child_prefix, child.children[child_prefix].help_text)]
+                else:
+                    reply = ['%s: %s' % (prefix, child.help_text)]
+        else:
+            reply = ['Available commands: ' + ', '.join(sorted(root_cmd.children.keys()))]
+        for i in reply:
+            await user.reply(i, is_private)
+
+
+class FullHelp(ChatCommand):
+    parent = HelpCommands
+    prefix = 'fullhelp'
+    help_text = 'Send a documentation for all commands in a private message'
+
+    async def run(self, user, message, is_private=False):
+        pass

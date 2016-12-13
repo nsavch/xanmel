@@ -8,12 +8,13 @@ logger = logging.getLogger(__name__)
 
 
 class XonCommands(CommandContainer):
-    pass
+    help_text = 'Commands for interaction with a Xonotic server'
 
 
 class Who(ChatCommand):
     prefix = 'who'
     parent = XonCommands
+    help_text = 'Lists players connected to the server (one-line format)'
 
     async def run(self, user, message, is_private=True):
         rcon_server = self.parent.properties['rcon_server']
