@@ -46,7 +46,7 @@ excuses = [
     "terrorist activities",
     "not enough memory, go get system upgrade",
     "interrupt configuration error",
-    "spaghetti cable cause packet failure",
+    "spaghetti cable causing packet failure",
     "boss forgot system password",
     "bank holiday - system operating credits  not recharged",
     "virus attack, luser responsible",
