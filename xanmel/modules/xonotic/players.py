@@ -31,6 +31,23 @@ class PlayerManager:
                 c += 1
         return c
 
+    @property
+    def bots(self):
+        res = []
+        for i in self.players_by_number2.values():
+            if i.is_bot:
+                res.append(i)
+        return res
+
+    def clear_bots(self):
+        for k, v in self.players_by_number1.items():
+            if v.is_bot:
+                try:
+                    del self.players_by_number1[k]
+                    del self.players_by_number2[v.number2]
+                except KeyError:
+                    pass
+
     def join(self, player):
         if player.number2 in self.players_by_number2:
             old_player = self.players_by_number2[player.number2]

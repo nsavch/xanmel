@@ -18,7 +18,11 @@ class Who(ChatCommand):
         else:
             player_names = []
             for player in rcon_server.players.players_by_number1.values():
-                player_names.append(Color.dp_to_irc(player.nickname).decode('utf8'))
+                if not player.is_bot:
+                    player_names.append(Color.dp_to_irc(player.nickname).decode('utf8'))
             reply = ' | '.join(player_names)
+            bots = rcon_server.players.bots
+            if len(bots) > 0:
+                reply += ' | %s bots' % len(bots)
 
         await user.reply(rcon_server.config['out_prefix'] + reply, is_private)
