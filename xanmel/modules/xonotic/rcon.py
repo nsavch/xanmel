@@ -4,6 +4,7 @@ from contextlib import contextmanager
 from .rcon_log import RconLogParser
 from .rcon_utils import *
 from .players import PlayerManager
+from .chat_commands import XonCommands
 
 
 class RconServer:
@@ -25,6 +26,7 @@ class RconServer:
         self.players = PlayerManager()
         self.current_map = ''
         self.current_gt = ''
+        self.module.xanmel.cmd_root.register_container(XonCommands(rcon_server=self), config['cmd_prefix'])
 
     async def connect_cmd(self):
         rcon_command_protocol = rcon_protocol_factory(self.password,

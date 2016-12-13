@@ -31,4 +31,4 @@ class Excuse(ChatCommand):
 class FunModule(Module):
     def __init__(self, xanmel, config):
         super(FunModule, self).__init__(xanmel, config)
-        xanmel.cmd_root.register_container(FunCommands, '')
+        xanmel.cmd_root.register_container(FunCommands(), '')

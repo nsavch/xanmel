@@ -54,7 +54,7 @@ class Xanmel:
         try:
             actions_mod = importlib.import_module(module_pkg_name + '.actions')
         except ImportError:
-            logger.debug('No handlers in module %s', module_pkg_name)
+            logger.debug('No actions in module %s', module_pkg_name)
             return
         for member_name, member in inspect.getmembers(actions_mod, inspect.isclass):
             if issubclass(member, Action):
@@ -200,36 +200,43 @@ class CommandRoot:
 
 class CommandContainer:
     root = None
-    children = {}
+    children_classes = None
     prefix = ''
+    properties = None
 
     def __init__(self, **kwargs):
         self.properties = kwargs
+        self.children = {}
+        for k, v in self.children_classes.items():
+            self.children[k] = v()
+            self.children[k].parent = self
 
     async def run(self, user, message, is_private=False):
         message = message.lstrip()
         if not self.children:
             logger.info('Request to a container without children %s', self)
             return
-        prefix = message.lstrip().split(' ', 1)[0]
+        prefix = message.split(' ', 1)[0]
         if prefix not in self.children:
             await user.reply('Unknown command %s %s. Use "%s: help %s" to list available commands' %
                              (self.prefix, message, user.botnick, self.prefix), is_private)
         else:
             child = self.children[prefix]
-            await child.run(user, message[len(prefix)], is_private)
+            await child.run(user, message[len(prefix):], is_private)
 
 
 class ConnectChildrenMeta(type):
     def __new__(typ, name, bases, namespace, **kwds):
         instance = type.__new__(typ, name, bases, dict(namespace))
         if namespace['parent']:
+            if namespace['parent'].children_classes is None:
+                namespace['parent'].children_classes = {}
             if not instance.prefix:
                 logger.info('Skipping registering command %s: empty prefix', instance)
-            elif instance.prefix in namespace['parent'].children:
+            elif instance.prefix in namespace['parent'].children_classes:
                 logger.info('Skipping registering command %s: prefix already registered', instance)
             else:
-                namespace['parent'].children[instance.prefix] = instance()
+                namespace['parent'].children_classes[instance.prefix] = instance
         return instance
 
 
