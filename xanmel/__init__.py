@@ -39,7 +39,11 @@ class Xanmel:
             self.setup_event_generators(module)
 
     def load_handlers(self, module, module_pkg_name):
-        handlers_mod = importlib.import_module(module_pkg_name + '.handlers')
+        try:
+            handlers_mod = importlib.import_module(module_pkg_name + '.handlers')
+        except ImportError:
+            logger.debug('No handlers in module %s', module_pkg_name)
+            return
         for member_name, member in inspect.getmembers(handlers_mod, inspect.isclass):
             if issubclass(member, Handler):
                 handler = member(module=module)
@@ -47,7 +51,11 @@ class Xanmel:
                     self.handlers[event].append(handler)
 
     def load_actions(self, module, module_pkg_name):
-        actions_mod = importlib.import_module(module_pkg_name + '.actions')
+        try:
+            actions_mod = importlib.import_module(module_pkg_name + '.actions')
+        except ImportError:
+            logger.debug('No handlers in module %s', module_pkg_name)
+            return
         for member_name, member in inspect.getmembers(actions_mod, inspect.isclass):
             if issubclass(member, Action):
                 action = member(module=module)
@@ -167,7 +175,7 @@ class CommandRoot:
 
     def register_container(self, container, prefix):
         if not prefix:
-            for i in container.children:
+            for i in container.children.values():
                 if i.prefix not in self.children:
                     self.children[i.prefix] = i
                 else:
@@ -221,7 +229,7 @@ class ConnectChildrenMeta(type):
             elif instance.prefix in namespace['parent'].children:
                 logger.info('Skipping registering command %s: prefix already registered', instance)
             else:
-                namespace['parent'].children[instance.prefix] = instance
+                namespace['parent'].children[instance.prefix] = instance()
         return instance
 
 
