@@ -15,12 +15,18 @@ class FunCommands(CommandContainer):
 class Excuse(ChatCommand):
     parent = FunCommands
     prefix = 'excuse'
-    help_text = 'Finds an excuse for you after a bad game round'
+    help_args = '[USERNAME]'
+    help_text = 'Finds an excuse for you or USERNAME after a bad game round.'
 
     async def run(self, user, message, is_private=False):
-        print(user, message, is_private)
+        message = message.strip()
+        if message:
+            username = message
+        else:
+            username = user.name
+
         reply = '%s, %s %s. %s' % (
-            user.name,
+            username,
             random.choice(what_happened),
             random.choice(excuses),
             random.choice(endorses)
