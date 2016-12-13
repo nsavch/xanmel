@@ -24,6 +24,7 @@ class Xanmel:
     def __init__(self, loop, config_path):
         self.loop = loop
         self.geoip = geoip2.database.Reader('GeoLite2-City.mmdb')
+        self.cmd_root = CommandRoot(self)
         with open(os.path.expanduser(config_path), 'r') as config_file:
             self.config = yaml.load(config_file)
 
@@ -133,3 +134,101 @@ class Handler(GetNameMixin):
 
     def __str__(self):
         return self.get_name()
+
+
+class ChatUser:
+    def __init__(self, module, name, **kwargs):
+        self.module = module
+        self.name = name
+        self.properties = kwargs
+
+    @property
+    def is_admin(self):
+        return False
+
+    async def reply(self, message, is_private, **kwargs):
+        if is_private:
+            await self.private_reply(message, **kwargs)
+        else:
+            await self.public_reply(message, **kwargs)
+
+    async def private_reply(self, message, **kwargs):
+        pass
+
+    async def public_reply(self, message, **kwargs):
+        pass
+
+
+class CommandRoot:
+
+    def __init__(self, xanmel):
+        self.xanmel = xanmel
+        self.children = {}
+
+    def register_container(self, container, prefix):
+        if not prefix:
+            for i in container.children:
+                if i.prefix not in self.children:
+                    self.children[i.prefix] = i
+                else:
+                    logger.info('Prefix %s already registered. Skipping command %s', i.prefix, i)
+        else:
+            if prefix not in self.children:
+                container.root = self
+                container.prefix = prefix
+                self.children[prefix] = container
+            else:
+                logger.info('Prefix %s already registered. Skipping command container %s', prefix, container)
+
+    async def run(self, user, message, is_private=False):
+        message = message.lstrip()
+        prefix = message.split(' ', 1)[0]
+        if prefix not in self.children:
+            await user.reply('Unknown command. Use "%s: help" to list available commands' % user.botnick, is_private)
+        else:
+            child = self.children[prefix]
+            await child.run(user, message[len(prefix):], is_private)
+
+
+class CommandContainer:
+    root = None
+    children = {}
+    prefix = ''
+
+    def __init__(self, **kwargs):
+        self.properties = kwargs
+
+    async def run(self, user, message, is_private=False):
+        message = message.lstrip()
+        if not self.children:
+            logger.info('Request to a container without children %s', self)
+            return
+        prefix = message.lstrip().split(' ', 1)[0]
+        if prefix not in self.children:
+            await user.reply('Unknown command %s %s. Use "%s: help %s" to list available commands' %
+                             (self.prefix, message, user.botnick, self.prefix), is_private)
+        else:
+            child = self.children[prefix]
+            await child.run(user, message[len(prefix)], is_private)
+
+
+class ConnectChildrenMeta(type):
+    def __new__(typ, name, bases, namespace, **kwds):
+        instance = type.__new__(typ, name, bases, dict(namespace))
+        if namespace['parent']:
+            if not instance.prefix:
+                logger.info('Skipping registering command %s: empty prefix', instance)
+            elif instance.prefix in namespace['parent'].children:
+                logger.info('Skipping registering command %s: prefix already registered', instance)
+            else:
+                namespace['parent'].children[instance.prefix] = instance
+        return instance
+
+
+class ChatCommand(metaclass=ConnectChildrenMeta):
+    parent = None
+    prefix = ''
+    help_text = ''
+
+    async def run(self, user, message, is_private=False):
+        await user.reply('Command "%s" not implemented' % message, is_private)

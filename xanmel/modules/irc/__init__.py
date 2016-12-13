@@ -2,8 +2,24 @@ import asyncio
 
 import bottom
 
-from xanmel import Module
+from xanmel import Module, ChatUser
 from .events import *
+
+
+class IRCChatUser(ChatUser):
+    def __init__(self, *args, **kwargs):
+        super(IRCChatUser, self).__init__(*args, **kwargs)
+        self.botnick = self.module.config['nick']
+
+    @property
+    def is_admin(self):
+        return self.properties['irc_user'] in self.module.config['admin_users']
+
+    async def private_reply(self, message, **kwargs):
+        self.module.client.send('PRIVMSG', target=self.name, message=message)
+
+    async def public_reply(self, message, **kwargs):
+        self.module.client.send('PRIVMSG', target=self.module.config['channel'], message=message)
 
 
 class IRCModule(Module):
@@ -39,6 +55,9 @@ class IRCModule(Module):
         self.loop.create_task(self.client.connect())
 
     async def process_message(self, target, message, **kwargs):
+        kwargs['chat_user'] = IRCChatUser(self,
+                                          kwargs['nick'],
+                                          irc_user='%s@%s' % (kwargs['user'], kwargs['host']))
         if target == self.config['nick']:
             PrivateMessage(self, message=message, **kwargs).fire()
         elif target == self.config['channel']:

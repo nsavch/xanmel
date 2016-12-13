@@ -11,6 +11,14 @@ class MentionMessageHandler(Handler):
     events = [MentionMessage]
 
     async def handle(self, event):
-        await self.run_action(ChannelMessage,
-                              message="%s: You said '%s'" % (event.properties['nick'],
-                                                             event.properties['message']))
+        await self.module.xanmel.cmd_root.run(event.properties['chat_user'],
+                                              event.properties['message'])
+
+
+class PrivateMessageHandler(Handler):
+    events = [PrivateMessage]
+
+    async def handle(self, event):
+        await self.module.xanmel.cmd_root.run(event.properties['chat_user'],
+                                              event.properties['message'],
+                                              is_private=True)

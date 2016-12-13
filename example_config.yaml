@@ -7,6 +7,7 @@ xanmel.modules.irc.IRCModule:
   channel: '#xanmel'
   greeting: HELLO WORLD!
   mention_delimeters: [' ', ':', ',']
+  admin_users: []
 xanmel.modules.xonotic.XonoticModule:
   servers:
     - rcon_ip: 127.0.0.1
