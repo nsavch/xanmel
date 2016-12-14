@@ -26,7 +26,9 @@ class RconServer:
         self.players = PlayerManager()
         self.current_map = ''
         self.current_gt = ''
-        self.module.xanmel.cmd_root.register_container(XonCommands(rcon_server=self), config['cmd_prefix'])
+        command_container = XonCommands(rcon_server=self)
+        command_container.help_text = 'Commands for interacting with %s' % config['name']
+        self.module.xanmel.cmd_root.register_container(command_container, config['cmd_prefix'])
 
     async def connect_cmd(self):
         rcon_command_protocol = rcon_protocol_factory(self.password,

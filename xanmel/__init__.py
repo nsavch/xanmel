@@ -172,11 +172,13 @@ class CommandRoot:
     def __init__(self, xanmel):
         self.xanmel = xanmel
         self.children = {}
+        self.merged_containers = []
 
     def register_container(self, container, prefix):
         container.root = self
         container.prefix = prefix
         if not prefix:
+            self.merged_containers.append(container)
             for i in container.children.values():
                 if i.prefix not in self.children:
                     self.children[i.prefix] = i
@@ -321,4 +323,19 @@ class FullHelp(ChatCommand):
     help_text = 'Send a documentation for all commands in a private message'
 
     async def run(self, user, message, is_private=False):
-        pass
+        root_cmd = self.parent.root
+        reply = []
+        for i in root_cmd.merged_containers:
+            reply.append('-- ' + i.help_text + ' --')
+            for child_prefix in sorted(i.children):
+                if child_prefix in root_cmd.children:
+                    reply.append(root_cmd.children[child_prefix].format_help())
+        for child_prefix in sorted(root_cmd.children):
+            child = root_cmd.children[child_prefix]
+            if not isinstance(child, CommandContainer):
+                continue
+            reply.append('-- %s: %s --' % (child_prefix, child.help_text))
+            for subchild_prefix in sorted(child.children):
+                reply.append('%s %s' % (child_prefix, child.children[subchild_prefix].format_help()))
+        for i in reply:
+            await user.private_reply(i)
