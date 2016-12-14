@@ -29,7 +29,7 @@ class Excuse(ChatCommand):
             username,
             random.choice(what_happened),
             random.choice(excuses),
-            random.choice(endorses)
+            random.choice(motivations)
         )
         await user.reply(reply, is_private)
 
