@@ -29,6 +29,10 @@ class RconServer:
         command_container = XonCommands(rcon_server=self)
         command_container.help_text = 'Commands for interacting with %s' % config['name']
         self.module.xanmel.cmd_root.register_container(command_container, config['cmd_prefix'])
+        if config.get('raw_log'):
+            self.raw_log = open(config['raw_log'], 'ab')
+        else:
+            self.raw_log = None
 
     async def connect_cmd(self):
         rcon_command_protocol = rcon_protocol_factory(self.password,
@@ -55,6 +59,8 @@ class RconServer:
     def receive_log_response(self, data, addr):
         if addr[0] != self.server_address or addr[1] != self.server_port:
             return
+        if self.raw_log:
+            self.raw_log.write(data)
         self.log_parser.feed(data)
 
     def subscribe_to_log(self, proto):
