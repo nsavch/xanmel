@@ -324,10 +324,10 @@ class FullHelp(ChatCommand):
 
     async def run(self, user, message, is_private=False):
         root_cmd = self.parent.root
-        reply = []
+        reply = ['Angle brackets designate <required> command parameters.',
+                 'Square brackets designate [optional] command parameters']
         for i in root_cmd.merged_containers:
-            reply.append('Angle brackets designate <required> command parameters.')
-            reply.append('Square brackets designate [optional] command parameters')
+
             reply.append('-- ' + i.help_text + ' --')
             for child_prefix in sorted(i.children):
                 if child_prefix in root_cmd.children:
