@@ -7,6 +7,8 @@ from .events import *
 
 
 class IRCChatUser(ChatUser):
+    user_type = 'irc'
+
     def __init__(self, *args, **kwargs):
         super(IRCChatUser, self).__init__(*args, **kwargs)
         self.botnick = self.module.config['nick']

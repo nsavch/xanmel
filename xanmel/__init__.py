@@ -148,6 +148,8 @@ class Handler(GetNameMixin):
 
 
 class ChatUser:
+    user_type = ''
+
     def __init__(self, module, name, **kwargs):
         self.module = module
         self.name = name
@@ -178,8 +180,8 @@ class CommandRoot:
         self.xanmel = xanmel
         self.children = {}
         self.merged_containers = []
-        self.throttling = defaultdict(list)
-        self.disabled_users = {}
+        self.throttling = defaultdict(lambda: defaultdict(list))
+        self.disabled_users = defaultdict(dict)
 
     def register_container(self, container, prefix):
         container.root = self
@@ -198,19 +200,20 @@ class CommandRoot:
                 logger.info('Prefix %s already registered. Skipping command container %s', prefix, container)
 
     async def run(self, user, message, is_private=False):
+        ut = user.user_type
         uid = user.unique_id()
-        if uid in self.disabled_users:
-            if time.time() - self.disabled_users[uid] > 60:
-                del self.disabled_users[uid]
+        if uid in self.disabled_users[ut]:
+            if time.time() - self.disabled_users[ut][uid] > 60:
+                del self.disabled_users[ut][uid]
             else:
-                logger.info('User %s throttled for flooding!', uid)
+                logger.info('User %s:%s throttled for flooding!', ut, uid)
                 return
-        self.throttling[uid].append(time.time())
-        while time.time() - self.throttling[uid][0] > 10:
-            self.throttling[uid].pop(0)
-        if len(self.throttling[uid]) > 5:
-            logger.info('User %s throttled for flooding!', uid)
-            self.disabled_users[uid] = time.time()
+        self.throttling[ut][uid].append(time.time())
+        while time.time() - self.throttling[ut][uid][0] > 10:
+            self.throttling[ut][uid].pop(0)
+        if len(self.throttling[ut][uid]) > 5:
+            logger.info('User %s:%s throttled for flooding!', ut, uid)
+            self.disabled_users[ut][uid] = time.time()
             return
 
         message = message.lstrip()
@@ -239,6 +242,13 @@ class CommandContainer:
         for k, v in self.children_classes.items():
             self.children[k] = v()
             self.children[k].parent = self
+
+    def is_allowed_for(self, user):
+        return any([i.is_allowed_for(user) for i in self.children.values()])
+
+    @property
+    def admin_required(self):
+        return all([i.admin_required for i in self.children.values()])
 
     async def run(self, user, message, is_private=False):
         message = message.lstrip()
@@ -289,15 +299,10 @@ class ChatCommand(metaclass=ConnectChildrenMeta):
 
     def is_allowed_for(self, user):
         allowed = True
-        if not self.allowed_user_classes == '__all__':
-            allowed = False
-            for i in self.allowed_user_classes:
-                if isinstance(user, i):
-                    allowed = True
-                    break
-        for i in self.disallowed_user_classes:
-            if isinstance(user, i):
-                allowed = False
+        if self.allowed_user_classes != '__all__':
+            allowed = user.user_type in self.allowed_user_classes
+        if allowed:
+            allowed = user.user_type not in self.disallowed_user_classes
         if self.admin_required and not user.is_admin:
             allowed = False
         return allowed
@@ -338,8 +343,10 @@ class Help(ChatCommand):
                 if isinstance(child, CommandContainer):
                     rest = message[len(prefix):].strip()
                     if not rest:
+                        cmds = child.children
                         reply = ['%s: %s' % (prefix, child.help_text),
-                                 'Available commands: ' + ', '.join(sorted(child.children.keys()))]
+                                 'Available commands: ' + ', '.join(
+                                     sorted([i for i in cmds if cmds[i].is_allowed_for(user)]))]
                     else:
                         child_prefix = rest.split(' ', 1)[0]
                         if child_prefix not in child.children:
@@ -352,11 +359,19 @@ class Help(ChatCommand):
                                 }
                             ]
                         else:
-                            reply = ['%s %s' % (prefix, child.children[child_prefix].format_help())]
+                            cmd = child.children[child_prefix]
+                            if cmd.is_allowed_for(user):
+                                reply = ['%s %s' % (prefix, cmd.format_help())]
+                            else:
+                                reply = ['Unavailable command %s %s' % (prefix, child_prefix)]
                 else:
-                    reply = [child.format_help()]
+                    if child.is_allowed_for(user):
+                        reply = [child.format_help()]
+                    else:
+                        reply = ['Unavailable command %s' % prefix]
         else:
-            reply = ['Available commands: ' + ', '.join(sorted(root_cmd.children.keys()))]
+            cmds = root_cmd.children
+            reply = ['Available commands: ' + ', '.join(sorted([i for i in cmds if cmds[i].is_allowed_for(user)]))]
         for i in reply:
             await user.reply(i, is_private)
 
@@ -371,18 +386,21 @@ class FullHelp(ChatCommand):
         reply = ['Angle brackets designate <required> command parameters.',
                  'Square brackets designate [optional] command parameters']
         for i in root_cmd.merged_containers:
-
-            reply.append('-- ' + i.help_text + ' --')
-            for child_prefix in sorted(i.children):
-                if child_prefix in root_cmd.children:
-                    reply.append(root_cmd.children[child_prefix].format_help())
+            if i.is_allowed_for(user):
+                reply.append('-- ' + i.help_text + ' --')
+                for child_prefix in sorted(i.children):
+                    if child_prefix in root_cmd.children:
+                        if root_cmd.children[child_prefix].is_allowed_for(user):
+                            reply.append(root_cmd.children[child_prefix].format_help())
         for child_prefix in sorted(root_cmd.children):
             child = root_cmd.children[child_prefix]
             if not isinstance(child, CommandContainer):
                 continue
-            reply.append('-- %s: %s --' % (child_prefix, child.help_text))
-            for subchild_prefix in sorted(child.children):
-                reply.append('%s %s' % (child_prefix, child.children[subchild_prefix].format_help()))
+            if child.is_allowed_for(user):
+                reply.append('-- %s: %s --' % (child_prefix, child.help_text))
+                for subchild_prefix in sorted(child.children):
+                    if child.children[subchild_prefix].is_allowed_for(user):
+                        reply.append('%s %s' % (child_prefix, child.children[subchild_prefix].format_help()))
         for i in reply:
             await asyncio.sleep(1)  # Sleep 1 second to prevent kicking for Excess Flood
             await user.private_reply(i)
