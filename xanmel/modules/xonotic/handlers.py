@@ -14,15 +14,6 @@ class ChatMessageHandler(Handler):
     events = [ChatMessage]
 
     async def handle(self, event):
-        await self.run_action(ChannelMessage,
-                              message=Color.dp_to_irc(event.properties['message']).decode('utf8'),
-                              prefix=event.properties['server'].config['out_prefix'])
-
-
-class CommandMessageHandler(Handler):
-    events = [ChatMessage]
-
-    async def handle(self, event):
         cmd_root = self.module.xanmel.cmd_root
         server = event.properties['server']
         msg = event.properties['message']
@@ -39,8 +30,11 @@ class CommandMessageHandler(Handler):
                 message = Color.dp_to_none(msg[len(prefix):]).decode('utf8')
                 break
         if not user or not message.startswith(user.botnick + ': '):
-            return
-        await cmd_root.run(user, message[len(user.botnick)+1:], is_private=False)
+            await self.run_action(ChannelMessage,
+                                  message=Color.dp_to_irc(event.properties['message']).decode('utf8'),
+                                  prefix=event.properties['server'].config['out_prefix'])
+        else:
+            await cmd_root.run(user, message[len(user.botnick)+1:], is_private=False)
 
 
 class GameStartedHandler(Handler):
