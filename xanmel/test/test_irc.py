@@ -14,16 +14,16 @@ def test_process_message(xanmel, mocker):
     irc_module = xanmel.modules['xanmel.modules.irc.IRCModule']
     patched_fire = mocker.patch('xanmel.modules.irc.events.PrivateMessage.fire')
     xanmel.loop.run_until_complete(irc_module.process_message(
-        'xanmel', 'Hello, world'
+        'xanmel', 'Hello, world', nick='nick', user='~nick', host='127.0.0.1'
     ))
     assert patched_fire.called
     patched_fire = mocker.patch('xanmel.modules.irc.events.ChannelMessage.fire')
     xanmel.loop.run_until_complete(irc_module.process_message(
-        '#xanmel', 'Hello, world'
+        '#xanmel', 'Hello, world', nick='nick', user='~nick', host='127.0.0.1'
     ))
     assert patched_fire.called
     patched_fire = mocker.patch('xanmel.modules.irc.events.MentionMessage.fire')
     xanmel.loop.run_until_complete(irc_module.process_message(
-        '#xanmel', 'xanmel: Hello, world'
+        '#xanmel', 'xanmel: Hello, world', nick='nick', user='~nick', host='127.0.0.1'
     ))
     assert patched_fire.called
