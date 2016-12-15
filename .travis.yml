@@ -3,5 +3,11 @@ python:
   - "3.5"
   - "3.6-dev"
 
-install: "pip install -r requirements.txt"
-script: pytest
+install:
+  - pip install -r requirements.txt
+  - pip install coveralls
+
+script:
+  pytest --cov
+after_success:
+  coveralls
