@@ -17,7 +17,7 @@ class XonoticChatUser(ChatUser):
 
     async def public_reply(self, message, **kwargs):
         if self.server.config['say_type'] == 'ircmsg':
-            self.server.send('sv_cmd ircmsg [IRC] %s^7: %s' % (self.botnick, message))
+            self.server.send('sv_cmd ircmsg [BOT] %s^7: %s' % (self.botnick, message))
         else:
             with self.server.sv_adminnick(self.botnick):
                 self.server.send('say %s' % message)
