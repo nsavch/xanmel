@@ -16,6 +16,7 @@ class Who(ChatCommand):
     prefix = 'who'
     parent = XonCommands
     help_text = 'Lists players connected to the server (one-line format)'
+    allowed_user_types = ['irc']
 
     async def run(self, user, message, is_private=True):
         rcon_server = self.parent.properties['rcon_server']

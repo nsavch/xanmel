@@ -202,6 +202,8 @@ class CommandRoot:
     async def run(self, user, message, is_private=False):
         ut = user.user_type
         uid = user.unique_id()
+        logger.debug('Running a command for user %s, message %s', uid, message)
+
         if uid in self.disabled_users[ut]:
             if time.time() - self.disabled_users[ut][uid] > 60:
                 del self.disabled_users[ut][uid]
@@ -293,16 +295,16 @@ class ChatCommand(metaclass=ConnectChildrenMeta):
     prefix = ''
     help_args = ''
     help_text = ''
-    allowed_user_classes = '__all__'
-    disallowed_user_classes = []
+    allowed_user_types = '__all__'
+    disallowed_user_types = []
     admin_required = False
 
     def is_allowed_for(self, user):
         allowed = True
-        if self.allowed_user_classes != '__all__':
-            allowed = user.user_type in self.allowed_user_classes
+        if self.allowed_user_types != '__all__':
+            allowed = user.user_type in self.allowed_user_types
         if allowed:
-            allowed = user.user_type not in self.disallowed_user_classes
+            allowed = user.user_type not in self.disallowed_user_types
         if self.admin_required and not user.is_admin:
             allowed = False
         return allowed
@@ -325,7 +327,7 @@ class Help(ChatCommand):
     parent = HelpCommands
     prefix = 'help'
     help_args = '[CMDNAME] [SUBCMDNAME]'
-    help_text = 'Provide useful and friendly help'
+    help_text = 'Provide useful and friendly help.'
 
     async def run(self, user, message, is_private=False):
         if is_private:
@@ -380,6 +382,7 @@ class FullHelp(ChatCommand):
     parent = HelpCommands
     prefix = 'fullhelp'
     help_text = 'Send a documentation for all commands in a private message'
+    allowed_user_types = ['irc']
 
     async def run(self, user, message, is_private=False):
         root_cmd = self.parent.root

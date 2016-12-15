@@ -2,6 +2,7 @@ import geoip2.errors
 
 from xanmel import Handler
 
+from .chat_user import XonoticChatUser
 from .colors import Color
 from .events import *
 from .rcon_log import GAME_TYPES
@@ -16,6 +17,30 @@ class ChatMessageHandler(Handler):
         await self.run_action(ChannelMessage,
                               message=Color.dp_to_irc(event.properties['message']).decode('utf8'),
                               prefix=event.properties['server'].config['out_prefix'])
+
+
+class CommandMessageHandler(Handler):
+    events = [ChatMessage]
+
+    async def handle(self, event):
+        cmd_root = self.module.xanmel.cmd_root
+        server = event.properties['server']
+        msg = event.properties['message']
+        nicknames = sorted([i.nickname for i in server.players.players_by_number2.values()],
+                           key=lambda x: len(x), reverse=True)
+        user = None
+        message = None
+        for nickname in nicknames:
+            prefix = b'^7' + nickname + b'^7: '
+            if msg.startswith(prefix):
+                user = XonoticChatUser(self.module, Color.dp_to_none(nickname).decode('utf8'),
+                                       raw_nickname=nickname,
+                                       rcon_server=server)
+                message = Color.dp_to_none(msg[len(prefix):]).decode('utf8')
+                break
+        if not user or not message.startswith(user.botnick + ': '):
+            return
+        await cmd_root.run(user, message[len(user.botnick)+1:], is_private=False)
 
 
 class GameStartedHandler(Handler):
