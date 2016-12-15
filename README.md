@@ -1,5 +1,6 @@
 Xanmel
 ------
+[![Build Status](https://travis-ci.org/nsavch/xanmel.svg?branch=master)](https://travis-ci.org/nsavch/xanmel)
 
 Xanmel is a modular IRC bot designed primarily for gaming.
 
