@@ -1,8 +1,28 @@
 import asyncio
+from unittest.mock import Mock
+
 import pytest
 import yaml
+import random
 
-from xanmel.__init__ import Xanmel
+from xanmel import Xanmel, ChatUser
+
+
+@pytest.fixture()
+def dummy_chat_user():
+    class DummyChatUser(ChatUser):
+        def __init__(self, module, name, **kwargs):
+            super(DummyChatUser, self).__init__(module, name, **kwargs)
+            self.dummy_admin = True
+
+        def unique_id(self):
+            return random.randint(0, 1024*1024)
+
+        @property
+        def is_admin(self):
+            return self.dummy_admin
+
+    return DummyChatUser
 
 
 @pytest.fixture
@@ -44,4 +64,4 @@ def config():
 def mocked_coroutine():
     async def dummy(*args, **kwargs):
         pass
-    return dummy
+    return Mock(wraps=dummy)

@@ -1,6 +1,3 @@
-import pytest
-
-
 def test_module_loading(xanmel, mocker):
     mf = mocker.patch.object(xanmel, 'setup_event_generators')
     xanmel.load_modules()
