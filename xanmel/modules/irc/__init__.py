@@ -11,6 +11,9 @@ class IRCChatUser(ChatUser):
         super(IRCChatUser, self).__init__(*args, **kwargs)
         self.botnick = self.module.config['nick']
 
+    def unique_id(self):
+        return self.properties['irc_user']
+
     @property
     def is_admin(self):
         return self.properties['irc_user'] in self.module.config['admin_users']

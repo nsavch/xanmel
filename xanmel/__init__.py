@@ -6,6 +6,8 @@ from collections import defaultdict
 
 import geoip2.database
 import asyncio
+
+import time
 import yaml
 
 from xanmel.utils import current_time
@@ -151,6 +153,9 @@ class ChatUser:
         self.name = name
         self.properties = kwargs
 
+    def unique_id(self):
+        raise NotImplementedError
+
     @property
     def is_admin(self):
         return False
@@ -173,6 +178,8 @@ class CommandRoot:
         self.xanmel = xanmel
         self.children = {}
         self.merged_containers = []
+        self.throttling = defaultdict(list)
+        self.disabled_users = {}
 
     def register_container(self, container, prefix):
         container.root = self
@@ -191,6 +198,21 @@ class CommandRoot:
                 logger.info('Prefix %s already registered. Skipping command container %s', prefix, container)
 
     async def run(self, user, message, is_private=False):
+        uid = user.unique_id()
+        if uid in self.disabled_users:
+            if time.time() - self.disabled_users[uid] > 60:
+                del self.disabled_users[uid]
+            else:
+                logger.info('User %s throttled for flooding!', uid)
+                return
+        self.throttling[uid].append(time.time())
+        while time.time() - self.throttling[uid][0] > 10:
+            self.throttling[uid].pop(0)
+        if len(self.throttling[uid]) > 5:
+            logger.info('User %s throttled for flooding!', uid)
+            self.disabled_users[uid] = time.time()
+            return
+
         message = message.lstrip()
         prefix = message.split(' ', 1)[0]
         if prefix not in self.children:
@@ -234,7 +256,11 @@ class CommandContainer:
             await user.reply(reply, is_private)
         else:
             child = self.children[prefix]
-            await child.run(user, message[len(prefix):], is_private)
+
+            if child.is_allowed_for(user):
+                await child.run(user, message[len(prefix):], is_private)
+            else:
+                await user.reply('Access Denied', is_private)
 
 
 class ConnectChildrenMeta(type):
@@ -257,6 +283,24 @@ class ChatCommand(metaclass=ConnectChildrenMeta):
     prefix = ''
     help_args = ''
     help_text = ''
+    allowed_user_classes = '__all__'
+    disallowed_user_classes = []
+    admin_required = False
+
+    def is_allowed_for(self, user):
+        allowed = True
+        if not self.allowed_user_classes == '__all__':
+            allowed = False
+            for i in self.allowed_user_classes:
+                if isinstance(user, i):
+                    allowed = True
+                    break
+        for i in self.disallowed_user_classes:
+            if isinstance(user, i):
+                allowed = False
+        if self.admin_required and not user.is_admin:
+            allowed = False
+        return allowed
 
     def format_help(self):
         if self.help_args:
