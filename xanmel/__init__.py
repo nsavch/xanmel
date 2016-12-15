@@ -340,4 +340,5 @@ class FullHelp(ChatCommand):
             for subchild_prefix in sorted(child.children):
                 reply.append('%s %s' % (child_prefix, child.children[subchild_prefix].format_help()))
         for i in reply:
+            await asyncio.sleep(1)  # Sleep 1 second to prevent kicking for Excess Flood
             await user.private_reply(i)
