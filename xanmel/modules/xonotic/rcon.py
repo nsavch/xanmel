@@ -33,6 +33,7 @@ class RconServer:
             self.raw_log = open(config['raw_log'], 'ab')
         else:
             self.raw_log = None
+        self.map_list = []
 
     async def connect_cmd(self):
         rcon_command_protocol = rcon_protocol_factory(self.password,
@@ -77,6 +78,15 @@ class RconServer:
 
     async def update_server_status(self):
         # TODO: clean up "zombie" players
+        maplist_output = await self.execute('g_maplist')
+        prefix = b'"g_maplist" is '
+        if maplist_output.startswith(prefix) and b'\n' in maplist_output:
+            m = re.match(b'"g_maplist" is "([^"]+)"', maplist_output)
+            if m:
+                maplist_output = m.group(1)
+            self.map_list = sorted(maplist_output.decode('utf8').split(' '))
+        print(self.map_list)
+
         status_output = await self.execute('status 1')
         print(status_output)
         for i in status_output.split(b'\n'):

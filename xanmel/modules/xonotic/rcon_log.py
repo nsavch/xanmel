@@ -258,6 +258,14 @@ class ChatMessageParser(BaseParser):
         ChatMessage(self.rcon_server.module, server=self.rcon_server, message=data).fire()
 
 
+class MaplistParser(BaseParser):
+    key = b'"g_maplist" is '
+
+    def process(self, data):
+        print('MAPLIST')
+        print(data)
+
+
 class RconLogParser:
     parsers = [
         JoinParser,
