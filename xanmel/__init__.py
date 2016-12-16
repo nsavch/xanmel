@@ -30,9 +30,10 @@ class Xanmel:
         self.cmd_root.register_container(HelpCommands(), prefix='')
         with open(os.path.expanduser(config_path), 'r') as config_file:
             self.config = yaml.load(config_file)
+        loop.set_debug(self.config['settings']['asyncio_debug'])
 
     def load_modules(self):
-        for module_path, module_config in self.config.items():
+        for module_path, module_config in self.config['modules'].items():
             module_pkg_name, module_name = module_path.rsplit('.', 1)
             module_pkg = importlib.import_module(module_pkg_name)
             module = getattr(module_pkg, module_name)(self, module_config)

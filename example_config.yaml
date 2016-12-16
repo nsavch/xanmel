@@ -1,28 +1,31 @@
-xanmel.modules.irc.IRCModule:
-  host: irc.quakenet.org
-  port: 6667
-  ssl: false
-  nick: xanmel
-  realname: Xanmel BOT
-  channel: '#xanmel'
-  greeting: HELLO WORLD!
-  mention_delimeters: [' ', ':', ',']
-  admin_users: []
-xanmel.modules.xonotic.XonoticModule:
-  servers:
-    - name: Local Xonotic Server
-      rcon_ip: 127.0.0.1
-      rcon_port: 26005
-      public_ip: 94.23.207.83
-      public_port: 26000
-      rcon_password: password
-      rcon_secure: 1
-      out_prefix: 'exe > '
-      in_prefix: ''
-      cmd_prefix: xon
-      say_type: say
-      botnick: xanmel
-      stats_ordering: ['score', 'goals', 'faults', 'kills', 'revivals', 'deaths', 'suicides']
-      stats_blacklist: ['dmg', 'dmgtaken', 'elo']
-      raw_log: /tmp/xonotic.log
-xanmel.modules.fun.FunModule: {}
+settings:
+  asyncio_debug: false
+modules:
+  xanmel.modules.irc.IRCModule:
+    host: irc.quakenet.org
+    port: 6667
+    ssl: false
+    nick: xanmel
+    realname: Xanmel BOT
+    channel: '#xanmel'
+    greeting: HELLO WORLD!
+    mention_delimeters: [' ', ':', ',']
+    admin_users: []
+  xanmel.modules.xonotic.XonoticModule:
+    servers:
+      - name: Local Xonotic Server
+        rcon_ip: 127.0.0.1
+        rcon_port: 26005
+        public_ip: 94.23.207.83
+        public_port: 26000
+        rcon_password: password
+        rcon_secure: 1
+        out_prefix: 'exe > '
+        in_prefix: ''
+        cmd_prefix: xon
+        say_type: say
+        botnick: xanmel
+        stats_ordering: ['score', 'goals', 'faults', 'kills', 'revivals', 'deaths', 'suicides']
+        stats_blacklist: ['dmg', 'dmgtaken', 'elo']
+        raw_log: /tmp/xonotic.log
+  xanmel.modules.fun.FunModule: {}
