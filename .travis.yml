@@ -11,3 +11,6 @@ script:
   pytest --cov
 after_success:
   coveralls
+
+notifications:
+  irc: "irc.qakenet.org#xanmel"
