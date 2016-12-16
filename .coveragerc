@@ -2,3 +2,5 @@
 omit =
     */python?.?/*
     */site-packages/*
+    xanmel/test/*
+    xanmel/modules/*/test/*
