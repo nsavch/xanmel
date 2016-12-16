@@ -13,4 +13,4 @@ after_success:
   coveralls
 
 notifications:
-  irc: "irc.qakenet.org#xanmel"
+  irc: "irc.quakenet.org#xanmel"
