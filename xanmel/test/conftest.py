@@ -34,21 +34,6 @@ def event_loop():
 
 
 @pytest.fixture
-def transport():
-    class Transport:
-        def __init__(self):
-            self.written = []
-            self.closed = False
-
-        def write(self, data):
-            self.written.append(data)
-
-        def close(self):
-            self.closed = True
-    return Transport()
-
-
-@pytest.fixture
 def xanmel(event_loop, mocker):
     xanmel = Xanmel(event_loop, 'example_config.yaml')
     yield xanmel
@@ -65,3 +50,14 @@ def mocked_coroutine():
     async def dummy(*args, **kwargs):
         pass
     return Mock(wraps=dummy)
+
+
+@pytest.fixture
+def log_effect():
+    class LogEffect:
+        def __init__(self):
+            self.log = []
+
+        def __call__(self, *args, **kwargs):
+            self.log.append({'args': args, 'kwargs': kwargs})
+    return LogEffect()
