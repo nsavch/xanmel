@@ -95,7 +95,7 @@ excuses = [
     "power company having EMP problems with their reactor",
     "the ring needing another token",
     "SCSI Chain overterminated",
-    "because of network lag due to too many people playing deathmatch",
+    "network lag due to too many people playing deathmatch",
     "user distributing pornography on server",
     "disks spinning backwards",
     "too few computrons available",
