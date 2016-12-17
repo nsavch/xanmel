@@ -50,14 +50,3 @@ def mocked_coroutine():
     async def dummy(*args, **kwargs):
         pass
     return Mock(wraps=dummy)
-
-
-@pytest.fixture
-def log_effect():
-    class LogEffect:
-        def __init__(self):
-            self.log = []
-
-        def __call__(self, *args, **kwargs):
-            self.log.append({'args': args, 'kwargs': kwargs})
-    return LogEffect()
