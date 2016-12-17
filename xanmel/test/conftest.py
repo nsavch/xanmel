@@ -1,4 +1,5 @@
 import asyncio
+import asynctest
 from unittest.mock import Mock
 
 import pytest
@@ -22,6 +23,9 @@ def dummy_chat_user():
         def is_admin(self):
             return self.dummy_admin
 
+        private_reply = asynctest.CoroutineMock()
+        public_reply = asynctest.CoroutineMock()
+
     return DummyChatUser
 
 
@@ -37,12 +41,6 @@ def event_loop():
 def xanmel(event_loop, mocker):
     xanmel = Xanmel(event_loop, 'example_config.yaml')
     yield xanmel
-
-
-@pytest.fixture
-def config():
-    with open('example_config.yaml') as f:
-        return yaml.load(f)
 
 
 @pytest.fixture
