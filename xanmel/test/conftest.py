@@ -15,9 +15,10 @@ def dummy_chat_user():
         def __init__(self, module, name, **kwargs):
             super(DummyChatUser, self).__init__(module, name, **kwargs)
             self.dummy_admin = True
+            self.uid = random.randint(0, 1024*1024)
 
         def unique_id(self):
-            return random.randint(0, 1024*1024)
+            return self.uid
 
         @property
         def is_admin(self):

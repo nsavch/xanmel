@@ -101,13 +101,7 @@ class Module:
         pass
 
 
-class GetNameMixin:
-    @classmethod
-    def get_name(cls):
-        return '%s.%s' % (inspect.getmodule(cls).__name__, cls.__name__)
-
-
-class Event(GetNameMixin):
+class Event:
     def __init__(self, module, **kwargs):
         self.module = module
         self.properties = kwargs
@@ -122,7 +116,7 @@ class Event(GetNameMixin):
         return '%s(%r)' % (self.get_name(), self.properties)
 
 
-class Action(GetNameMixin):
+class Action:
     # TODO: include list of required/optional properties
     def __init__(self, module):
         self.module = module
@@ -131,7 +125,7 @@ class Action(GetNameMixin):
         raise NotImplementedError()
 
 
-class Handler(GetNameMixin):
+class Handler:
     events = []
 
     def __init__(self, module):
@@ -143,9 +137,6 @@ class Handler(GetNameMixin):
 
     async def handle(self, event):
         pass
-
-    def __str__(self):
-        return self.get_name()
 
 
 class ChatUser:
@@ -204,6 +195,7 @@ class CommandRoot:
         ut = user.user_type
         uid = user.unique_id()
         logger.debug('Running a command for user %s, message %s', uid, message)
+        print(self.throttling[ut])
 
         if uid in self.disabled_users[ut]:
             if time.time() - self.disabled_users[ut][uid] > 60:
@@ -214,6 +206,7 @@ class CommandRoot:
         self.throttling[ut][uid].append(time.time())
         while time.time() - self.throttling[ut][uid][0] > 10:
             self.throttling[ut][uid].pop(0)
+        print(self.throttling[ut])
         if len(self.throttling[ut][uid]) > 5:
             logger.info('User %s:%s throttled for flooding!', ut, uid)
             self.disabled_users[ut][uid] = time.time()
