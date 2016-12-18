@@ -22,12 +22,13 @@ class ChatMessageHandler(Handler):
         user = None
         message = None
         for nickname in nicknames:
-            prefix = b'^7' + nickname + b'^7: '
-            if msg.startswith(prefix):
+            prefix1 = b'^7' + nickname + b'^7: '
+            prefix2 = b'^3' + nickname + b'^7: '
+            if msg.startswith(prefix1) or msg.startswith(prefix2):
                 user = XonoticChatUser(self.module, Color.dp_to_none(nickname).decode('utf8'),
                                        raw_nickname=nickname,
                                        rcon_server=server)
-                message = Color.dp_to_none(msg[len(prefix):]).decode('utf8')
+                message = Color.dp_to_none(msg[len(prefix1):]).decode('utf8')
                 break
         if not user or not message.startswith(user.botnick + ': '):
             await self.run_action(ChannelMessage,

@@ -135,14 +135,6 @@ class PartParser(BaseParser):
                      current=self.rcon_server.players.current).fire()
 
 
-class TeamParser(BaseParser):
-    # TODO: figure out what is that?
-    key = b':team:'
-
-    def process(self, data):
-        pass
-
-
 class ScoresParser(BaseParser):
     # TODO: currently only dm scores are supported.
     key = b':scores:'
@@ -270,7 +262,6 @@ class RconLogParser:
     parsers = [
         JoinParser,
         PartParser,
-        # TeamParser,
         ScoresParser,
         GameStartedParser,
         NameChangeParser,
