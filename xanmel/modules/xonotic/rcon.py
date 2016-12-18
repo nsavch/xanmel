@@ -1,10 +1,13 @@
 import asyncio
 from contextlib import contextmanager
+import logging
 
 from .rcon_log import RconLogParser
 from .rcon_utils import *
 from .players import PlayerManager
 from .chat_commands import XonCommands
+
+logger = logging.getLogger(__name__)
 
 
 class RconServer:
@@ -85,7 +88,8 @@ class RconServer:
             if m:
                 maplist_output = m.group(1)
             self.map_list = sorted(maplist_output.decode('utf8').split(' '))
-        print(self.map_list)
+        logger.info('Got %s on the map list', len(self.map_list))
+        logger.debug(self.map_list)
 
         status_output = await self.execute('status 1')
         print(status_output)

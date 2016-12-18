@@ -47,7 +47,7 @@ class Maps(ChatCommand):
     async def run(self, user, message, is_private=True):
         rcon_server = self.parent.properties['rcon_server']
         if not rcon_server.map_list:
-            await user.reply(rcon_server.config['aut_prefix'] + 'Map List not initialized', is_private)
+            await user.reply(rcon_server.config['out_prefix'] + 'Map List not initialized', is_private)
             return
         pattern = message.strip().split(' ')[0].strip()
         pattern = '*%s*' % pattern

@@ -41,6 +41,11 @@ def irc_module(xanmel):
     return xanmel.modules['xanmel.modules.irc.IRCModule']
 
 
+@pytest.fixture
+def xon_module(xanmel):
+    return xanmel.modules['xanmel.modules.xonotic.XonoticModule']
+
+
 @pytest.fixture(scope='function')
 def xanmel(event_loop, mocker):
     xanmel = Xanmel(event_loop, 'example_config.yaml')
