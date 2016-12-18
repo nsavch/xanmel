@@ -62,26 +62,26 @@ def rcon_secure_time_packet(password, command):
     ])
 
 
-def parse_challenge_response(response):
-    l = len(CHALLENGE_RESPONSE_HEADER)
-    return response[l:l+11]
-
-
-def rcon_secure_challenge_packet(password, challenge, command):
-    password = ensure_bytes(password)
-    challenge = ensure_bytes(challenge)
-    command = ensure_bytes(command)
-    hmac_key = b' '.join([challenge, command])
-    key = hmac_md4(password, hmac_key).digest()
-    return b''.join([
-        QUAKE_PACKET_HEADER,
-        b'srcon HMAC-MD4 CHALLENGE ',
-        key,
-        b' ',
-        challenge,
-        b' ',
-        command
-    ])
+# def parse_challenge_response(response):
+#     l = len(CHALLENGE_RESPONSE_HEADER)
+#     return response[l:l+11]
+#
+#
+# def rcon_secure_challenge_packet(password, challenge, command):
+#     password = ensure_bytes(password)
+#     challenge = ensure_bytes(challenge)
+#     command = ensure_bytes(command)
+#     hmac_key = b' '.join([challenge, command])
+#     key = hmac_md4(password, hmac_key).digest()
+#     return b''.join([
+#         QUAKE_PACKET_HEADER,
+#         b'srcon HMAC-MD4 CHALLENGE ',
+#         key,
+#         b' ',
+#         challenge,
+#         b' ',
+#         command
+#     ])
 
 
 def parse_rcon_response(packet):
