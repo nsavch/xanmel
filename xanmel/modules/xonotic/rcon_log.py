@@ -250,14 +250,6 @@ class ChatMessageParser(BaseParser):
         ChatMessage(self.rcon_server.module, server=self.rcon_server, message=data).fire()
 
 
-class MaplistParser(BaseParser):
-    key = b'"g_maplist" is '
-
-    def process(self, data):
-        print('MAPLIST')
-        print(data)
-
-
 class RconLogParser:
     parsers = [
         JoinParser,
@@ -291,7 +283,8 @@ class RconLogParser:
                     if parser.is_multiline and parser.started and (not parser.finished):
                         if len(self.current) != 0:
                             if b'\n' in self.current:
-                                logger.warning('A multi-line parser %r did not finished but left some lines %r', parser, self.current)
+                                logger.warning('A multi-line parser %r did not finished but left some lines %r',
+                                               parser, self.current)
                             else:
                                 logger.debug('Waiting for more input for parser %r', parser)
                         self.active_parser = parser

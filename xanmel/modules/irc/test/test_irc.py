@@ -1,8 +1,7 @@
-from xanmel.modules.irc import MentionMessage, IRCChatUser
+from xanmel.modules.irc import IRCChatUser
 from xanmel.modules.irc import actions
 from xanmel.modules.irc import events
 from xanmel.modules.irc.handlers import MentionMessageHandler, PrivateMessageHandler
-from xanmel.test.conftest import *
 
 
 def test_connect(xanmel, mocker, mocked_coro, irc_module):
