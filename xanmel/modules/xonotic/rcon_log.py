@@ -275,6 +275,7 @@ class RconLogParser:
             if self.active_parser.finished:
                 self.active_parser = None
         else:
+            print(self.current)
             previous_length = len(self.current)
             while len(self.current) > 0 and b'\n' in self.current:
                 for i in self.parsers:
