@@ -1,5 +1,6 @@
 import string
 
+from xanmel.modules.xonotic.chat_user import XonoticChatUser
 from xanmel.modules.xonotic.players import Player
 from xanmel.test.conftest import *
 
@@ -29,3 +30,20 @@ def test_maps(xanmel, xon_module, dummy_chat_user):
     assert chat_user.public_reply.call_args[0][0] == 'exe > [25/25]: afterslime, atelier, catharsis, courtfun, dance, darkzone, drain, finalrage, fuse, g-23 (15 more maps skipped)'
     xanmel.loop.run_until_complete(xanmel.cmd_root.run(chat_user, 'xon maps darkzo', is_private=False))
     assert chat_user.public_reply.call_args[0][0] == 'exe > [1/25]: darkzone'
+
+
+def test_chat_user(xanmel, xon_module, mocked_coro):
+    srv = xon_module.servers[0]
+    srv.send = mocked_coro
+    cu = XonoticChatUser(xon_module, 'test', rcon_server=srv, raw_nickname=b'test^7')
+    assert cu.unique_id() == b'test^7'
+    xanmel.loop.run_until_complete(cu.private_reply('test'))
+    assert srv.send.call_count == 0
+    xanmel.loop.run_until_complete(cu.public_reply('test'))
+    assert srv.send.call_count == 3
+    assert [i[0][0] for i in srv.send.call_args_list] == ['sv_adminnick "xanmel"', 'say test', 'sv_adminnick ""']
+    srv.config['say_type'] = 'ircmsg'
+    srv.send.reset_mock()
+    xanmel.loop.run_until_complete(cu.public_reply('test'))
+    assert srv.send.call_count == 1
+    assert [i[0][0] for i in srv.send.call_args_list] == ['sv_cmd ircmsg [BOT] xanmel^7: test']
