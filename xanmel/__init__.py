@@ -95,10 +95,10 @@ class Module:
         self.loop = xanmel.loop
 
     def setup_event_generators(self):
-        pass
+        pass  # pragma: no cover
 
     def teardown(self):
-        pass
+        pass  # pragma: no cover
 
 
 class Event:
@@ -122,7 +122,7 @@ class Action:
         self.module = module
 
     async def run(self, **kwargs):
-        raise NotImplementedError()
+        raise NotImplementedError()  # pragma: no cover
 
 
 class Handler:
@@ -136,7 +136,7 @@ class Handler:
         await action.run(**kwargs)
 
     async def handle(self, event):
-        pass
+        pass  # pragma: no cover
 
 
 class ChatUser:
@@ -148,11 +148,11 @@ class ChatUser:
         self.properties = kwargs
 
     def unique_id(self):
-        raise NotImplementedError
+        raise NotImplementedError  # pragma: no cover
 
     @property
     def is_admin(self):
-        return False
+        return False  # pragma: no cover
 
     async def reply(self, message, is_private, **kwargs):
         if is_private:
@@ -161,10 +161,10 @@ class ChatUser:
             await self.public_reply(message, **kwargs)
 
     async def private_reply(self, message, **kwargs):
-        pass
+        pass  # pragma: no cover
 
     async def public_reply(self, message, **kwargs):
-        pass
+        pass  # pragma: no cover
 
 
 class CommandRoot:
@@ -313,7 +313,7 @@ class ChatCommand(metaclass=ConnectChildrenMeta):
             return '%s: %s' % (self.prefix, self.help_text)
 
     async def run(self, user, message, is_private=False):
-        await user.reply('Command "%s" not implemented' % message, is_private)
+        raise NotImplementedError  # pragma: no cover
 
 
 class HelpCommands(CommandContainer):

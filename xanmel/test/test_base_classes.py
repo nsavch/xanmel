@@ -1,6 +1,7 @@
 import asyncio
 import asynctest
 
+from xanmel import Xanmel
 from xanmel.modules.irc.events import MentionMessage
 from xanmel.modules.irc.handlers import MentionMessageHandler
 from xanmel.modules.irc.actions import ChannelMessage
@@ -12,6 +13,23 @@ def test_module_loading(xanmel, mocker):
     assert 'xanmel.modules.xonotic.XonoticModule' in xanmel.modules.keys(), xanmel.modules
     assert 'xanmel.modules.fun.FunModule' in xanmel.modules.keys(), xanmel.modules
     assert xanmel.setup_event_generators.call_count == 3
+
+
+def test_setup_event_generators(event_loop, mocker):
+    xanmel = Xanmel(event_loop, 'example_config.yaml')
+    for k, v in xanmel.modules.items():
+        mocker.patch.object(v, 'setup_event_generators')
+        xanmel.setup_event_generators(v)
+    for k, v in xanmel.modules.items():
+        assert v.setup_event_generators.call_count == 1
+
+
+def test_teardown(xanmel, mocker):
+    for k, v in xanmel.modules.items():
+        mocker.patch.object(v, 'teardown')
+    xanmel.teardown()
+    for k, v in xanmel.modules.items():
+        assert v.teardown.call_count == 1
 
 
 def test_event(xanmel, mocker):

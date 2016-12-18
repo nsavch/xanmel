@@ -311,6 +311,3 @@ class RconLogParser:
                             pass
                             # logger.debug('Unparsed log line %r', line)
                 previous_length = len(self.current)
-
-    def parse_join(self, line):
-        pass
