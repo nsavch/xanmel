@@ -1,9 +1,7 @@
 import asyncio
 import asynctest
-from unittest.mock import Mock
 
 import pytest
-import yaml
 import random
 
 from xanmel import Xanmel, ChatUser
@@ -39,13 +37,18 @@ def event_loop():
 
 
 @pytest.fixture
+def irc_module(xanmel):
+    return xanmel.modules['xanmel.modules.irc.IRCModule']
+
+
+@pytest.fixture(scope='function')
 def xanmel(event_loop, mocker):
     xanmel = Xanmel(event_loop, 'example_config.yaml')
-    yield xanmel
+    mocker.patch.object(xanmel, 'setup_event_generators')
+    xanmel.load_modules()
+    return xanmel
 
 
 @pytest.fixture
-def mocked_coroutine():
-    async def dummy(*args, **kwargs):
-        pass
-    return Mock(wraps=dummy)
+def mocked_coro():
+    return asynctest.CoroutineMock()

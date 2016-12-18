@@ -7,19 +7,15 @@ from xanmel.modules.irc.actions import ChannelMessage
 
 
 def test_module_loading(xanmel, mocker):
-    mf = mocker.patch.object(xanmel, 'setup_event_generators')
-    xanmel.load_modules()
     assert len(xanmel.modules) == 3, xanmel.modules
     assert 'xanmel.modules.irc.IRCModule' in xanmel.modules.keys(), xanmel.modules
     assert 'xanmel.modules.xonotic.XonoticModule' in xanmel.modules.keys(), xanmel.modules
     assert 'xanmel.modules.fun.FunModule' in xanmel.modules.keys(), xanmel.modules
-    assert mf.call_count == 3
+    assert xanmel.setup_event_generators.call_count == 3
 
 
 def test_event(xanmel, mocker):
     asyncio.sleep = asynctest.CoroutineMock()
-    mocker.patch.object(xanmel, 'setup_event_generators')
-    xanmel.load_modules()
     irc_module = xanmel.modules['xanmel.modules.irc.IRCModule']
     handlers = xanmel.handlers[MentionMessage]
     for i in handlers:
@@ -33,8 +29,6 @@ def test_event(xanmel, mocker):
 
 
 def test_run_action(xanmel, mocker):
-    mocker.patch.object(xanmel, 'setup_event_generators')
-    xanmel.load_modules()
     irc_module = xanmel.modules['xanmel.modules.irc.IRCModule']
     h = MentionMessageHandler(irc_module)
     a = xanmel.actions[ChannelMessage]

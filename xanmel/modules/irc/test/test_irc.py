@@ -1,5 +1,3 @@
-import asynctest
-
 from xanmel.modules.irc import MentionMessage, IRCChatUser
 from xanmel.modules.irc import actions
 from xanmel.modules.irc import events
@@ -7,20 +5,14 @@ from xanmel.modules.irc.handlers import MentionMessageHandler, PrivateMessageHan
 from xanmel.test.conftest import *
 
 
-def test_connect(xanmel, mocker, mocked_coroutine):
-    mocker.patch.object(xanmel, 'setup_event_generators')
-    xanmel.load_modules()
-    irc_module = xanmel.modules['xanmel.modules.irc.IRCModule']
+def test_connect(xanmel, mocker, mocked_coro, irc_module):
     patched_send = mocker.patch.object(irc_module.client, 'send')
-    irc_module.client.wait = mocked_coroutine
+    irc_module.client.wait = mocked_coro
     xanmel.loop.run_until_complete(irc_module.connect())
     assert patched_send.call_count == 4
 
 
-def test_process_message(xanmel, mocker):
-    mocker.patch.object(xanmel, 'setup_event_generators')
-    xanmel.load_modules()
-    irc_module = xanmel.modules['xanmel.modules.irc.IRCModule']
+def test_process_message(xanmel, mocker, irc_module):
     patched_fire = mocker.patch('xanmel.modules.irc.events.PrivateMessage.fire')
     xanmel.loop.run_until_complete(irc_module.process_message(
         'xanmel', 'Hello, world', nick='nick', user='~nick', host='127.0.0.1'
@@ -38,10 +30,7 @@ def test_process_message(xanmel, mocker):
     assert patched_fire.called
 
 
-def test_channel_message_action(xanmel, mocker):
-    mocker.patch.object(xanmel, 'setup_event_generators')
-    xanmel.load_modules()
-    irc_module = xanmel.modules['xanmel.modules.irc.IRCModule']
+def test_channel_message_action(xanmel, mocker, irc_module):
     send = mocker.patch.object(irc_module.client, 'send')
     channel_message = xanmel.actions[actions.ChannelMessage]
     xanmel.loop.run_until_complete(channel_message.run(message='Hello', prefix='pref'))
@@ -57,10 +46,7 @@ def test_channel_message_action(xanmel, mocker):
     assert log[1][1]['message'] == 'Hi'
 
 
-def test_channel_messages_action(xanmel, mocker):
-    mocker.patch.object(xanmel, 'setup_event_generators')
-    xanmel.load_modules()
-    irc_module = xanmel.modules['xanmel.modules.irc.IRCModule']
+def test_channel_messages_action(xanmel, mocker, irc_module):
     send = mocker.patch.object(irc_module.client, 'send')
     channel_messages = xanmel.actions[actions.ChannelMessages]
     xanmel.loop.run_until_complete(channel_messages.run(messages=['Hello', 'World'], prefix='pref'))
@@ -76,10 +62,7 @@ def test_channel_messages_action(xanmel, mocker):
     assert log[3][1]['message'] == 'There'
 
 
-def test_private_message_action(xanmel, mocker):
-    mocker.patch.object(xanmel, 'setup_event_generators')
-    xanmel.load_modules()
-    irc_module = xanmel.modules['xanmel.modules.irc.IRCModule']
+def test_private_message_action(xanmel, mocker, irc_module):
     send = mocker.patch.object(irc_module.client, 'send')
     private_message = xanmel.actions[actions.PrivateMessage]
     xanmel.loop.run_until_complete(private_message.run(target='username', message='Hello', prefix='pref'))
@@ -93,10 +76,7 @@ def test_private_message_action(xanmel, mocker):
     assert log[1][1]['message'] == 'Hi'
 
 
-def test_private_messages_action(xanmel, mocker):
-    mocker.patch.object(xanmel, 'setup_event_generators')
-    xanmel.load_modules()
-    irc_module = xanmel.modules['xanmel.modules.irc.IRCModule']
+def test_private_messages_action(xanmel, mocker, irc_module):
     send = mocker.patch.object(irc_module.client, 'send')
     private_messages = xanmel.actions[actions.PrivateMessages]
     xanmel.loop.run_until_complete(private_messages.run(target='username', messages=['Hello', 'World'], prefix='pref'))
@@ -110,39 +90,31 @@ def test_private_messages_action(xanmel, mocker):
     assert log[3][1]['message'] == 'There'
 
 
-def test_mention_message_handler(xanmel, mocker):
-    mocker.patch.object(xanmel, 'setup_event_generators')
-    xanmel.load_modules()
-    xanmel.cmd_root.run = asynctest.CoroutineMock()
-    irc_module = xanmel.modules['xanmel.modules.irc.IRCModule']
+def test_mention_message_handler(xanmel, mocker, irc_module, mocked_coro):
+    mocker.patch.object(irc_module.client, 'send')
     msg_handler = MentionMessageHandler(irc_module)
     chat_user = IRCChatUser(irc_module, 'johndoe', irc_user='~johndoe@127.0.0.1')
     event = events.MentionMessage(irc_module, message='excuse', chat_user=chat_user)
+    xanmel.cmd_root.run = mocked_coro
     xanmel.loop.run_until_complete(msg_handler.handle(event))
     assert xanmel.cmd_root.run.call_count == 1
     assert xanmel.cmd_root.run.call_args_list[0][0] == (chat_user, 'excuse')
     assert xanmel.cmd_root.run.call_args_list[0][1] == {}
 
 
-def test_private_message_handler(xanmel, mocker):
-    mocker.patch.object(xanmel, 'setup_event_generators')
-    xanmel.load_modules()
-    xanmel.cmd_root.run = asynctest.CoroutineMock()
-    irc_module = xanmel.modules['xanmel.modules.irc.IRCModule']
+def test_private_message_handler(xanmel, mocker, irc_module, mocked_coro):
+    mocker.patch.object(irc_module.client, 'send')
     msg_handler = PrivateMessageHandler(irc_module)
     chat_user = IRCChatUser(irc_module, 'johndoe', irc_user='~johndoe@127.0.0.1')
     event = events.PrivateMessage(irc_module, message='excuse', chat_user=chat_user)
+    xanmel.cmd_root.run = mocked_coro
     xanmel.loop.run_until_complete(msg_handler.handle(event))
     assert xanmel.cmd_root.run.call_count == 1
     assert xanmel.cmd_root.run.call_args_list[0][0] == (chat_user, 'excuse')
     assert xanmel.cmd_root.run.call_args_list[0][1] == {'is_private': True}
 
 
-def test_chat_user(xanmel, mocker):
-    mocker.patch.object(xanmel, 'setup_event_generators')
-    xanmel.load_modules()
-    xanmel.cmd_root.run = asynctest.CoroutineMock()
-    irc_module = xanmel.modules['xanmel.modules.irc.IRCModule']
+def test_chat_user(xanmel, mocker, irc_module):
     chat_user = IRCChatUser(irc_module, 'johndoe', irc_user='~johndoe@127.0.0.1')
     assert chat_user.unique_id() == '~johndoe@127.0.0.1'
     assert chat_user.is_admin

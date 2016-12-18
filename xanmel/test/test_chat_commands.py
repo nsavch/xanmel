@@ -71,11 +71,8 @@ def test_connect_chidlren():
     assert TestContainer.children_classes['pref'] == Command1
 
 
-def test_acl(xanmel, mocker, dummy_chat_user):
+def test_acl(xanmel, mocker, dummy_chat_user, irc_module):
     asyncio.sleep = asynctest.CoroutineMock()
-    mocker.patch.object(xanmel, 'setup_event_generators')
-    xanmel.load_modules()
-    irc_module = xanmel.modules['xanmel.modules.irc.IRCModule']
     chat_user = dummy_chat_user(module=irc_module,
                                 name=''.join(random.sample(string.ascii_letters, 10)))
     chat_user.botnick = irc_module.config['nick']
@@ -109,10 +106,7 @@ def test_acl(xanmel, mocker, dummy_chat_user):
         assert 'top secret command' not in msg
 
 
-def test_throttling(xanmel, mocker, dummy_chat_user):
-    mocker.patch.object(xanmel, 'setup_event_generators')
-    xanmel.load_modules()
-    irc_module = xanmel.modules['xanmel.modules.irc.IRCModule']
+def test_throttling(xanmel, mocker, dummy_chat_user, irc_module):
     chat_user = dummy_chat_user(module=irc_module,
                                 name=''.join(random.sample(string.ascii_letters, 10)))
     chat_user.botnick = irc_module.config['nick']
@@ -127,10 +121,7 @@ def test_throttling(xanmel, mocker, dummy_chat_user):
     assert chat_user.public_reply.call_count == 6
 
 
-def test_unknown_root_command(xanmel, mocker, dummy_chat_user):
-    mocker.patch.object(xanmel, 'setup_event_generators')
-    xanmel.load_modules()
-    irc_module = xanmel.modules['xanmel.modules.irc.IRCModule']
+def test_unknown_root_command(xanmel, mocker, dummy_chat_user, irc_module):
     chat_user = dummy_chat_user(module=irc_module,
                                 name=''.join(random.sample(string.ascii_letters, 10)))
     chat_user.botnick = irc_module.config['nick']
@@ -146,10 +137,7 @@ def test_unknown_root_command(xanmel, mocker, dummy_chat_user):
     assert chat_user.botnick not in msg
 
 
-def test_unknown_container_command(xanmel, mocker, dummy_chat_user):
-    mocker.patch.object(xanmel, 'setup_event_generators')
-    xanmel.load_modules()
-    irc_module = xanmel.modules['xanmel.modules.irc.IRCModule']
+def test_unknown_container_command(xanmel, mocker, dummy_chat_user, irc_module):
     chat_user = dummy_chat_user(module=irc_module,
                                 name=''.join(random.sample(string.ascii_letters, 10)))
     chat_user.botnick = irc_module.config['nick']
@@ -183,10 +171,7 @@ def test_unknown_container_command(xanmel, mocker, dummy_chat_user):
     assert chat_user.public_reply.call_count == prev_call_count
 
 
-def test_help(xanmel, mocker, dummy_chat_user):
-    mocker.patch.object(xanmel, 'setup_event_generators')
-    xanmel.load_modules()
-    irc_module = xanmel.modules['xanmel.modules.irc.IRCModule']
+def test_help(xanmel, mocker, dummy_chat_user, irc_module):
     chat_user = dummy_chat_user(module=irc_module,
                                 name=''.join(random.sample(string.ascii_letters, 10)))
     chat_user.botnick = irc_module.config['nick']
@@ -221,11 +206,8 @@ def test_help(xanmel, mocker, dummy_chat_user):
     assert msg.startswith('xon maps [PATTERN]:')
 
 
-def test_fullhelp(xanmel, mocker, dummy_chat_user):
+def test_fullhelp(xanmel, mocker, dummy_chat_user, irc_module):
     asyncio.sleep = asynctest.CoroutineMock()
-    mocker.patch.object(xanmel, 'setup_event_generators')
-    xanmel.load_modules()
-    irc_module = xanmel.modules['xanmel.modules.irc.IRCModule']
     chat_user = dummy_chat_user(module=irc_module,
                                 name=''.join(random.sample(string.ascii_letters, 10)))
     chat_user.botnick = irc_module.config['nick']
