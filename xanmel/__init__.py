@@ -195,7 +195,6 @@ class CommandRoot:
         ut = user.user_type
         uid = user.unique_id()
         logger.debug('Running a command for user %s, message %s', uid, message)
-        print(self.throttling[ut])
 
         if uid in self.disabled_users[ut]:
             if time.time() - self.disabled_users[ut][uid] > 60:
@@ -206,7 +205,6 @@ class CommandRoot:
         self.throttling[ut][uid].append(time.time())
         while time.time() - self.throttling[ut][uid][0] > 10:
             self.throttling[ut][uid].pop(0)
-        print(self.throttling[ut])
         if len(self.throttling[ut][uid]) > 5:
             logger.info('User %s:%s throttled for flooding!', ut, uid)
             self.disabled_users[ut][uid] = time.time()
@@ -235,6 +233,8 @@ class CommandContainer:
     def __init__(self, **kwargs):
         self.properties = kwargs
         self.children = {}
+        if not self.children_classes:
+            return
         for k, v in self.children_classes.items():
             self.children[k] = v()
             self.children[k].parent = self
@@ -242,14 +242,17 @@ class CommandContainer:
     def is_allowed_for(self, user):
         return any([i.is_allowed_for(user) for i in self.children.values()])
 
-    @property
-    def admin_required(self):
-        return all([i.admin_required for i in self.children.values()])
-
     async def run(self, user, message, is_private=False):
         message = message.lstrip()
         if not self.children:
             logger.info('Request to a container without children %s', self)
+            return
+        if not message:
+            reply = '%(prefix)s: %(help)s. Use "help %(prefix)s" to list available subcommands' % {
+                'prefix': self.prefix,
+                'help': self.help_text
+            }
+            await user.reply(reply, is_private)
             return
         prefix = message.split(' ', 1)[0]
         if prefix not in self.children:
@@ -272,7 +275,7 @@ class CommandContainer:
 class ConnectChildrenMeta(type):
     def __new__(typ, name, bases, namespace, **kwds):
         instance = type.__new__(typ, name, bases, dict(namespace))
-        if namespace['parent']:
+        if namespace.get('parent'):
             if namespace['parent'].children_classes is None:
                 namespace['parent'].children_classes = {}
             if not instance.prefix:
