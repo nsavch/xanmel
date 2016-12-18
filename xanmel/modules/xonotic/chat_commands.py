@@ -60,7 +60,3 @@ class Maps(ChatCommand):
             reply[0] += ' (%s more maps skipped)' % (len(rcon_server.map_list) - 10)
         for i in reply:
             await user.reply(rcon_server.config['out_prefix'] + i, is_private)
-
-
-
-
