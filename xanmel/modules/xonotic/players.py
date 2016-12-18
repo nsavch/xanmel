@@ -1,3 +1,4 @@
+from xanmel.modules.xonotic.colors import Color
 from xanmel.utils import current_time
 
 
@@ -40,22 +41,24 @@ class PlayerManager:
         return res
 
     def clear_bots(self):
+        to_clear = []
         for k, v in self.players_by_number1.items():
             if v.is_bot:
-                try:
-                    del self.players_by_number1[k]
-                    del self.players_by_number2[v.number2]
-                except KeyError:
-                    pass
+                to_clear.append((k, v.number2))
+        for n1, n2 in to_clear:
+            try:
+                del self.players_by_number1[n1]
+                del self.players_by_number2[n2]
+            except KeyError:
+                pass
 
     def join(self, player):
         if player.number2 in self.players_by_number2:
             old_player = self.players_by_number2[player.number2]
-            old_player.number1 = player.number1
-            old_player.nickname = player.nickname
-            old_player.ip_address = player.ip_address
-            old_player.join_timestamp = player.join_timestamp
-            self.players_by_number1[old_player.number1] = old_player
+            if old_player.number1 in self.players_by_number1 and self.players_by_number1[old_player.number1].number2 == player.number2:
+                del self.players_by_number1[old_player.number1]
+            self.players_by_number1[player.number1] = player
+            self.players_by_number2[player.number2] = player
             return
         else:
             self.players_by_number1[player.number1] = player
@@ -64,13 +67,13 @@ class PlayerManager:
             return player
 
     def part(self, number1):
-        player = self.players_by_number1[number1]
         try:
+            player = self.players_by_number1[number1]
             del self.players_by_number1[player.number1]
             del self.players_by_number2[player.number2]
+            return self.players_by_number1[number1]
         except KeyError:
             pass
-        return player
 
     def clear(self):
         self.players_by_number1 = {}
@@ -83,4 +86,5 @@ class PlayerManager:
         return old_nickname, player
 
     def __str__(self):
-        return repr(list(self.players_by_number1.items()))
+        return ', '.join(['%s: %s' % (n1, Color.dp_to_none(p.nickname).decode('utf8'))
+                          for n1, p in self.players_by_number1.items()])
