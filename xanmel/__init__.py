@@ -113,7 +113,7 @@ class Event:
             self.module.loop.create_task(i.handle(self))
 
     def __str__(self):
-        return '%s(%r)' % (self.get_name(), self.properties)
+        return '%s(%r)' % (type(self), self.properties)
 
 
 class Action:
