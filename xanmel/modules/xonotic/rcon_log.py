@@ -111,14 +111,14 @@ class JoinParser(BaseParser):
                     ip, rest = rest.split(b':', 1)
 
         player = self.rcon_server.players.join(Player(
+            server=self.rcon_server,
             nickname=rest,
             number1=int(number1),
             number2=int(number2),
             ip_address=ip.decode('utf8')
         ))
         if player and not player.is_bot:
-            Join(self.rcon_server.module, server=self.rcon_server, player=player,
-                 current=self.rcon_server.players.current).fire()
+            Join(self.rcon_server.module, server=self.rcon_server, player=player).fire()
 
 
 class PartParser(BaseParser):
@@ -127,8 +127,7 @@ class PartParser(BaseParser):
     def process(self, data):
         player = self.rcon_server.players.part(int(data))
         if player and not player.is_bot:
-            Part(self.rcon_server.module, server=self.rcon_server, player=player,
-                 current=self.rcon_server.players.current).fire()
+            Part(self.rcon_server.module, server=self.rcon_server, player=player).fire()
 
 
 class ScoresParser(BaseParser):

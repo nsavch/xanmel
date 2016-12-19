@@ -51,7 +51,6 @@ def xanmel(event_loop, mocker):
     xanmel = Xanmel(event_loop, 'example_config.yaml')
     mocker.patch.object(xanmel, 'setup_event_generators')
     xanmel.load_modules()
-    print(xanmel)
     return xanmel
 
 

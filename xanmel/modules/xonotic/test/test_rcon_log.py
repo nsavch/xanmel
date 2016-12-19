@@ -70,7 +70,7 @@ def test_part(log_parser, mocker):
     srv = log_parser.rcon_server
     mocker.patch.object(Part, '__init__', return_value=None)
     mocker.patch.object(Part, 'fire', return_value=None)
-    p = Player(b'test', 1, 2, '127.0.0.1')
+    p = Player(srv, b'test', 1, 2, '127.0.0.1')
     srv.players.join(p)
     log_parser.feed(b':part:1\n')
     assert Part.fire.call_count == 1
@@ -88,7 +88,7 @@ def test_part_bot(log_parser, mocker):
     srv = log_parser.rcon_server
     mocker.patch.object(Part, '__init__', return_value=None)
     mocker.patch.object(Part, 'fire', return_value=None)
-    p = Player(b'test', 1, 2, 'bot')
+    p = Player(srv, b'test', 1, 2, 'bot')
     srv.players.join(p)
     log_parser.feed(b':part:1\n')
     assert Part.fire.call_count == 0
@@ -99,7 +99,7 @@ def test_name_change(log_parser, mocker):
     srv = log_parser.rcon_server
     mocker.patch.object(NameChange, '__init__', return_value=None)
     mocker.patch.object(NameChange, 'fire', return_value=None)
-    p = Player(b'test', 1, 2, '127.0.0.1')
+    p = Player(srv, b'test', 1, 2, '127.0.0.1')
     srv.players.join(p)
     log_parser.feed(b':name:1:barbaz\n')
     assert NameChange.fire.call_count == 1

@@ -5,16 +5,15 @@ from xanmel.modules.xonotic.chat_user import XonoticChatUser
 from xanmel.modules.xonotic.players import Player
 
 
-def test_who(xanmel, xon_module, dummy_chat_user, irc_module):
-    rcon_server = xon_module.servers[0]
-    rcon_server.players.join(Player(b'test', 1, 2, '127.0.0.1'))
-    rcon_server.players.join(Player(b'test2', 2, 3, '127.0.0.1'))
+def test_who(xanmel, xon_module, xon_server, dummy_chat_user, irc_module):
+    xon_server.players.join(Player(xon_server, b'test', 1, 2, '127.0.0.1'))
+    xon_server.players.join(Player(xon_server, b'test2', 2, 3, '127.0.0.1'))
     chat_user = dummy_chat_user(module=irc_module,
                                 name=''.join(random.sample(string.ascii_letters, 10)))
     chat_user.user_type = 'irc'
     xanmel.loop.run_until_complete(xanmel.cmd_root.run(chat_user, 'xon who', is_private=False))
     assert chat_user.public_reply.call_args[0][0] == 'exe > test\x0f | test2\x0f'
-    rcon_server.players.join(Player(b'[BOT] Eureka', 3, 4, 'bot'))
+    xon_server.players.join(Player(xon_server, b'[BOT] Eureka', 3, 4, 'bot'))
     xanmel.loop.run_until_complete(xanmel.cmd_root.run(chat_user, 'xon who', is_private=False))
     assert chat_user.public_reply.call_args[0][0] == 'exe > test\x0f | test2\x0f | 1 bots'
 

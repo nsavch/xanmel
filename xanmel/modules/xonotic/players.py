@@ -1,14 +1,30 @@
+import geoip2.errors
+
 from xanmel.modules.xonotic.colors import Color
 from xanmel.utils import current_time
 
 
 class Player:
-    def __init__(self, nickname, number1, number2, ip_address):
+    def __init__(self, server, nickname, number1, number2, ip_address):
+        self.server = server
         self.nickname = nickname
         self.number1 = number1
         self.number2 = number2
         self.ip_address = ip_address
         self.join_timestamp = None
+        self.geo_response = None
+        if not self.is_bot:
+            try:
+                self.geo_response = self.server.module.xanmel.geoip.city(self.ip_address)
+            except (ValueError, geoip2.errors.AddressNotFoundError):
+                pass
+
+    @property
+    def country(self):
+        if self.geo_response:
+            return self.geo_response.country.name
+        else:
+            return 'Unknown'
 
     @property
     def is_bot(self):

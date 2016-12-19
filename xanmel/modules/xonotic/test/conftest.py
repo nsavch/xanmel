@@ -9,6 +9,11 @@ def log_parser(xon_module):
 
 
 @pytest.fixture
+def xon_server(xon_module):
+    return xon_module.servers[0]
+
+
+@pytest.fixture
 def example_scores():
     return b"""^7^xB50<E2><9D><87>^x4B0Skaven^xB50<E2><9D><87>^7^1 has been sublimated by ^7FPM^1's Vaporizer
 :scores:dm_darkzone:317
