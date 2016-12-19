@@ -67,13 +67,12 @@ class PlayerManager:
             return player
 
     def part(self, number1):
-        try:
+        if number1 in self.players_by_number1:
             player = self.players_by_number1[number1]
             del self.players_by_number1[player.number1]
-            del self.players_by_number2[player.number2]
-            return self.players_by_number1[number1]
-        except KeyError:
-            pass
+            if player.number2 in self.players_by_number2:
+                del self.players_by_number2[player.number2]
+            return player
 
     def clear(self):
         self.players_by_number1 = {}

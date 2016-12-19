@@ -79,7 +79,7 @@ class BaseParser:
                     return data
 
     def process(self, data):
-        raise NotImplementedError
+        raise NotImplementedError  # pragma: no cover
 
 
 class JoinParser(BaseParser):
@@ -125,14 +125,10 @@ class PartParser(BaseParser):
     key = b':part:'
 
     def process(self, data):
-        try:
-            player = self.rcon_server.players.part(int(data))
-        except KeyError:
-            pass
-        else:
-            if player and not player.is_bot:
-                Part(self.rcon_server.module, server=self.rcon_server, player=player,
-                     current=self.rcon_server.players.current).fire()
+        player = self.rcon_server.players.part(int(data))
+        if player and not player.is_bot:
+            Part(self.rcon_server.module, server=self.rcon_server, player=player,
+                 current=self.rcon_server.players.current).fire()
 
 
 class ScoresParser(BaseParser):
