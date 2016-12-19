@@ -21,3 +21,19 @@ def test_scores_singe(log_parser, mocker, xon_module, example_scores):
     assert len(kwargs['players']) == 3
     assert kwargs['players'][0]['nickname'] == b'FPM'
     assert kwargs['players'][0]['score'] == 30
+
+
+def test_team_scores_multi(log_parser, mocker, xon_module, example_teamscores):
+    part1 = example_teamscores[:50]
+    part2 = example_teamscores[50:]
+    mocker.patch.object(GameEnded, '__init__', return_value=None)
+    mocker.patch.object(GameEnded, 'fire')
+    log_parser.feed(part1)
+    assert GameEnded.fire.call_count == 0
+    log_parser.feed(part2)
+    assert GameEnded.fire.call_count == 1
+    kwargs = GameEnded.__init__.call_args[1]
+    assert kwargs['game_duration'] == 85
+    assert kwargs['gt'] == 'tdm'
+    assert len(kwargs['players']) == 5
+    assert len(kwargs['teams']) == 2

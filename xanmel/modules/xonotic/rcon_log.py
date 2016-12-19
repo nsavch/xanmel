@@ -185,7 +185,10 @@ class ScoresParser(BaseParser):
                         try:
                             player_data[header] = int(stats[ix])
                         except ValueError:
-                            player_data[header] = stats[ix].decode('utf8')
+                            try:
+                                player_data[header] = float(stats[ix])
+                            except ValueError:
+                                player_data[header] = stats[ix].decode('utf8')
                 players.append(player_data)
             elif row.startswith(b':teamscores'):
                 _, _, _, stats, team_id = row.split(b':')
@@ -275,7 +278,6 @@ class RconLogParser:
             if self.active_parser.finished:
                 self.active_parser = None
         else:
-            print(self.current)
             previous_length = len(self.current)
             while len(self.current) > 0 and b'\n' in self.current:
                 for i in self.parsers:
