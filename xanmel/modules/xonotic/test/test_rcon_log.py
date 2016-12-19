@@ -93,3 +93,34 @@ def test_part_bot(log_parser, mocker):
     log_parser.feed(b':part:1\n')
     assert Part.fire.call_count == 0
     assert len(srv.players.players_by_number1) == 0
+
+
+def test_name_change(log_parser, mocker):
+    srv = log_parser.rcon_server
+    mocker.patch.object(NameChange, '__init__', return_value=None)
+    mocker.patch.object(NameChange, 'fire', return_value=None)
+    p = Player(b'test', 1, 2, '127.0.0.1')
+    srv.players.join(p)
+    log_parser.feed(b':name:1:barbaz\n')
+    assert NameChange.fire.call_count == 1
+    assert NameChange.__init__.call_args[1]['old_nickname'] == b'test'
+    assert srv.players.players_by_number1[1].nickname == b'barbaz'
+    log_parser.feed(b':name:5:barbaz\n')
+    assert NameChange.fire.call_count == 1
+
+
+def test_game_started(log_parser, mocker):
+    mocker.patch.object(GameStarted, '__init__', return_value=None)
+    mocker.patch.object(GameStarted, 'fire', return_value=None)
+    log_parser.feed(b':gamestart:dm_asylum_full:0.1482099669.871995\n')
+    assert GameStarted.fire.call_count == 1
+    assert GameStarted.__init__.call_args[1]['gt'] == 'dm' == log_parser.rcon_server.current_gt
+    assert GameStarted.__init__.call_args[1]['map'] == 'asylum_full' == log_parser.rcon_server.current_map
+
+
+def test_chat_message(log_parser, mocker):
+    mocker.patch.object(ChatMessage, '__init__', return_value=None)
+    mocker.patch.object(ChatMessage, 'fire', return_value=None)
+    log_parser.feed(b'\x01^7test^7: hello\n')
+    assert ChatMessage.fire.call_count == 1
+    assert ChatMessage.__init__.call_args[1]['message'] == b'^7test^7: hello'
