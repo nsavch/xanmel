@@ -19,11 +19,11 @@ class Xanmel:
     """
     The basic metadata holder. There should be only 1 instance per running process of this class.
     """
-    modules = {}
-    handlers = defaultdict(list)
-    actions = {}
 
     def __init__(self, loop, config_path):
+        self.modules = {}
+        self.handlers = defaultdict(list)
+        self.actions = {}
         self.loop = loop
         self.geoip = geoip2.database.Reader('GeoLite2-City.mmdb')
         self.cmd_root = CommandRoot(self)

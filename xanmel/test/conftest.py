@@ -46,11 +46,12 @@ def xon_module(xanmel):
     return xanmel.modules['xanmel.modules.xonotic.XonoticModule']
 
 
-@pytest.fixture(scope='function')
+@pytest.fixture
 def xanmel(event_loop, mocker):
     xanmel = Xanmel(event_loop, 'example_config.yaml')
     mocker.patch.object(xanmel, 'setup_event_generators')
     xanmel.load_modules()
+    print(xanmel)
     return xanmel
 
 

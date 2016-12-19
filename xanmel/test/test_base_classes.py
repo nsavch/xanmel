@@ -12,6 +12,9 @@ def test_module_loading(xanmel, mocker):
     assert 'xanmel.modules.irc.IRCModule' in xanmel.modules.keys(), xanmel.modules
     assert 'xanmel.modules.xonotic.XonoticModule' in xanmel.modules.keys(), xanmel.modules
     assert 'xanmel.modules.fun.FunModule' in xanmel.modules.keys(), xanmel.modules
+    for i in xanmel.handlers.values():
+        for h in i:
+            assert h.module.xanmel is xanmel
     assert xanmel.setup_event_generators.call_count == 3
 
 

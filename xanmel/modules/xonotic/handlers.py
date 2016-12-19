@@ -35,6 +35,7 @@ class ChatMessageHandler(Handler):
                                   message=Color.dp_to_irc(event.properties['message']).decode('utf8'),
                                   prefix=event.properties['server'].config['out_prefix'])
         else:
+            print(cmd_root.run)
             await cmd_root.run(user, message[len(user.botnick)+1:], is_private=False)
 
 
