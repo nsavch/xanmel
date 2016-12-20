@@ -154,6 +154,7 @@ class ScoresParser(BaseParser):
         teams = []
         player_sort_column = 'score'
         team_sort_column = 'score'
+        number1s = []
         for row in lines[1:]:
             if row.startswith(b':labels:player'):
                 player_header = row.split(b':')[3].split(b',')
@@ -174,6 +175,7 @@ class ScoresParser(BaseParser):
                     'team_id': None if team_id == b'spectator' else int(team_id),
                     'number1': int(number1)
                 }
+                number1s.append(int(number1))
                 stats = stats.split(b',')
                 for ix, header in enumerate(player_header):
                     if header:
@@ -213,6 +215,14 @@ class ScoresParser(BaseParser):
                   player_sort_column=player_sort_column,
                   team_sort_column=team_sort_column
                   ).fire()
+        zombies = []
+        for k, v in self.rcon_server.players.players_by_number1.items():
+            if k not in number1s:
+                zombies.append(k)
+        for k in zombies:
+            player = self.rcon_server.players.part(k)
+            if player:
+                Part(self.rcon_server.module, server=self.rcon_server, player=player).fire()
 
 
 class GameStartedParser(BaseParser):

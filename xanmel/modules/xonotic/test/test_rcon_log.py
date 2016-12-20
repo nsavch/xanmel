@@ -11,9 +11,10 @@ def test_feed(log_parser):
     assert log_parser.current == b'newline'
 
 
-def test_scores_singe(log_parser, mocker, xon_module, example_scores):
+def test_scores_single(log_parser, mocker, xon_module, example_scores):
     mocker.patch.object(GameEnded, '__init__', return_value=None)
     mocker.patch.object(GameEnded, 'fire')
+
     log_parser.feed(example_scores)
     assert GameEnded.fire.call_count == 1
     assert GameEnded.__init__.call_args[0][0] == xon_module
@@ -22,6 +23,18 @@ def test_scores_singe(log_parser, mocker, xon_module, example_scores):
     assert len(kwargs['players']) == 3
     assert kwargs['players'][0]['nickname'] == b'FPM'
     assert kwargs['players'][0]['score'] == 30
+
+
+def test_scores_clear_zombies(log_parser, mocker, xon_server, example_scores):
+    mocker.patch.object(GameEnded, '__init__', return_value=None)
+    mocker.patch.object(GameEnded, 'fire')
+    mocker.patch.object(Part, '__init__', return_value=None)
+    mocker.patch.object(Part, 'fire', return_value=None)
+    p = Player(xon_server, b'test', 1, 2, '127.0.0.1')
+    xon_server.players.join(p)
+    log_parser.feed(example_scores)
+    assert Part.fire.call_count == 1
+    assert Part.__init__.call_args[1]['player'] == p
 
 
 def test_team_scores_multi(log_parser, mocker, example_teamscores):
