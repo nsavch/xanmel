@@ -1,4 +1,3 @@
-import xanmel
 from xanmel.modules.irc.actions import ChannelMessage
 from xanmel.modules.xonotic.events import *
 from xanmel.modules.xonotic.players import Player
