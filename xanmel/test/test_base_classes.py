@@ -20,6 +20,7 @@ def test_module_loading(xanmel, mocker):
 
 def test_setup_event_generators(event_loop, mocker):
     xanmel = Xanmel(event_loop, 'example_config.yaml')
+    xanmel.load_modules()
     for k, v in xanmel.modules.items():
         mocker.patch.object(v, 'setup_event_generators')
         xanmel.setup_event_generators(v)
