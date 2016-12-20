@@ -1,3 +1,4 @@
+import xanmel
 from xanmel.modules.irc.actions import ChannelMessage
 from xanmel.modules.xonotic.events import *
 from xanmel.modules.xonotic.players import Player
@@ -138,3 +139,24 @@ def test_irc_message_handler(xanmel, xon_module, irc_module, xon_server, mocker)
     xon_server.config['in_prefix'] = 'abraca'
     xanmel.loop.run_until_complete(h.handle(ev))
     assert xon_server.send.call_count == 4
+
+
+def test_scores_handler_empty(xanmel, xon_module, xon_server, mocked_coro):
+    ev = GameEnded(xon_module, server=xon_server, players=[])
+    h = xanmel.handlers[GameEnded][0]
+    h.run_action = mocked_coro
+    xanmel.loop.run_until_complete(h.handle(ev))
+    assert not h.run_action.called
+
+
+def test_scores_handler(xanmel, xon_module, xon_server, mocked_coro, example_scores_event, example_team_scores_event):
+    ev = GameEnded(xon_module, server=xon_server, **example_scores_event)
+    h = xanmel.handlers[GameEnded][0]
+    h.run_action = mocked_coro
+    xanmel.loop.run_until_complete(h.handle(ev))
+    assert h.run_action.called
+    h.run_action.reset_mock()
+    assert not h.run_action.called
+    ev = GameEnded(xon_module, server=xon_server, **example_team_scores_event)
+    xanmel.loop.run_until_complete(h.handle(ev))
+    assert h.run_action.called

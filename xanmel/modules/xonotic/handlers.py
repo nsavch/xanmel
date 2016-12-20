@@ -112,18 +112,12 @@ class GameEndedHandler(Handler):
             )
         return res
 
-    def __visible_len(self, s):
-        return len(Color.irc_to_none(s.encode('utf8')).decode('utf8'))
-
-    def __pad(self, s, l, t='right'):
-        sl = self.__visible_len(s)
+    def __pad(self, s, l):
+        sl = len(s)
         if sl >= l:
             return s
         else:
-            if t == 'right':
-                return s + ' ' * (l - sl)
-            else:
-                return ' ' * (l - sl) + s
+            return ' ' * (l - sl) + s
 
     def __output_player_table(self, color, header, table):
         line0 = Color(code=color, bright=True).irc().decode('utf8')
@@ -134,7 +128,7 @@ class GameEndedHandler(Handler):
         for row in table:
             line = ''
             for ix, col in enumerate(row[:-1]):
-                line += ' | ' + self.__pad(str(col), len(header[ix]), 'left')
+                line += ' | ' + self.__pad(str(col), len(header[ix]))
             line += ' | ' + row[-1]
             yield line
 
