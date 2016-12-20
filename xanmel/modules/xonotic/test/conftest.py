@@ -66,9 +66,9 @@ def example_scores_event():
         {'score': 0, 'deaths': 42, 'dmgtaken': 4200, 'dmg': 900, 'team_id': -1, 'nickname': b'ItzDub98', 'kills': 9,
          'number1': 4, 'elo': 0, 'suicides': 9}, {'score': 0, 'deaths': 6, 'dmgtaken': 600, 'dmg': 100, 'team_id': -1,
                                                   'nickname': b'^xF00\xee\x83\x88\xee\x83\x85\xee\x83\x81\xee\x83\x92\xee\x83\x94^x0EEof^xEF1\xee\x83\x87\xee\x83\x8f\xee\x83\x8c\xee\x83\x84^xFFF\xee\x82\xb5\xee\x82\xb2\xee\x82\xb3^7',
-                                                  'kills': 1, 'number1': 6, 'e lo': 0, 'suicides': 1}],
+                                                  'kills': 1, 'number1': 6, 'elo': 0, 'suicides': 1}],
         'team_sort_column': 'score', 'map': 'revdm1', 'game_duration': 581, 'teams': [],
-        'playe r_sort_column': 'score', 'gt': 'dm', 'team_header': None,
+        'player_sort_column': 'score', 'gt': 'dm', 'team_header': None,
         'player_header': ['score', '', '', '', '', '', '', '', '', '', 'deaths', 'dmg', 'dmgtaken', '', '', '', '',
                           '', '', '', 'elo', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '',
                           'kills', '', '', '', '', '', '', '', '', '', '', '', '', '', 'suicides', '', '', '']}

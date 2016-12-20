@@ -32,6 +32,8 @@ def test_scores_clear_zombies(log_parser, mocker, xon_server, example_scores):
     mocker.patch.object(Part, 'fire', return_value=None)
     p = Player(xon_server, b'test', 1, 2, '127.0.0.1')
     xon_server.players.join(p)
+    xon_server.players.join(Player(xon_server, b'FPM', 4, 7, '127.0.0.1'))
+    xon_server.players.join(Player(xon_server, b'^x26FDarth Silvius^7', 7, 3, '127.0.0.1'))
     log_parser.feed(example_scores)
     assert Part.fire.call_count == 1
     assert Part.__init__.call_args[1]['player'] == p
