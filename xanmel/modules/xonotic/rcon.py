@@ -45,6 +45,7 @@ class RconServer:
         _, self.command_protocol = await self.loop.create_datagram_endpoint(
             rcon_command_protocol, remote_addr=(self.server_address, self.server_port))
         await self.update_server_status()
+        await self.update_maplist()
 
     async def connect_log(self):
         rcon_log_protocol = rcon_protocol_factory(self.password,
@@ -79,8 +80,7 @@ class RconServer:
     def send(self, command):
         self.command_protocol.send(command)
 
-    async def update_server_status(self):
-        # TODO: clean up "zombie" players
+    async def update_maplist(self):
         maplist_output = await self.execute('g_maplist')
         prefix = b'"g_maplist" is '
         if maplist_output.startswith(prefix) and b'\n' in maplist_output:
@@ -91,8 +91,8 @@ class RconServer:
         logger.info('Got %s on the map list', len(self.map_list))
         logger.debug(self.map_list)
 
+    async def update_server_status(self):
         status_output = await self.execute('status 1')
-        print(status_output)
         for i in status_output.split(b'\n'):
             if not i.strip():
                 continue
