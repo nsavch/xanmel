@@ -103,7 +103,7 @@ class PlayerManager:
 
     def clear_elo(self):
         self.elo_data = {}
-        self.ip_port_to_client_id = {}
+        # self.ip_port_to_client_id = {}
         self.number2_to_ip_port = {}
 
     def name_change(self, number1, new_nickname):
