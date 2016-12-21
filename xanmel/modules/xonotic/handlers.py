@@ -153,7 +153,7 @@ class GameEndedHandler(Handler):
         for i in event.properties['player_header']:
             if i and i not in player_header and i not in event.properties['server'].config['stats_blacklist']:
                 player_header.append(i)
-        player_header.append('   elo')
+        player_header.append(' elo')
         player_header.append('player')
         if event.properties['gt'] == 'dm' and len(event.properties['players']) == 2:
             elo_type = 'duel'
