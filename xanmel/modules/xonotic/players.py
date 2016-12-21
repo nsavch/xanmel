@@ -121,7 +121,7 @@ class PlayerManager:
             if current_mode is None and pref not in ('S', 'n', 'i', 'G', 'P'):
                 continue
             elif current_mode and pref == 'e':
-                elo_data[current_mode] = float(data)
+                elo_data[current_mode] = float(data.strip('elo '))
             if pref == 'S':
                 elo_data['url'] = data
             elif pref == 'n':

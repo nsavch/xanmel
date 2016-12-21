@@ -273,12 +273,12 @@ class AuthenticationParser(BaseParser):
         m = ipv4_address.match(data)
         if m:
             ip = m.group(0)[:-1]
-            data = data[len(ip)+1]
+            data = data[len(ip)+1:]
         else:
             m = ipv6_address_or_addrz.match(data)
             if m:
                 ip = m.group(0)[:-1]
-                data = data[len(ip)+1]
+                data = data[len(ip)+1:]
         if not ip:
             return
         port, data = data.split(b' ', 1)
