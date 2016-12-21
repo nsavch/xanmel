@@ -125,6 +125,7 @@ class RconServer:
             print(rest)
             num2, _ = rest.split(b' ', 1)
             try:
+                port = int(port)
                 num2 = int(num2)
             except ValueError:
                 continue

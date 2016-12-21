@@ -1,9 +1,12 @@
+import logging
 import geoip2.errors
 import math
 
 from xanmel.modules.xonotic.colors import Color
 from xanmel.utils import current_time
 
+
+logger = logging.getLogger(__name__)
 
 class Player:
     def __init__(self, server, nickname, number1, number2, ip_address):
