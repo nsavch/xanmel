@@ -104,6 +104,9 @@ class PlayerManager:
         return old_nickname, player
 
     def add_client_id(self, ip, port, client_id):
+        if b'@' in client_id:
+            client_id = client_id.split(b'@', 1)[0]
+        client_id = client_id.decode('utf8')
         self.client_ids[client_id] = (ip, port)
 
     def update_status(self, ip, port, number2):
