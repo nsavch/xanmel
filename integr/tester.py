@@ -7,7 +7,7 @@ from .fake_irc import FakeIRCServer
 class IntTester:
     def __init__(self):
         self.loop = asyncio.get_event_loop()
-        self.xanmel = Xanmel(self.loop, 'int_test_config.yaml')
+        self.xanmel = Xanmel(self.loop, 'integr_config.yaml')
         self.irc = FakeIRCServer(self.loop)
         self.xanmel.load_modules()
 
