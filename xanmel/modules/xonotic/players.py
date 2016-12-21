@@ -117,6 +117,8 @@ class PlayerManager:
         elo_data = {}
         primary_id = None
         for line in elo_txt.split('\n'):
+            if not line.strip():
+                continue
             pref, data = line.split(' ', 1)
             if current_mode is None and pref not in ('S', 'n', 'i', 'G', 'P'):
                 continue
