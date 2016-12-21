@@ -270,6 +270,7 @@ class AuthenticationParser(BaseParser):
     key = b'Authenticated connection to '
 
     def process(self, data):
+        logger.debug('Go authenticated client info: %r', data)
         ip = None
         m = ipv4_address.match(data)
         if m:
