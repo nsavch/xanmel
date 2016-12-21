@@ -155,7 +155,7 @@ class GameEndedHandler(Handler):
                 player_header.append(i)
         player_header.append(' elo')
         player_header.append('player')
-        if event.properties['gt'] == 'dm' and len(event.properties['players']) == 2:
+        if event.properties['gt'] == 'dm' and len([i for i in event.properties['players'] if i['team_id']]) == 2:
             elo_type = 'duel'
         else:
             elo_type = event.properties['gt'].lower()
