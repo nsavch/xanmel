@@ -44,7 +44,7 @@ class PlayerManager:
         self.players_by_number2 = {}
         self.elo_data = {}
         self.ip_port_to_client_id = {}
-        self.number2_to_ip_port = {}
+        self.number2_to_client_id = {}
         self.max = 0
 
     @property
@@ -103,8 +103,6 @@ class PlayerManager:
 
     def clear_elo(self):
         self.elo_data = {}
-        # self.ip_port_to_client_id = {}
-        self.number2_to_ip_port = {}
 
     def name_change(self, number1, new_nickname):
         player = self.players_by_number1[number1]
@@ -119,7 +117,8 @@ class PlayerManager:
         self.ip_port_to_client_id[(ip, port)] = client_id
 
     def update_status(self, ip, port, number2):
-        self.number2_to_ip_port[number2] = (ip, port)
+        if (ip, port) in self.ip_port_to_client_id:
+            self.number2_to_client_id[number2] = self.ip_port_to_client_id[(ip, port)]
 
     def add_elo(self, elo_txt):
         current_mode = None
@@ -149,8 +148,7 @@ class PlayerManager:
     def get_elo(self, number1, elo_type):
         try:
             player = self.players_by_number1[number1]
-            ip, port = self.number2_to_ip_port[player.number2]
-            client_id = self.ip_port_to_client_id[(ip, port)]
+            client_id = self.number2_to_client_id[player.number2]
             elo = self.elo_data[client_id][elo_type]
             res = math.floor(elo)
         except KeyError:
