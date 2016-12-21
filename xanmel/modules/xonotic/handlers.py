@@ -153,7 +153,12 @@ class GameEndedHandler(Handler):
         for i in event.properties['player_header']:
             if i and i not in player_header and i not in event.properties['server'].config['stats_blacklist']:
                 player_header.append(i)
+        player_header.append('   elo')
         player_header.append('player')
+        if event.properties['gt'] == 'dm' and len(event.properties['players']) == 2:
+            elo_type = 'duel'
+        else:
+            elo_type = event.properties['gt'].lower()
         if event.properties['teams']:
             messages.append(
                 'Team scores: %s' % ':'.join(self.__team_scores(event.properties['teams'],
@@ -164,8 +169,9 @@ class GameEndedHandler(Handler):
                 for player in event.properties['players']:
                     if player['team_id'] == i['team_id']:
                         row = []
-                        for col in player_header[:-1]:
+                        for col in player_header[:-2]:
                             row.append(player[col])
+                        row.append(event.properties['server'].players.get_elo(player['number1'], elo_type))
                         row.append(Color.dp_to_irc(player['nickname']).decode('utf8'))
                         table.append(row)
                 messages += list(self.__output_player_table(i['color'], player_header, table))
@@ -174,8 +180,9 @@ class GameEndedHandler(Handler):
             for player in event.properties['players']:
                 if player['team_id']:
                     row = []
-                    for col in player_header[:-1]:
+                    for col in player_header[:-2]:
                         row.append(player[col])
+                    row.append(event.properties['server'].players.get_elo(player['number1'], elo_type))
                     row.append(Color.dp_to_irc(player['nickname']).decode('utf8'))
                     table.append(row)
             messages += list(self.__output_player_table(Color.CYAN, player_header, table))

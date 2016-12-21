@@ -150,9 +150,9 @@ class ScoresParser(BaseParser):
         return bytes([i for i in s if chr(i).isalpha()]).decode('utf8')
 
     def process(self, lines):
-        logger.debug(self.rcon_server.players.client_ids)
+        logger.debug(self.rcon_server.players.ip_port_to_client_id)
         logger.debug(self.rcon_server.players.elo_data)
-        logger.debug(self.rcon_server.players.ip_port_to_number2)
+        logger.debug(self.rcon_server.players.number2_to_ip_port)
         gt_map, game_duration = lines[0].split(b':')
         game_duration = int(game_duration)
         gt, map = gt_map.decode('utf8').split('_', 1)

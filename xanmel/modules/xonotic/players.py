@@ -1,4 +1,5 @@
 import geoip2.errors
+import math
 
 from xanmel.modules.xonotic.colors import Color
 from xanmel.utils import current_time
@@ -39,8 +40,8 @@ class PlayerManager:
         self.players_by_number1 = {}
         self.players_by_number2 = {}
         self.elo_data = {}
-        self.client_ids = {}
-        self.ip_port_to_number2 = {}
+        self.ip_port_to_client_id = {}
+        self.number2_to_ip_port = {}
         self.max = 0
 
     @property
@@ -107,13 +108,16 @@ class PlayerManager:
         if b'@' in client_id:
             client_id = client_id.split(b'@', 1)[0]
         client_id = client_id.decode('utf8')
-        self.client_ids[client_id] = (ip, port)
+        self.ip_port_to_client_id[(ip, port)] = client_id
 
     def update_status(self, ip, port, number2):
-        to_clear = [k for k, v in self.ip_port_to_number2.items() if v == number2]
+        to_clear = [k for k in self.number2_to_ip_port.keys() if k == number2]
         for i in to_clear:
-            del self.ip_port_to_number2[i]
-        self.ip_port_to_number2[(ip, port)] = number2
+            v = self.number2_to_ip_port[i]
+            del self.number2_to_ip_port[i]
+            if v in self.ip_port_to_client_id:
+                del self.ip_port_to_client_id[v]
+        self.number2_to_ip_port[number2] = (ip, port)
 
     def add_elo(self, elo_txt):
         current_mode = None
@@ -134,11 +138,24 @@ class PlayerManager:
             elif pref == 'i':
                 elo_data['player_id'] = data
             elif pref == 'G':
-                current_mode = data
+                current_mode = data.lower()
             elif pref == 'P':
                 primary_id = data
         if primary_id:
             self.elo_data[primary_id] = elo_data
+
+    def get_elo(self, number1, elo_type):
+        try:
+            player = self.players_by_number1[number1]
+            ip, port = self.number2_to_ip_port[player.number2]
+            client_id = self.ip_port_to_client_id[(ip, port)]
+            elo = self.elo_data[client_id][elo_type]
+            res = math.floor(elo)
+        except KeyError:
+            res = None
+        if res is None:
+            return '--'
+        return res
 
     def __str__(self):
         return ', '.join(['%s: %s' % (n1, Color.dp_to_none(p.nickname).decode('utf8'))
