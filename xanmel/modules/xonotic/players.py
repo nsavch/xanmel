@@ -101,6 +101,11 @@ class PlayerManager:
         self.players_by_number1 = {}
         self.players_by_number2 = {}
 
+    def clear_elo(self):
+        self.elo_data = {}
+        self.ip_port_to_client_id = {}
+        self.number2_to_ip_port = {}
+
     def name_change(self, number1, new_nickname):
         player = self.players_by_number1[number1]
         old_nickname = player.nickname
@@ -114,12 +119,6 @@ class PlayerManager:
         self.ip_port_to_client_id[(ip, port)] = client_id
 
     def update_status(self, ip, port, number2):
-        to_clear = [k for k in self.number2_to_ip_port.keys() if k == number2]
-        for i in to_clear:
-            v = self.number2_to_ip_port[i]
-            del self.number2_to_ip_port[i]
-            if v in self.ip_port_to_client_id:
-                del self.ip_port_to_client_id[v]
         self.number2_to_ip_port[number2] = (ip, port)
 
     def add_elo(self, elo_txt):
