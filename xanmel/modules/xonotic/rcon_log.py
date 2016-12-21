@@ -1,6 +1,8 @@
 import logging
 import re
 
+import requests
+
 from .colors import Color
 from .events import *
 from .players import Player
@@ -27,6 +29,11 @@ GAME_TYPES = {
     'rc': 'race',
     'tdm': 'team deathmatch',
 }
+
+ipv4_address = re.compile(
+            b'^(?:(?:[0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\\.){3}(?:[0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5]):')
+ipv6_address_or_addrz = re.compile(
+            b'^(?:(?:[0-9A-Fa-f]{1,4}:){6}(?:[0-9A-Fa-f]{1,4}:[0-9A-Fa-f]{1,4}|(?:(?:[0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\\.){3}(?:[0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5]))|::(?:[0-9A-Fa-f]{1,4}:){5}(?:[0-9A-Fa-f]{1,4}:[0-9A-Fa-f]{1,4}|(?:(?:[0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\\.){3}(?:[0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5]))|(?:[0-9A-Fa-f]{1,4})?::(?:[0-9A-Fa-f]{1,4}:){4}(?:[0-9A-Fa-f]{1,4}:[0-9A-Fa-f]{1,4}|(?:(?:[0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\\.){3}(?:[0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5]))|(?:[0-9A-Fa-f]{1,4}:[0-9A-Fa-f]{1,4})?::(?:[0-9A-Fa-f]{1,4}:){3}(?:[0-9A-Fa-f]{1,4}:[0-9A-Fa-f]{1,4}|(?:(?:[0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\\.){3}(?:[0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5]))|(?:(?:[0-9A-Fa-f]{1,4}:){,2}[0-9A-Fa-f]{1,4})?::(?:[0-9A-Fa-f]{1,4}:){2}(?:[0-9A-Fa-f]{1,4}:[0-9A-Fa-f]{1,4}|(?:(?:[0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\\.){3}(?:[0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5]))|(?:(?:[0-9A-Fa-f]{1,4}:){,3}[0-9A-Fa-f]{1,4})?::[0-9A-Fa-f]{1,4}:(?:[0-9A-Fa-f]{1,4}:[0-9A-Fa-f]{1,4}|(?:(?:[0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\\.){3}(?:[0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5]))|(?:(?:[0-9A-Fa-f]{1,4}:){,4}[0-9A-Fa-f]{1,4})?::(?:[0-9A-Fa-f]{1,4}:[0-9A-Fa-f]{1,4}|(?:(?:[0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\\.){3}(?:[0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5]))|(?:(?:[0-9A-Fa-f]{1,4}:){,5}[0-9A-Fa-f]{1,4})?::[0-9A-Fa-f]{1,4}|(?:(?:[0-9A-Fa-f]{1,4}:){,6}[0-9A-Fa-f]{1,4})?::)(?:%25(?:[A-Za-z0-9\\-._~]|%[0-9A-Fa-f]{2})+)?:')
 
 
 class BaseParser:
@@ -89,10 +96,6 @@ class JoinParser(BaseParser):
 
         # TODO: find proper namings for number1 and number2
         number1, number2, rest = data.split(b':', 2)
-        ipv4_address = re.compile(
-            b'^(?:(?:[0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\\.){3}(?:[0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5]):')
-        ipv6_address_or_addrz = re.compile(
-            b'^(?:(?:[0-9A-Fa-f]{1,4}:){6}(?:[0-9A-Fa-f]{1,4}:[0-9A-Fa-f]{1,4}|(?:(?:[0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\\.){3}(?:[0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5]))|::(?:[0-9A-Fa-f]{1,4}:){5}(?:[0-9A-Fa-f]{1,4}:[0-9A-Fa-f]{1,4}|(?:(?:[0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\\.){3}(?:[0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5]))|(?:[0-9A-Fa-f]{1,4})?::(?:[0-9A-Fa-f]{1,4}:){4}(?:[0-9A-Fa-f]{1,4}:[0-9A-Fa-f]{1,4}|(?:(?:[0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\\.){3}(?:[0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5]))|(?:[0-9A-Fa-f]{1,4}:[0-9A-Fa-f]{1,4})?::(?:[0-9A-Fa-f]{1,4}:){3}(?:[0-9A-Fa-f]{1,4}:[0-9A-Fa-f]{1,4}|(?:(?:[0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\\.){3}(?:[0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5]))|(?:(?:[0-9A-Fa-f]{1,4}:){,2}[0-9A-Fa-f]{1,4})?::(?:[0-9A-Fa-f]{1,4}:){2}(?:[0-9A-Fa-f]{1,4}:[0-9A-Fa-f]{1,4}|(?:(?:[0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\\.){3}(?:[0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5]))|(?:(?:[0-9A-Fa-f]{1,4}:){,3}[0-9A-Fa-f]{1,4})?::[0-9A-Fa-f]{1,4}:(?:[0-9A-Fa-f]{1,4}:[0-9A-Fa-f]{1,4}|(?:(?:[0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\\.){3}(?:[0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5]))|(?:(?:[0-9A-Fa-f]{1,4}:){,4}[0-9A-Fa-f]{1,4})?::(?:[0-9A-Fa-f]{1,4}:[0-9A-Fa-f]{1,4}|(?:(?:[0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\\.){3}(?:[0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5]))|(?:(?:[0-9A-Fa-f]{1,4}:){,5}[0-9A-Fa-f]{1,4})?::[0-9A-Fa-f]{1,4}|(?:(?:[0-9A-Fa-f]{1,4}:){,6}[0-9A-Fa-f]{1,4})?::)(?:%25(?:[A-Za-z0-9\\-._~]|%[0-9A-Fa-f]{2})+)?:')
 
         if rest.startswith(b'bot'):
             ip = b'bot'
@@ -119,6 +122,7 @@ class JoinParser(BaseParser):
         ))
         if player and not player.is_bot:
             Join(self.rcon_server.module, server=self.rcon_server, player=player).fire()
+            self.rcon_server.module.loop.create_task(self.rcon_server.update_server_status())
 
 
 class PartParser(BaseParser):
@@ -146,6 +150,9 @@ class ScoresParser(BaseParser):
         return bytes([i for i in s if chr(i).isalpha()]).decode('utf8')
 
     def process(self, lines):
+        logger.debug(self.rcon_server.players.client_ids)
+        logger.debug(self.rcon_server.players.elo_data)
+        logger.debug(self.rcon_server.players.ip_port_to_number2)
         gt_map, game_duration = lines[0].split(b':')
         game_duration = int(game_duration)
         gt, map = gt_map.decode('utf8').split('_', 1)
@@ -256,6 +263,56 @@ class ChatMessageParser(BaseParser):
 
     def process(self, data):
         ChatMessage(self.rcon_server.module, server=self.rcon_server, message=data).fire()
+
+
+class AuthenticationParser(BaseParser):
+    key = b'Authenticated connection to '
+
+    def process(self, data):
+        ip = None
+        m = ipv4_address.match(data)
+        if m:
+            ip = m.group(0)[:-1]
+            data = data[len(ip)+1]
+        else:
+            m = ipv6_address_or_addrz.match(data)
+            if m:
+                ip = m.group(0)[:-1]
+                data = data[len(ip)+1]
+        if not ip:
+            return
+        port, data = data.split(b' ', 1)
+        try:
+            port = int(port)
+        except ValueError:
+            return
+        m = re.search(rb'client is (.*)@', data)
+        if m:
+            client_id = m.group(1)
+        else:
+            return
+        self.rcon_server.players.add_client_id(ip, port, client_id)
+
+
+class EloParser(BaseParser):
+    key = b'^7Retrieving playerstats from URL: '
+
+    async def retrieve_elo(self, url):
+        sig = self.rcon_server.config.get('elo_request_signature')
+        if not sig:
+            return
+        response = requests.request(method='post', url=url,
+                                    headers={'X-D0-Blind-ID-Detached-Signature': sig}, data=b'\n')
+        if response.status_code != 200:
+            logger.debug('Got status code %s from %s', response.status_code, url)
+            return
+        try:
+            self.rcon_server.players.add_elo(response.text)
+        except:
+            logger.debug('Failed to parse elo %s', response.text, exc_info=True)
+
+    def process(self, data):
+        self.rcon_server.module.loop.create_task(self.retrieve_elo(data))
 
 
 class RconLogParser:

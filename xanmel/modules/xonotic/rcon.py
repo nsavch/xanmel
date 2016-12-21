@@ -29,6 +29,8 @@ class RconServer:
         self.players = PlayerManager()
         self.current_map = ''
         self.current_gt = ''
+        self.hostname = ''
+        self.timing = ''
         command_container = XonCommands(rcon_server=self)
         command_container.help_text = 'Commands for interacting with %s' % config['name']
         self.module.xanmel.cmd_root.register_container(command_container, config['cmd_prefix'])
@@ -93,12 +95,40 @@ class RconServer:
 
     async def update_server_status(self):
         status_output = await self.execute('status 1')
-        for i in status_output.split(b'\n'):
+        nl = 0
+        lines = status_output.split(b'\n')
+        for nl, i in enumerate(lines):
             if not i.strip():
                 continue
             if i.startswith(b'players'):
                 m = re.match(rb'players:\s*(\d+)\s*active\s*\((\d+)\s*max', i)
                 self.players.max = int(m.group(2))
+            if i.startswith(b'host'):
+                self.hostname = i[len(b'host')+1:].strip().decode('utf8')
+            if i.startswith(b'timing'):
+                self.timing = i[len(b'timing')+1:].strip().decode('utf8')
+            if i.startswith(b'^2IP '):
+                break
+        for i in lines[nl+1:]:
+            if not i.strip():
+                continue
+            ip_port, rest = i[2:].split(b' ', 1)
+
+            if b':' not in ip_port:
+                # bot
+                continue
+            ip, port = ip_port.rsplit(b':', 1)
+            print(rest)
+            if b'#' not in rest:
+                continue
+            rest = rest[rest.index(b'#')+1:]
+            print(rest)
+            num2, _ = rest.split(b' ', 1)
+            try:
+                num2 = int(num2)
+            except ValueError:
+                continue
+            self.players.update_status(ip, port, num2)
 
     async def execute(self, command, timeout=1):
         await self.command_lock.acquire()

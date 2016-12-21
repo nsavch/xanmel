@@ -38,6 +38,9 @@ class PlayerManager:
     def __init__(self):
         self.players_by_number1 = {}
         self.players_by_number2 = {}
+        self.elo_data = {}
+        self.client_ids = {}
+        self.ip_port_to_number2 = {}
         self.max = 0
 
     @property
@@ -99,6 +102,38 @@ class PlayerManager:
         old_nickname = player.nickname
         player.nickname = new_nickname
         return old_nickname, player
+
+    def add_client_id(self, ip, port, client_id):
+        self.client_ids[client_id] = (ip, port)
+
+    def update_status(self, ip, port, number2):
+        to_clear = [k for k, v in self.ip_port_to_number2.items() if v == number2]
+        for i in to_clear:
+            del self.ip_port_to_number2[i]
+        self.ip_port_to_number2[(ip, port)] = number2
+
+    def add_elo(self, elo_txt):
+        current_mode = None
+        elo_data = {}
+        primary_id = None
+        for line in elo_txt.split('\n'):
+            pref, data = line.split(' ', 1)
+            if current_mode is None and pref not in ('S', 'n', 'i', 'G', 'P'):
+                continue
+            elif current_mode and pref == 'e':
+                elo_data[current_mode] = float(data)
+            if pref == 'S':
+                elo_data['url'] = data
+            elif pref == 'n':
+                elo_data['nickname'] = data
+            elif pref == 'i':
+                elo_data['player_id'] = data
+            elif pref == 'G':
+                current_mode = data
+            elif pref == 'P':
+                primary_id = data
+        if primary_id:
+            self.elo_data[primary_id] = elo_data
 
     def __str__(self):
         return ', '.join(['%s: %s' % (n1, Color.dp_to_none(p.nickname).decode('utf8'))
