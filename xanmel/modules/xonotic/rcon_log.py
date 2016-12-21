@@ -312,6 +312,7 @@ class EloParser(BaseParser):
             logger.debug('Failed to parse elo %s', response.text, exc_info=True)
 
     def process(self, data):
+        logger.debug('Trying to retrieve player stats from url %s', data)
         self.rcon_server.module.loop.create_task(self.retrieve_elo(data))
 
 
@@ -322,7 +323,9 @@ class RconLogParser:
         ScoresParser,
         GameStartedParser,
         NameChangeParser,
-        ChatMessageParser
+        ChatMessageParser,
+        AuthenticationParser,
+        EloParser
     ]
 
     def __init__(self, rcon_server):
