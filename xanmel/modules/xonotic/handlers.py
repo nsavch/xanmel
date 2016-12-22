@@ -68,6 +68,8 @@ class JoinHandler(Handler):
             ranks = player.elo_advanced.get('ranks', {})
             if len(ranks) > 0:
                 formatted_ranks = ' [%s]' % ', '.join(['%s:%s' % (k, v['rank']) for k, v in ranks.items()])
+        if not player.really_joined:
+            return
         message = '\00309+ join\x0f: %(name)s%(rank)s \00303%(country)s\x0f \00304%(map)s\x0f [\00304%(current)s\x0f/\00304%(max)s\x0f]' % {
             'name': Color.dp_to_irc(event.properties['player'].nickname).decode('utf8'),
             'map': event.properties['server'].current_map,

@@ -19,6 +19,8 @@ class Player:
         self.number1 = number1
         self.number2 = number2
         self.ip_address = ip_address
+        self.really_joined = True
+
         self.join_timestamp = None
         self.geo_response = None
         self.elo_url = None
@@ -160,12 +162,12 @@ class PlayerManager:
                 del self.players_by_number1[old_player.number1]
             self.players_by_number1[player.number1] = player
             self.players_by_number2[player.number2] = player
-            return
+            player.really_joined = False
         else:
             self.players_by_number1[player.number1] = player
             self.players_by_number2[player.number2] = player
             player.join_timestamp = current_time()
-            return player
+        return player
 
     def part(self, number1):
         if number1 in self.players_by_number1:

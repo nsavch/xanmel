@@ -118,9 +118,8 @@ class JoinParser(BaseParser):
             number2=int(number2),
             ip_address=ip.decode('utf8')
         ))
-        if player and not player.is_bot:
+        if not player.is_bot:
             Join(self.rcon_server.module, server=self.rcon_server, player=player).fire()
-            self.rcon_server.module.loop.create_task(self.rcon_server.update_server_status())
 
 
 class PartParser(BaseParser):
@@ -264,7 +263,6 @@ class EloParser(BaseParser):
     key = b'^7Retrieving playerstats from URL: '
 
     def process(self, data):
-        logger.debug('Trying to retrieve player stats from url %s', data)
         self.rcon_server.players.current_url = data
 
 

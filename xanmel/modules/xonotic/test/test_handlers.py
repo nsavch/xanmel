@@ -83,7 +83,7 @@ def test_join_handler(xanmel, xon_module, xon_server, mocked_coro):
     assert '[\x03042\x0f/\x030412\x0f]' in msg
     assert 'Netherlands' in msg
     assert 'test' in msg
-    p = Player(xon_server, b'test ', 3, 4, '127.0.0.1')
+    p = Player(xon_server, b'test123', 5, 6, '127.0.0.1')
     xon_server.players.join(p)
     ev = Join(xon_module, player=p, server=xon_server)
     xanmel.loop.run_until_complete(h.handle(ev))
