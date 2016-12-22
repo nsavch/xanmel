@@ -185,6 +185,8 @@ class PlayerManager:
             player = self.players_by_number1[number1]
             if player.elo_basic:
                 res = player.elo_basic.get(game_type, '--')
+                if isinstance(res, float):
+                    res = math.floor(res)
         return res
 
     def name_change(self, number1, new_nickname):
