@@ -95,9 +95,8 @@ class RconServer:
 
     async def update_server_status(self):
         status_output = await self.execute('status 1')
-        nl = 0
         lines = status_output.split(b'\n')
-        for nl, i in enumerate(lines):
+        for i in lines:
             if not i.strip():
                 continue
             if i.startswith(b'players'):
@@ -109,27 +108,6 @@ class RconServer:
                 self.timing = i[len(b'timing')+1:].strip().decode('utf8')
             if i.startswith(b'^2IP '):
                 break
-        for i in lines[nl+1:]:
-            if not i.strip():
-                continue
-            ip_port, rest = i[2:].split(b' ', 1)
-
-            if b':' not in ip_port:
-                # bot
-                continue
-            ip, port = ip_port.rsplit(b':', 1)
-            print(rest)
-            if b'#' not in rest:
-                continue
-            rest = rest[rest.index(b'#')+1:]
-            print(rest)
-            num2, _ = rest.split(b' ', 1)
-            try:
-                port = int(port)
-                num2 = int(num2)
-            except ValueError:
-                continue
-            self.players.update_status(ip, port, num2)
 
     async def execute(self, command, timeout=1):
         await self.command_lock.acquire()

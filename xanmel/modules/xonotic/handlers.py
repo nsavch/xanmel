@@ -60,12 +60,21 @@ class JoinHandler(Handler):
     events = [Join]
 
     async def handle(self, event):
-        message = '\00309+ join\x0f: %(name)s \00303%(country)s\x0f \00304%(map)s\x0f [\00304%(current)s\x0f/\00304%(max)s\x0f]' % {
+        player = event.properties['player']
+        if player.elo_url:
+            await player.get_elo()
+        formatted_ranks = ''
+        if player.elo_advanced:
+            ranks = player.elo_advanced.get('ranks', {})
+            if len(ranks) > 0:
+                formatted_ranks = ' [%s]' % ', '.join(['%s:%s' % (k, v['rank']) for k, v in ranks.items()])
+        message = '\00309+ join\x0f: %(name)s%(rank)s \00303%(country)s\x0f \00304%(map)s\x0f [\00304%(current)s\x0f/\00304%(max)s\x0f]' % {
             'name': Color.dp_to_irc(event.properties['player'].nickname).decode('utf8'),
             'map': event.properties['server'].current_map,
             'current': event.properties['server'].players.current,
             'max': event.properties['server'].players.max,
-            'country': event.properties['player'].country
+            'country': player.country,
+            'rank': formatted_ranks
         }
         await self.run_action(ChannelMessage, message=message,
                               prefix=event.properties['server'].config['out_prefix'])

@@ -2,11 +2,14 @@ import logging
 import geoip2.errors
 import math
 
+import requests
+
 from xanmel.modules.xonotic.colors import Color
 from xanmel.utils import current_time
 
 
 logger = logging.getLogger(__name__)
+
 
 class Player:
     def __init__(self, server, nickname, number1, number2, ip_address):
@@ -17,11 +20,81 @@ class Player:
         self.ip_address = ip_address
         self.join_timestamp = None
         self.geo_response = None
+        self.elo_url = None
+
+        self.elo_basic = None
+        self.elo_advanced = None
         if not self.is_bot:
             try:
                 self.geo_response = self.server.module.xanmel.geoip.city(self.ip_address)
             except (ValueError, geoip2.errors.AddressNotFoundError):
                 pass
+
+    async def get_elo(self):
+        loop = self.server.module.xanmel.loop
+        if self.elo_url is None:
+            return
+        sig = self.server.config.get('elo_request_signature')
+        if not sig:
+            return
+        response = await loop.run_in_executor(None, requests.request,
+                                              method='post',
+                                              url=self.elo_url,
+                                              headers={'X-D0-Blind-ID-Detached-Signature': sig},
+                                              data=b'\n')
+        if response.status_code != 200:
+            logger.debug('Got status code %s from %s', response.status_code, self.elo_url)
+            return
+        try:
+            self.parse_elo(response.text)
+        except:
+            logger.debug('Failed to parse elo %s', response.text, exc_info=True)
+        else:
+            logger.debug('Got basic elo %r', self.elo_basic)
+            await self.get_elo_advanced()
+
+    async def get_elo_advanced(self):
+        loop = self.server.module.xanmel.loop
+        url = self.elo_basic.get('url')
+        response = await loop.run_in_executor(None, requests.get, url + '.json')
+        if response.status_code != 200:
+            logger.debug('Got status code %s from %s', response.status_code, self.elo_url)
+            return
+        try:
+            self.elo_advanced = response.json()
+            logger.debug('Got advanced elo %r', self.elo_advanced)
+        except:
+            logger.debug('Could not parse json %s', response.text, exc_info=True)
+        if isinstance(self.elo_advanced, list) and len(self.elo_advanced) > 0:
+            self.elo_advanced = self.elo_advanced[0]
+        else:
+            logger.debug('Strange advanced elo %r', self.elo_advanced)
+        if not isinstance(self.elo_advanced, dict):
+            logger.debug('Strange advanced elo %r', self.elo_advanced)
+            self.elo_advanced = None
+
+    def parse_elo(self, elo_txt):
+        current_mode = None
+        elo_data = {}
+        for line in elo_txt.split('\n'):
+            if not line.strip():
+                continue
+            pref, data = line.split(' ', 1)
+            if current_mode is None and pref not in ('S', 'n', 'i', 'G', 'P'):
+                continue
+            elif current_mode and pref == 'e':
+                elo_data[current_mode] = float(data.strip('elo '))
+            if pref == 'S':
+                elo_data['url'] = data
+            elif pref == 'n':
+                elo_data['nickname'] = data
+            elif pref == 'i':
+                elo_data['player_id'] = data
+            elif pref == 'G':
+                current_mode = data.lower()
+            elif pref == 'P':
+                elo_data['primary_id'] = data
+        self.elo_basic = elo_data
 
     @property
     def country(self):
@@ -43,8 +116,8 @@ class PlayerManager:
         self.players_by_number1 = {}
         self.players_by_number2 = {}
         self.elo_data = {}
-        self.ip_port_to_client_id = {}
-        self.number2_to_client_id = {}
+        self.current_url = None
+        self.players_by_url = {}
         self.max = 0
 
     @property
@@ -76,6 +149,9 @@ class PlayerManager:
                 pass
 
     def join(self, player):
+        if self.current_url:
+            player.elo_url = self.current_url
+            self.current_url = None
         if player.number2 in self.players_by_number2:
             old_player = self.players_by_number2[player.number2]
             if old_player.number1 in self.players_by_number1 and self.players_by_number1[old_player.number1].number2 == player.number2:
@@ -101,61 +177,19 @@ class PlayerManager:
         self.players_by_number1 = {}
         self.players_by_number2 = {}
 
-    def clear_elo(self):
-        self.elo_data = {}
+    def get_elo(self, number1, game_type):
+        res = '--'
+        if number1 in self.players_by_number1:
+            player = self.players_by_number1[number1]
+            if player.elo_basic:
+                res = player.elo_basic.get(game_type, '--')
+        return res
 
     def name_change(self, number1, new_nickname):
         player = self.players_by_number1[number1]
         old_nickname = player.nickname
         player.nickname = new_nickname
         return old_nickname, player
-
-    def add_client_id(self, ip, port, client_id):
-        if b'@' in client_id:
-            client_id = client_id.split(b'@', 1)[0]
-        client_id = client_id.decode('utf8')
-        self.ip_port_to_client_id[(ip, port)] = client_id
-
-    def update_status(self, ip, port, number2):
-        if (ip, port) in self.ip_port_to_client_id:
-            self.number2_to_client_id[number2] = self.ip_port_to_client_id[(ip, port)]
-
-    def add_elo(self, elo_txt):
-        current_mode = None
-        elo_data = {}
-        primary_id = None
-        for line in elo_txt.split('\n'):
-            if not line.strip():
-                continue
-            pref, data = line.split(' ', 1)
-            if current_mode is None and pref not in ('S', 'n', 'i', 'G', 'P'):
-                continue
-            elif current_mode and pref == 'e':
-                elo_data[current_mode] = float(data.strip('elo '))
-            if pref == 'S':
-                elo_data['url'] = data
-            elif pref == 'n':
-                elo_data['nickname'] = data
-            elif pref == 'i':
-                elo_data['player_id'] = data
-            elif pref == 'G':
-                current_mode = data.lower()
-            elif pref == 'P':
-                primary_id = data
-        if primary_id:
-            self.elo_data[primary_id] = elo_data
-
-    def get_elo(self, number1, elo_type):
-        try:
-            player = self.players_by_number1[number1]
-            client_id = self.number2_to_client_id[player.number2]
-            elo = self.elo_data[client_id][elo_type]
-            res = math.floor(elo)
-        except KeyError:
-            res = None
-        if res is None:
-            return '--'
-        return res
 
     def __str__(self):
         return ', '.join(['%s: %s' % (n1, Color.dp_to_none(p.nickname).decode('utf8'))

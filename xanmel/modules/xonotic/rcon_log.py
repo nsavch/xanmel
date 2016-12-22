@@ -1,8 +1,6 @@
 import logging
 import re
 
-import requests
-
 from .colors import Color
 from .events import *
 from .players import Player
@@ -150,8 +148,6 @@ class ScoresParser(BaseParser):
         return bytes([i for i in s if chr(i).isalpha()]).decode('utf8')
 
     def process(self, lines):
-        logger.debug(self.rcon_server.players.elo_data)
-        logger.debug(self.rcon_server.players.number2_to_client_id)
         gt_map, game_duration = lines[0].split(b':')
         game_duration = int(game_duration)
         gt, map = gt_map.decode('utf8').split('_', 1)
@@ -265,55 +261,12 @@ class ChatMessageParser(BaseParser):
         ChatMessage(self.rcon_server.module, server=self.rcon_server, message=data).fire()
 
 
-class AuthenticationParser(BaseParser):
-    key = b'Authenticated connection to '
-
-    def process(self, data):
-        logger.debug('Go authenticated client info: %r', data)
-        ip = None
-        m = ipv4_address.match(data)
-        if m:
-            ip = m.group(0)[:-1]
-            data = data[len(ip)+1:]
-        else:
-            m = ipv6_address_or_addrz.match(data)
-            if m:
-                ip = m.group(0)[:-1]
-                data = data[len(ip)+1:]
-        if not ip:
-            return
-        port, data = data.split(b' ', 1)
-        try:
-            port = int(port)
-        except ValueError:
-            return
-        m = re.search(rb'client is (.*)@', data)
-        if m:
-            client_id = m.group(1)
-        else:
-            return
-        self.rcon_server.players.add_client_id(ip, port, client_id)
-
-
 class EloParser(BaseParser):
     key = b'^7Retrieving playerstats from URL: '
 
-    async def retrieve_elo(self, url):
-        sig = self.rcon_server.config.get('elo_request_signature')
-        if not sig:
-            return
-        response = requests.request(method='post', url=url,
-                                    headers={'X-D0-Blind-ID-Detached-Signature': sig}, data=b'\n')
-        if response.status_code != 200:
-            logger.debug('Got status code %s from %s', response.status_code, url)
-            return
-        try:
-            self.rcon_server.players.add_elo(response.text)
-        except:
-            logger.debug('Failed to parse elo %s', response.text, exc_info=True)
-
     def process(self, data):
         logger.debug('Trying to retrieve player stats from url %s', data)
+        self.rcon_server.players.current_url = data
         self.rcon_server.module.loop.create_task(self.retrieve_elo(data))
 
 
@@ -325,7 +278,6 @@ class RconLogParser:
         GameStartedParser,
         NameChangeParser,
         ChatMessageParser,
-        AuthenticationParser,
         EloParser
     ]
 
