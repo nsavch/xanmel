@@ -267,7 +267,6 @@ class EloParser(BaseParser):
     def process(self, data):
         logger.debug('Trying to retrieve player stats from url %s', data)
         self.rcon_server.players.current_url = data
-        self.rcon_server.module.loop.create_task(self.retrieve_elo(data))
 
 
 class RconLogParser:
