@@ -1,3 +1,4 @@
+import functools
 import logging
 import geoip2.errors
 import math
@@ -37,11 +38,12 @@ class Player:
         sig = self.server.config.get('elo_request_signature')
         if not sig:
             return
-        response = await loop.run_in_executor(None, requests.request,
-                                              method='post',
-                                              url=self.elo_url,
-                                              headers={'X-D0-Blind-ID-Detached-Signature': sig},
-                                              data=b'\n')
+        response = await loop.run_in_executor(None, functools.partial(
+            requests.request,
+            method='post',
+            url=self.elo_url,
+            headers={'X-D0-Blind-ID-Detached-Signature': sig},
+            data=b'\n'))
         if response.status_code != 200:
             logger.debug('Got status code %s from %s', response.status_code, self.elo_url)
             return
