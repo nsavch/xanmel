@@ -1,6 +1,9 @@
 import asyncio
+import functools
 from contextlib import contextmanager
 import logging
+
+import requests
 
 from .rcon_log import RconLogParser
 from .rcon_utils import *
@@ -31,6 +34,7 @@ class RconServer:
         self.current_gt = ''
         self.hostname = ''
         self.timing = ''
+        self.server_stats = {}
         command_container = XonCommands(rcon_server=self)
         command_container.help_text = 'Commands for interacting with %s' % config['name']
         self.module.xanmel.cmd_root.register_container(command_container, config['cmd_prefix'])
@@ -103,11 +107,24 @@ class RconServer:
                 m = re.match(rb'players:\s*(\d+)\s*active\s*\((\d+)\s*max', i)
                 self.players.max = int(m.group(2))
             if i.startswith(b'host'):
-                self.hostname = i[len(b'host')+1:].strip().decode('utf8')
+                self.hostname = i[len(b'host') + 1:].strip().decode('utf8')
             if i.startswith(b'timing'):
-                self.timing = i[len(b'timing')+1:].strip().decode('utf8')
+                self.timing = i[len(b'timing') + 1:].strip().decode('utf8')
             if i.startswith(b'^2IP '):
                 break
+
+    async def update_server_stats(self):
+        if self.config.get('server_stats_url'):
+            response = await self.module.xanmel.loop.run_in_executor(
+                None, functools.partial(requests.get,
+                                        self.config['server_stats_url'],
+                                        headers={'Accept': 'application/json'}))
+            try:
+                self.server_stats = response.json()
+            except:
+                logger.info('Could not download stats, got status %s, response %r',
+                            response.status_code,
+                            response.text)
 
     async def execute(self, command, timeout=1):
         await self.command_lock.acquire()
@@ -155,4 +172,5 @@ def rcon_protocol_factory(password, secure, received_callback=None, connection_m
             elif secure == RCON_NOSECURE:
                 msg = rcon_nosecure_packet(password, command)
             self.transport.sendto(msg)
+
     return RconProtocol

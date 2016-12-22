@@ -28,5 +28,9 @@ modules:
         stats_ordering: ['score', 'goals', 'faults', 'kills', 'revivals', 'deaths']
         stats_blacklist: ['dmg', 'dmgtaken', 'elo']
         elo_request_signature: 'gQEBTrBWi2M7i5cInTMatx0iHAxmN4Xta2NZdXD2OsFls/x/k6XrxoevCGARC4jhC2DzgYHFM5vA40aih59tlXSzrFQ6EiiSgoWG+h1oERFHYWdg3KNwgEkUfnskEy2FS6BhdTs6JdpBAsEq348+NysGVhe7ZYMHlJUTFYE/nJVKC4qBAQGPqnGoD6GhuHLYN+Sf73ROColneBdJ7ttuVwm32FvI8LuD5aLDll7bpqfHTWhgbTW02CYvkTAYtoz2RZmIGK5ZHHaM/V6vcSXnq2ab/7mFRiag7D5OUsmIFY9E3IqcqtP7+wXSVgiNFY3DBPy27bXjk8ZJ9nUD5dQBL9sG8TzWd4EBAdZmc6gLKdO16z5PJQGsWrf1yOViENd/VANx+7aGPQsouAuhwzOlB06SkZ6dxx2zLyfagVthXTXY4JfUoAaa9vSkwqH/7TNIyHxBI220ZyFtekGzJFro2b7zRYiOqs3bKr0pec7qakn9blY0YfgO9W9GI8vG+JsQIk7MJNmSBupTgQEBQUDrksY28iujDepIsG4mXaZdvKM2RhWKKxI4VgrXQ33FVmAQqPwrA3U0EMEE6DR+O8tf6kHsN5efub9aU30E5nRcKEKBln5ro3RHtnLMtBikG5Tqy4o3grx4/SHfFPhs4CMvOYT304A6y1f35TsUj83ahbORkFjaKetTq97vZkk='
+        player_rankings: ['dm', 'duel', 'ctf']
+        server_stats_url: http://stats.xonotic.org/server/7975
+        # none, stats-enabled, all
+        show_geolocation_for: stats-enabled
         raw_log: /tmp/xonotic.log
   xanmel.modules.fun.FunModule: {}

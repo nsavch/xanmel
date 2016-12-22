@@ -33,7 +33,7 @@ def test_maps(xanmel, xon_module, dummy_chat_user, irc_module):
 
 def test_chat_user(xanmel, xon_module, mocked_coro):
     srv = xon_module.servers[0]
-    srv.send = mocked_coro
+    srv.send = mocked_coro()
     cu = XonoticChatUser(xon_module, 'test', rcon_server=srv, raw_nickname=b'test^7')
     assert cu.unique_id() == b'test^7'
     xanmel.loop.run_until_complete(cu.private_reply('test'))

@@ -102,10 +102,15 @@ class Player:
 
     @property
     def country(self):
-        if self.geo_response:
-            return self.geo_response.country.name
+        mode = self.server.config.get('show_geolocation_for', 'none')
+        if mode == 'all' or (mode == 'stats-enabled' and self.elo_basic):
+            if self.geo_response:
+                geoloc = self.geo_response.country.name
+            else:
+                geoloc = 'Unknown'
         else:
-            return 'Unknown'
+            geoloc = 'Planet Earth'
+        return geoloc
 
     @property
     def is_bot(self):
@@ -121,7 +126,6 @@ class PlayerManager:
         self.players_by_number2 = {}
         self.elo_data = {}
         self.current_url = None
-        self.players_by_url = {}
         self.max = 0
 
     @property

@@ -6,7 +6,7 @@ from xanmel.modules.irc.handlers import MentionMessageHandler, PrivateMessageHan
 
 def test_connect(xanmel, mocker, mocked_coro, irc_module):
     patched_send = mocker.patch.object(irc_module.client, 'send')
-    irc_module.client.wait = mocked_coro
+    irc_module.client.wait = mocked_coro()
     xanmel.loop.run_until_complete(irc_module.connect())
     assert patched_send.call_count == 4
 
@@ -94,7 +94,7 @@ def test_mention_message_handler(xanmel, mocker, irc_module, mocked_coro):
     msg_handler = MentionMessageHandler(irc_module)
     chat_user = IRCChatUser(irc_module, 'johndoe', irc_user='~johndoe@127.0.0.1')
     event = events.MentionMessage(irc_module, message='excuse', chat_user=chat_user)
-    xanmel.cmd_root.run = mocked_coro
+    xanmel.cmd_root.run = mocked_coro()
     xanmel.loop.run_until_complete(msg_handler.handle(event))
     assert xanmel.cmd_root.run.call_count == 1
     assert xanmel.cmd_root.run.call_args_list[0][0] == (chat_user, 'excuse')
@@ -106,7 +106,7 @@ def test_private_message_handler(xanmel, mocker, irc_module, mocked_coro):
     msg_handler = PrivateMessageHandler(irc_module)
     chat_user = IRCChatUser(irc_module, 'johndoe', irc_user='~johndoe@127.0.0.1')
     event = events.PrivateMessage(irc_module, message='excuse', chat_user=chat_user)
-    xanmel.cmd_root.run = mocked_coro
+    xanmel.cmd_root.run = mocked_coro()
     xanmel.loop.run_until_complete(msg_handler.handle(event))
     assert xanmel.cmd_root.run.call_count == 1
     assert xanmel.cmd_root.run.call_args_list[0][0] == (chat_user, 'excuse')

@@ -56,4 +56,4 @@ def xanmel(event_loop, mocker):
 
 @pytest.fixture
 def mocked_coro():
-    return asynctest.CoroutineMock()
+    return asynctest.CoroutineMock

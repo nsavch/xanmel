@@ -21,7 +21,7 @@ def test_hax0r(xon_server):
 
 
 def test_maplist(event_loop, xon_server, mocked_coro):
-    xon_server.execute = mocked_coro
+    xon_server.execute = mocked_coro()
     xon_server.execute.return_value = b'"g_maplist" is "solarium stormkeep warfare runningman xoylent finalrage dance ' \
                                       b'darkzone runningmanctf drain nexballarena glowplant afterslime silentsiege ' \
                                       b'vorix techassault leave_em_behind g-23 space-elevator implosion courtfun ' \
@@ -38,7 +38,7 @@ def test_maplist(event_loop, xon_server, mocked_coro):
 
 
 def test_server_status(event_loop, xon_server, mocked_coro):
-    xon_server.execute = mocked_coro
+    xon_server.execute = mocked_coro()
     xon_server.execute.return_value = b"""host:     Xonotic 0.8.1 Server
 version:  Xonotic build 02:02:44 Aug 25 2015 - release (gamename Xonotic)
 protocol: 3504 (DP7)
@@ -53,7 +53,7 @@ IP                                             %pl ping  time   frags  no   name
 
 
 def test_datagram_received(event_loop, xon_server, mocked_coro):
-    asyncio.sleep = mocked_coro
+    asyncio.sleep = mocked_coro()
     event_loop.run_until_complete(asyncio.gather(*asyncio.Task.all_tasks()))
     proto = xon_server.command_protocol
     proto.datagram_received(b'\xff\xff\xff\xffntest', ('127.0.0.1', 26005))

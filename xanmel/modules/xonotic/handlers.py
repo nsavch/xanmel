@@ -54,6 +54,7 @@ class GameStartedHandler(Handler):
         }
         await self.run_action(ChannelMessage, message=message,
                               prefix=event.properties['server'].config['out_prefix'])
+        await event.properties['server'].update_server_stats()
 
 
 class JoinHandler(Handler):
@@ -61,22 +62,36 @@ class JoinHandler(Handler):
 
     async def handle(self, event):
         player = event.properties['player']
-        if player.elo_url:
-            await player.get_elo()
-        formatted_ranks = ''
-        if player.elo_advanced:
-            ranks = player.elo_advanced.get('ranks', {})
-            if len(ranks) > 0:
-                formatted_ranks = ' [%s]' % ', '.join(['%s:%s' % (k, v['rank']) for k, v in ranks.items()])
         if not player.really_joined:
             return
-        message = '\00309+ join\x0f: %(name)s%(rank)s \00303%(country)s\x0f \00304%(map)s\x0f [\00304%(current)s\x0f/\00304%(max)s\x0f]' % {
+        server = event.properties['server']
+        enabled_ranks = server.config.get('player_rankings', ['dm', 'duel', 'ctf'])
+        if player.elo_url:
+            await player.get_elo()
+        formatted_ranks = 'no ranks'
+        if player.elo_advanced:
+            existing_ranks = player.elo_advanced.get('ranks', {})
+            ranks = []
+            for i in enabled_ranks:
+                if i in existing_ranks:
+                    ranks.append((i, existing_ranks[i]))
+            if len(ranks) > 0:
+                formatted_ranks = ', '.join(['%s:%s/%s' % (k, v['rank'], v['max_rank']) for k, v in ranks])
+        server_rank = ''
+        if player.elo_basic and server.server_stats:
+            top_players = server.server_stats.get('top_players', {}).get('top_players', [])
+            for i in top_players:
+                if player.elo_basic.get('player_id') == i.get('player_id'):
+                    server_rank = '[server rank %s]'
+
+        message = '\00309+ join\x0f: %(name)s \00312[%(rank)s]\x0f \00306%(server_rank)s\x0f \00303%(country)s\x0f \00304%(map)s\x0f [\00304%(current)s\x0f/\00304%(max)s\x0f]' % {
             'name': Color.dp_to_irc(event.properties['player'].nickname).decode('utf8'),
-            'map': event.properties['server'].current_map,
-            'current': event.properties['server'].players.current,
-            'max': event.properties['server'].players.max,
+            'map': server.current_map,
+            'current': server.players.current,
+            'max': server.players.max,
             'country': player.country,
-            'rank': formatted_ranks
+            'rank': formatted_ranks,
+            'server_rank': server_rank
         }
         await self.run_action(ChannelMessage, message=message,
                               prefix=event.properties['server'].config['out_prefix'])

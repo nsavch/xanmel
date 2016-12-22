@@ -9,8 +9,10 @@ def log_parser(xon_module):
 
 
 @pytest.fixture
-def xon_server(xon_module):
-    return xon_module.servers[0]
+def xon_server(xon_module, mocked_coro):
+    srv = xon_module.servers[0]
+    srv.update_server_stats = mocked_coro()
+    return srv
 
 
 @pytest.fixture
