@@ -99,10 +99,11 @@ class JoinHandler(Handler):
         else:
             server_rank_game_fmt = ''
         if highest_rank:
-            in_game_message = '^2 +join:^7 %(name)s ^2%(country)s ^x4F0[Rank %(hr_type)s:%(hr_rank)s%(server_rank)s]^7' % {
+            in_game_message = '^2 +join:^7 %(name)s ^2%(country)s ^x4F0[Rank %(hr_type)s:%(hr_rank)s/%(hr_maxrank)s%(server_rank)s]^7' % {
                 'name': event.properties['player'].nickname.decode('utf8'),
                 'hr_type': highest_rank['game_type_cd'],
                 'hr_rank': highest_rank['rank'],
+                'hr_maxrank': highest_rank['max_rank'],
                 'country': player.country,
                 'server_rank': server_rank_game_fmt
             }
@@ -112,7 +113,7 @@ class JoinHandler(Handler):
                 'country': player.country
             }
         if server.config['say_type'] == 'ircmsg':
-            server.send('sv_cmd ircmsg  ^7 %s' % in_game_message)
+            server.send('sv_cmd ircmsg ^7%s' % in_game_message)
         else:
             with server.sv_adminnick('*'):
                 server.send('say %s' % in_game_message)
