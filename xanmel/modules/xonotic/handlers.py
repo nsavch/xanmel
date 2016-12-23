@@ -112,9 +112,9 @@ class JoinHandler(Handler):
                 'country': player.country
             }
         if server.config['say_type'] == 'ircmsg':
-            server.send('sv_cmd ircmsg [BOT] %s^7: %s' % (server.config['botnick'], in_game_message))
+            server.send('sv_cmd ircmsg  ^7 %s' % (server.config['botnick'], in_game_message))
         else:
-            with server.sv_adminnick(server.config['botnick']):
+            with server.sv_adminnick('*'):
                 server.send('say %s' % in_game_message)
         await self.run_action(ChannelMessage, message=message,
                               prefix=event.properties['server'].config['out_prefix'])
