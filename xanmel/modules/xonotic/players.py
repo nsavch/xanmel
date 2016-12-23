@@ -92,7 +92,7 @@ class Player:
         if not self.elo_advanced:
             return
         highest_rank = None
-        for rank in self.elo_advanced.get('ranks', {}):
+        for rank in self.elo_advanced.get('ranks', {}).values():
             if rank in self.server.config.get('player_rankings', ['dm', 'duel', 'ctf']):
                 if highest_rank is None or rank['percentile'] > highest_rank['percentile']:
                     highest_rank = rank
