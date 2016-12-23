@@ -95,7 +95,7 @@ class JoinHandler(Handler):
         }
         highest_rank = player.get_highest_rank()
         if server_rank:
-            server_rank_game_fmt = ' ^2server:%s^x4F0' % server_rank
+            server_rank_game_fmt = ' ^3server:%s^x4F0' % server_rank
         else:
             server_rank_game_fmt = ''
         if highest_rank:
