@@ -92,6 +92,17 @@ class JoinHandler(Handler):
             'rank': formatted_ranks,
             'server_rank': server_rank_fmt
         }
+        in_game_message = '%(name)s: ^2[%(rank)s]^3%(server_rank)s^4%(country)s^7' % {
+            'name': event.properties['player'].nickname.decode('utf8'),
+            'rank': formatted_ranks,
+            'server_rank': server_rank_fmt,
+            'country': player.country
+        }
+        if server.config['say_type'] == 'ircmsg':
+            server.send('sv_cmd ircmsg [BOT] %s^7: %s' % (server.config['botnick'], message))
+        else:
+            with server.sv_adminnick(server.config['botnick']):
+                server.send('say %s' % message)
         await self.run_action(ChannelMessage, message=message,
                               prefix=event.properties['server'].config['out_prefix'])
 

@@ -68,9 +68,10 @@ def test_game_started_handler(xanmel, xon_module, xon_server, mocked_coro):
     assert 'deathmatch' in msg
 
 
-def test_join_handler(xanmel, xon_module, xon_server, mocked_coro):
+def test_join_handler(xanmel, xon_module, xon_server, mocked_coro, mocker):
     xon_server.config['show_geolocation_for'] = 'all'
     xon_server.players.max = 12
+    mocker.patch.object(xon_server, 'send')
     xon_server.players.join(Player(xon_server, b'meme police ', 1, 2, '127.0.0.1'))
     p = Player(xon_server, b'test ', 3, 4, '45.32.238.255')
     xon_server.players.join(p)
