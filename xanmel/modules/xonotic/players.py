@@ -1,5 +1,9 @@
 import functools
 import logging
+
+import asyncio
+import random
+
 import geoip2.errors
 import math
 
@@ -7,7 +11,6 @@ import requests
 
 from xanmel.modules.xonotic.colors import Color
 from xanmel.utils import current_time
-
 
 logger = logging.getLogger(__name__)
 
@@ -40,12 +43,20 @@ class Player:
         sig = self.server.config.get('elo_request_signature')
         if not sig:
             return
-        response = await loop.run_in_executor(None, functools.partial(
-            requests.request,
-            method='post',
-            url=self.elo_url,
-            headers={'X-D0-Blind-ID-Detached-Signature': sig},
-            data=b'\n'))
+        retries_left = 5
+        while retries_left > 0:
+            response = await loop.run_in_executor(None, functools.partial(
+                requests.request,
+                method='post',
+                url=self.elo_url,
+                headers={'X-D0-Blind-ID-Detached-Signature': sig},
+                data=b'\n'))
+            if response.status_code != 404:
+                retries_left = 0
+            else:
+                retries_left -= 1
+                logger.debug('404 for %s, %s retries left', self.elo_url, retries_left)
+                await asyncio.sleep(random.random() * 5)
         if response.status_code != 200:
             logger.debug('Got status code %s from %s', response.status_code, self.elo_url)
             return
@@ -169,7 +180,8 @@ class PlayerManager:
             self.current_url = None
         if player.number2 in self.players_by_number2:
             old_player = self.players_by_number2[player.number2]
-            if old_player.number1 in self.players_by_number1 and self.players_by_number1[old_player.number1].number2 == player.number2:
+            if old_player.number1 in self.players_by_number1 and self.players_by_number1[
+                old_player.number1].number2 == player.number2:
                 del self.players_by_number1[old_player.number1]
             self.players_by_number1[player.number1] = player
             self.players_by_number2[player.number2] = player
