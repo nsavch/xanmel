@@ -107,7 +107,7 @@ class JoinHandler(Handler):
                 'server_rank': server_rank_game_fmt
             }
         else:
-            in_game_message = '^2 +join:^7 %(name)s ^2%(country)s' % {
+            in_game_message = '^2+join:^7 %(name)s ^2%(country)s' % {
                 'name': event.properties['player'].nickname.decode('utf8'),
                 'country': player.country
             }
