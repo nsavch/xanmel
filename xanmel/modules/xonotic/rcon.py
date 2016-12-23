@@ -52,6 +52,7 @@ class RconServer:
             rcon_command_protocol, remote_addr=(self.server_address, self.server_port))
         await self.update_server_status()
         await self.update_maplist()
+        await self.update_server_stats()
 
     async def connect_log(self):
         rcon_log_protocol = rcon_protocol_factory(self.password,

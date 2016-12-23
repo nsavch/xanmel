@@ -112,6 +112,14 @@ class Player:
             geoloc = 'Planet Earth'
         return geoloc
 
+    def get_server_rank(self):
+        if self.elo_basic and self.server.server_stats:
+            top_players = self.server.server_stats.get('top_players', {}).get('top_players', [])
+            for i in top_players:
+                print(i)
+                if self.elo_basic.get('player_id') == i.get('player_id'):
+                    return i['rank']
+
     @property
     def is_bot(self):
         return 'bot' in self.ip_address

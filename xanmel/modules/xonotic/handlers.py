@@ -77,21 +77,20 @@ class JoinHandler(Handler):
                     ranks.append((i, existing_ranks[i]))
             if len(ranks) > 0:
                 formatted_ranks = ', '.join(['%s:%s/%s' % (k, v['rank'], v['max_rank']) for k, v in ranks])
-        server_rank = ''
-        if player.elo_basic and server.server_stats:
-            top_players = server.server_stats.get('top_players', {}).get('top_players', [])
-            for i in top_players:
-                if player.elo_basic.get('player_id') == i.get('player_id'):
-                    server_rank = '[server rank %s]'
+        server_rank = player.get_server_rank()
+        if server_rank:
+            server_rank_fmt = ' [server rank %s] ' % server_rank
+        else:
+            server_rank_fmt = ''
 
-        message = '\00309+ join\x0f: %(name)s \00312[%(rank)s]\x0f \00306%(server_rank)s\x0f \00303%(country)s\x0f \00304%(map)s\x0f [\00304%(current)s\x0f/\00304%(max)s\x0f]' % {
+        message = '\00309+ join\x0f: %(name)s \00312[%(rank)s]\x0f\00306%(server_rank)s\x0f\00303%(country)s\x0f \00304%(map)s\x0f [\00304%(current)s\x0f/\00304%(max)s\x0f]' % {
             'name': Color.dp_to_irc(event.properties['player'].nickname).decode('utf8'),
             'map': server.current_map,
             'current': server.players.current,
             'max': server.players.max,
             'country': player.country,
             'rank': formatted_ranks,
-            'server_rank': server_rank
+            'server_rank': server_rank_fmt
         }
         await self.run_action(ChannelMessage, message=message,
                               prefix=event.properties['server'].config['out_prefix'])
