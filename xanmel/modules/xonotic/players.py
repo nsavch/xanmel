@@ -54,7 +54,7 @@ class Player:
         except:
             logger.debug('Failed to parse elo %s', response.text, exc_info=True)
         else:
-            logger.debug('Got basic elo %r', self.elo_basic)
+            # logger.debug('Got basic elo %r', self.elo_basic)
             await self.get_elo_advanced()
 
     async def get_elo_advanced(self):
@@ -66,7 +66,7 @@ class Player:
             return
         try:
             self.elo_advanced = response.json()
-            logger.debug('Got advanced elo %r', self.elo_advanced)
+            # logger.debug('Got advanced elo %r', self.elo_advanced)
         except:
             logger.debug('Could not parse json %s', response.text, exc_info=True)
         if isinstance(self.elo_advanced, list) and len(self.elo_advanced) > 0:
@@ -116,7 +116,7 @@ class Player:
         if self.elo_basic and self.server.server_stats:
             top_players = self.server.server_stats.get('top_players', {}).get('top_players', [])
             for i in top_players:
-                print(i)
+                logger.debug(i)
                 if self.elo_basic.get('player_id') == i.get('player_id'):
                     return i['rank']
 

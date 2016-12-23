@@ -81,7 +81,7 @@ class JoinHandler(Handler):
         if server_rank:
             server_rank_fmt = ' [server rank %s] ' % server_rank
         else:
-            server_rank_fmt = ''
+            server_rank_fmt = ' '
 
         message = '\00309+ join\x0f: %(name)s \00312[%(rank)s]\x0f\00306%(server_rank)s\x0f\00303%(country)s\x0f \00304%(map)s\x0f [\00304%(current)s\x0f/\00304%(max)s\x0f]' % {
             'name': Color.dp_to_irc(event.properties['player'].nickname).decode('utf8'),
