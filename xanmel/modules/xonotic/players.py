@@ -88,6 +88,16 @@ class Player:
             logger.debug('Strange advanced elo %r', self.elo_advanced)
             self.elo_advanced = None
 
+    def get_highest_rank(self):
+        if not self.elo_advanced:
+            return
+        highest_rank = None
+        for rank in self.elo_advanced.get('ranks', {}):
+            if rank in self.server.config.get('player_rankings', ['dm', 'duel', 'ctf']):
+                if highest_rank is None or rank['percentile'] > highest_rank['percentile']:
+                    highest_rank = rank
+        return highest_rank
+
     def parse_elo(self, elo_txt):
         current_mode = None
         elo_data = {}

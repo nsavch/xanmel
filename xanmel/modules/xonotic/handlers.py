@@ -68,6 +68,7 @@ class JoinHandler(Handler):
         enabled_ranks = server.config.get('player_rankings', ['dm', 'duel', 'ctf'])
         if player.elo_url:
             await player.get_elo()
+        # TODO: move that to the player class
         formatted_ranks = 'no ranks'
         if player.elo_advanced:
             existing_ranks = player.elo_advanced.get('ranks', {})
@@ -79,7 +80,7 @@ class JoinHandler(Handler):
                 formatted_ranks = ', '.join(['%s:%s/%s' % (k, v['rank'], v['max_rank']) for k, v in ranks])
         server_rank = player.get_server_rank()
         if server_rank:
-            server_rank_fmt = ' [server rank %s] ' % server_rank
+            server_rank_fmt = ' [server rank: %s] ' % server_rank
         else:
             server_rank_fmt = ' '
 
@@ -92,12 +93,24 @@ class JoinHandler(Handler):
             'rank': formatted_ranks,
             'server_rank': server_rank_fmt
         }
-        in_game_message = '%(name)s: ^2[%(rank)s]^3%(server_rank)s^4%(country)s^7' % {
-            'name': event.properties['player'].nickname.decode('utf8'),
-            'rank': formatted_ranks,
-            'server_rank': server_rank_fmt,
-            'country': player.country
-        }
+        highest_rank = player.get_highest_rank()
+        if server_rank:
+            server_rank_game_fmt = ' server: %s' % server_rank
+        else:
+            server_rank_game_fmt = ''
+        if highest_rank:
+            in_game_message = '^2 +join:^7 %(name)s ^2%(country)s ^x4F0[Rank %(hr_type)s:%(hr_rank)s%(server_rank)s ]^7' % {
+                'name': event.properties['player'].nickname.decode('utf8'),
+                'hr_type': highest_rank['game_type_cd'],
+                'hr_rank': highest_rank['rank'],
+                'country': player.country,
+                'server_rank': server_rank_game_fmt
+            }
+        else:
+            in_game_message = '^2 +join:^7 %(name)s ^2%(country)s' % {
+                'name': event.properties['player'].nickname.decode('utf8'),
+                'country': player.country
+            }
         if server.config['say_type'] == 'ircmsg':
             server.send('sv_cmd ircmsg [BOT] %s^7: %s' % (server.config['botnick'], in_game_message))
         else:
