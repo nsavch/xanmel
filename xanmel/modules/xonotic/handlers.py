@@ -95,11 +95,11 @@ class JoinHandler(Handler):
         }
         highest_rank = player.get_highest_rank()
         if server_rank:
-            server_rank_game_fmt = ' server: %s' % server_rank
+            server_rank_game_fmt = ' server:%s' % server_rank
         else:
             server_rank_game_fmt = ''
         if highest_rank:
-            in_game_message = '^2 +join:^7 %(name)s ^2%(country)s ^x4F0[Rank %(hr_type)s:%(hr_rank)s%(server_rank)s ]^7' % {
+            in_game_message = '^2 +join:^7 %(name)s ^2%(country)s ^x4F0[Rank %(hr_type)s:%(hr_rank)s%(server_rank)s]^7' % {
                 'name': event.properties['player'].nickname.decode('utf8'),
                 'hr_type': highest_rank['game_type_cd'],
                 'hr_rank': highest_rank['rank'],
