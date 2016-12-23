@@ -62,12 +62,12 @@ class JoinHandler(Handler):
 
     async def handle(self, event):
         player = event.properties['player']
-        if not player.really_joined:
-            return
         server = event.properties['server']
         enabled_ranks = server.config.get('player_rankings', ['dm', 'duel', 'ctf'])
         if player.elo_url:
             await player.get_elo()
+        if not player.really_joined:
+            return
         # TODO: move that to the player class
         formatted_ranks = 'no ranks'
         if player.elo_advanced:

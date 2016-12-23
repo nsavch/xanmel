@@ -43,7 +43,7 @@ class Player:
         sig = self.server.config.get('elo_request_signature')
         if not sig:
             return
-        retries_left = 5
+        retries_left = 3
         while retries_left > 0:
             response = await loop.run_in_executor(None, functools.partial(
                 requests.request,
@@ -130,7 +130,7 @@ class Player:
             else:
                 geoloc = 'Unknown'
         else:
-            geoloc = self.server.config.get('private_country', 'Planet Earth')
+            geoloc = self.server.config.get('private_country', '')
         return geoloc
 
     def get_server_rank(self):
