@@ -58,7 +58,7 @@ class Player:
                 logger.debug('404 for %s, %s retries left', self.elo_url, retries_left)
                 await asyncio.sleep(random.random() * 5)
         if response.status_code != 200:
-            logger.debug('Got status code %s from %s', response.status_code, self.elo_url)
+            logger.debug('Got status code %s from %s, %s', response.status_code, self.elo_url, response.text)
             return
         try:
             self.parse_elo(response.text)
@@ -130,7 +130,7 @@ class Player:
             else:
                 geoloc = 'Unknown'
         else:
-            geoloc = 'Planet Earth'
+            geoloc = self.server.config.get('private_country', 'Planet Earth')
         return geoloc
 
     def get_server_rank(self):
@@ -190,8 +190,7 @@ class PlayerManager:
             self.current_url = None
         if player.number2 in self.players_by_number2:
             old_player = self.players_by_number2[player.number2]
-            if old_player.number1 in self.players_by_number1 and self.players_by_number1[
-                old_player.number1].number2 == player.number2:
+            if old_player.number1 in self.players_by_number1 and self.players_by_number1[old_player.number1].number2 == player.number2:
                 del self.players_by_number1[old_player.number1]
             self.players_by_number1[player.number1] = player
             self.players_by_number2[player.number2] = player
