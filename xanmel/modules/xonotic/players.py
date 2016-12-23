@@ -116,6 +116,7 @@ class Player:
         if self.elo_basic and self.server.server_stats:
             top_players = self.server.server_stats.get('top_players', {}).get('top_players', [])
             for i in top_players:
+                logger.debug(self.elo_basic)
                 logger.debug(i)
                 if self.elo_basic.get('player_id') == i.get('player_id'):
                     return i['rank']
