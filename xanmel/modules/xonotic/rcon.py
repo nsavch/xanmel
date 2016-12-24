@@ -3,7 +3,7 @@ import functools
 from contextlib import contextmanager
 import logging
 
-import requests
+import aiohttp
 
 from .rcon_log import RconLogParser
 from .rcon_utils import *
@@ -116,16 +116,18 @@ class RconServer:
 
     async def update_server_stats(self):
         if self.config.get('server_stats_url'):
-            response = await self.module.xanmel.loop.run_in_executor(
-                None, functools.partial(requests.get,
-                                        self.config['server_stats_url'],
-                                        headers={'Accept': 'application/json'}))
-            try:
-                self.server_stats = response.json()
-            except:
-                logger.info('Could not download stats, got status %s, response %r',
-                            response.status_code,
-                            response.text)
+            async with aiohttp.ClientSession() as session:
+                async with session.get(self.config['server_stats_url'],
+                                       headers={'Accept': 'application/json'}) as resp:
+                    if resp.status != 200:
+                        logger.info('Could not download server stats from %s, got status %s',
+                                    self.config.get['server_stats_url'],
+                                    resp.status)
+                        return
+                    try:
+                        self.server_stats = await resp.json()
+                    except:
+                        logger.info('Could not parse stats', exc_info=True)
 
     async def execute(self, command, timeout=1):
         await self.command_lock.acquire()

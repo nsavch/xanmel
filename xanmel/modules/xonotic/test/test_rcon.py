@@ -1,5 +1,7 @@
 import copy
 
+from aioresponses import aioresponses
+
 from xanmel.modules.xonotic.rcon import *
 
 
@@ -58,3 +60,11 @@ def test_datagram_received(event_loop, xon_server, mocked_coro):
     proto = xon_server.command_protocol
     proto.datagram_received(b'\xff\xff\xff\xffntest', ('127.0.0.1', 26005))
     assert xon_server.command_response == b'test'
+
+
+def test_update_server_stats(event_loop, xon_server, example_server_stats):
+    xon_server.update_server_stats = xon_server.update_server_stats_orig
+    with aioresponses() as m:
+        m.get('http://stats.xonotic.org/server/7975', status=200, payload=example_server_stats)
+        event_loop.run_until_complete(xon_server.update_server_stats())
+    assert len(xon_server.server_stats['top_scorers']['top_scorers']) == 10

@@ -56,7 +56,7 @@ class Player:
             else:
                 retries_left -= 1
                 logger.debug('404 for %s, %s retries left', self.elo_url, retries_left)
-                await asyncio.sleep(random.random() * 5)
+                await asyncio.sleep(1 + random.random() * 2)
         if response.status_code != 200:
             logger.debug('Got status code %s from %s, %s', response.status_code, self.elo_url, response.text)
             return
