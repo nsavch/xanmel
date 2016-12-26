@@ -60,4 +60,6 @@ def test_join_override(xon_server):
 
 
 def test_get_elo(xon_server):
-    pass
+    pm = PlayerManager()
+    pm.join(Player(xon_server, b'test', 1, 2, '127.0.0.1'))
+

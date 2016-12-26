@@ -57,6 +57,6 @@ class Maps(ChatCommand):
                 res.append(i)
         reply = ['[%s/%s]: %s' % (len(res), len(rcon_server.map_list), ', '.join(res[:10]))]
         if len(res) > 10:
-            reply[0] += ' (%s more maps skipped)' % (len(rcon_server.map_list) - 10)
+            reply[0] += ' (%s more maps skipped)' % (len(res) - 10)
         for i in reply:
             await user.reply(rcon_server.config['out_prefix'] + i, is_private)

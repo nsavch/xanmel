@@ -29,6 +29,8 @@ def test_maps(xanmel, xon_module, dummy_chat_user, irc_module):
     assert chat_user.public_reply.call_args[0][0] == 'exe > [25/25]: afterslime, atelier, catharsis, courtfun, dance, darkzone, drain, finalrage, fuse, g-23 (15 more maps skipped)'
     xanmel.loop.run_until_complete(xanmel.cmd_root.run(chat_user, 'xon maps darkzo', is_private=False))
     assert chat_user.public_reply.call_args[0][0] == 'exe > [1/25]: darkzone'
+    xanmel.loop.run_until_complete(xanmel.cmd_root.run(chat_user, 'xon maps a', is_private=False))
+    assert chat_user.public_reply.call_args[0][0] == 'exe > [16/25]: afterslime, atelier, catharsis, dance, darkzone, drain, finalrage, glowplant, leave_em_behind, nexballarena (6 more maps skipped)'
 
 
 def test_chat_user(xanmel, xon_module, mocked_coro):
