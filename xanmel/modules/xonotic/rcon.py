@@ -1,5 +1,4 @@
 import asyncio
-import functools
 from contextlib import contextmanager
 import logging
 
@@ -20,6 +19,7 @@ class RconServer:
         self.config = config
         self.server_address = config['rcon_ip']
         self.server_port = int(config['rcon_port'])
+        self.log_listener_ip = config.get('log_listener_ip')
         self.password = config['rcon_password']
         self.secure = int(config.get('rcon_secure', RCON_SECURE_TIME))
         self.admin_nick = ''
@@ -47,7 +47,8 @@ class RconServer:
     async def connect_cmd(self):
         rcon_command_protocol = rcon_protocol_factory(self.password,
                                                       self.secure,
-                                                      self.receive_command_response)
+                                                      self.receive_command_response,
+                                                      local_ip=self.log_listener_ip)
         _, self.command_protocol = await self.loop.create_datagram_endpoint(
             rcon_command_protocol, remote_addr=(self.server_address, self.server_port))
         await self.update_server_status()
@@ -58,7 +59,8 @@ class RconServer:
         rcon_log_protocol = rcon_protocol_factory(self.password,
                                                   self.secure,
                                                   self.receive_log_response,
-                                                  self.subscribe_to_log)
+                                                  self.subscribe_to_log,
+                                                  local_ip=self.log_listener_ip)
         await self.loop.create_datagram_endpoint(
             rcon_log_protocol, remote_addr=(self.server_address, self.server_port)
         )
@@ -140,7 +142,8 @@ class RconServer:
         return self.command_response
 
 
-def rcon_protocol_factory(password, secure, received_callback=None, connection_made_callback=None):
+def rcon_protocol_factory(password, secure, received_callback=None, connection_made_callback=None,
+                          local_ip=None):
     class RconProtocol(asyncio.DatagramProtocol):
         transport = None
         local_port = None
@@ -149,6 +152,8 @@ def rcon_protocol_factory(password, secure, received_callback=None, connection_m
         def connection_made(self, transport):
             self.transport = transport
             self.local_host, self.local_port = self.transport.get_extra_info('sockname')
+            if local_ip:
+                self.local_host = local_ip
             if connection_made_callback:
                 connection_made_callback(self)
 
