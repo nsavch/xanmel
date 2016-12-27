@@ -289,10 +289,10 @@ class IRCMessageHandler(Handler):
                         server.send('say %s' % message)
 
 
-class IRCConnected(ServerConnectedBase):
-    events = [irc_events.ConnectedAndJoined]
-
-    async def handle(self, event):
-        for server in self.module.servers:
-            if server.hostname:
-                await self.report(server, server.hostname)
+# class IRCConnected(ServerConnectedBase):
+#     events = [irc_events.ConnectedAndJoined]
+#
+#     async def handle(self, event):
+#         for server in self.module.servers:
+#             if server.hostname:
+#                 await self.report(server, server.hostname)

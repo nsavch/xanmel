@@ -59,7 +59,9 @@ class RconServer:
                 status = await self.update_server_status()
                 if status:
                     ServerConnect(self.module, server=self, hostname=self.hostname).fire()
-            await asyncio.sleep(30)
+            else:
+                await self.update_server_status()
+                await asyncio.sleep(30)
 
     async def connect_cmd(self):
         rcon_command_protocol = rcon_protocol_factory(self.password,
