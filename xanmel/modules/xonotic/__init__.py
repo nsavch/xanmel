@@ -9,5 +9,4 @@ class XonoticModule(Module):
         for server in config['servers']:
             self.servers.append(RconServer(self, server))
         for i in self.servers:
-            self.loop.create_task(i.connect_cmd())
-            self.loop.create_task(i.connect_log())
+            self.loop.create_task(i.check_connection())

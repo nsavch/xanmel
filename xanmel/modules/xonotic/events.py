@@ -1,6 +1,14 @@
 from xanmel import Event
 
 
+class ServerConnect(Event):
+    pass
+
+
+class ServerDisconnect(Event):
+    pass
+
+
 class Join(Event):
     pass
 

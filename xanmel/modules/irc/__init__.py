@@ -62,6 +62,7 @@ class IRCModule(Module):
         self.reconnect_interval = 0
 
     def send(self, command, **kwargs):
+        # TODO: catch 40* errors here
         if not self.client.protocol:
             logger.debug('Skipping command %s while not connected', command)
             return
@@ -101,7 +102,7 @@ class IRCModule(Module):
                 # send a keepalive message. PING would probably fit better, but parsing PONG isn't
                 # supported in python-bottom
                 self.send('NOTICE', target="#xanmel", message=random.randint(0, 1024*1024))
-            await asyncio.sleep(5)
+            await asyncio.sleep(30)
 
     def setup_event_generators(self):
         self.client.on('CLIENT_CONNECT', self.connect)

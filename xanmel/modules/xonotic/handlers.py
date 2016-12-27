@@ -10,6 +10,30 @@ from xanmel.modules.irc.actions import ChannelMessage, ChannelMessages
 import xanmel.modules.irc.events as irc_events
 
 
+class ServerConnectHandler(Handler):
+    events = [ServerConnect]
+
+    async def handle(self, event):
+        msg = '\00303Xonotic Server Connected:\x0f \00312%(hostname)s\x0f; join now: \2xonotic +connect %(sv_ip)s:%(sv_port)s' % {
+            'hostname': event.properties['hostname'],
+            'sv_ip': event.properties['server'].config['public_ip'],
+            'sv_port': event.properties['server'].config['public_port']
+        }
+        await self.run_action(ChannelMessage, message=msg,
+                              prefix=event.properties['server'].config['out_prefix'])
+
+
+class ServerDisconnectHandler(Handler):
+    events = [ServerDisconnect]
+
+    async def handle(self, event):
+        hostname = event.properties['hostname']
+        await self.run_action(ChannelMessage,
+                              message='\00304Xonotic Server Disconnected:\x0f \00312%s\x0f' % hostname,
+                              prefix=event.properties['server'].config['out_prefix'])
+
+
+
 class ChatMessageHandler(Handler):
     events = [ChatMessage]
 

@@ -56,7 +56,7 @@ IP                                             %pl ping  time   frags  no   name
 
 def test_datagram_received(event_loop, xon_server, mocked_coro):
     asyncio.sleep = mocked_coro()
-    event_loop.run_until_complete(asyncio.gather(*asyncio.Task.all_tasks()))
+    event_loop.run_until_complete(xon_server.connect_cmd())
     proto = xon_server.command_protocol
     proto.datagram_received(b'\xff\xff\xff\xffntest', ('127.0.0.1', 26005))
     assert xon_server.command_response == b'test'

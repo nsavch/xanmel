@@ -4,6 +4,7 @@ import logging
 
 import aiohttp
 
+from xanmel.modules.xonotic.events import ServerDisconnect, ServerConnect
 from .rcon_log import RconLogParser
 from .rcon_utils import *
 from .players import PlayerManager
@@ -43,6 +44,22 @@ class RconServer:
         else:
             self.raw_log = None
         self.map_list = []
+        self.status_timestamp = 0
+        self.log_timestamp = 0
+
+    async def check_connection(self):
+        while True:
+            if time.time() - self.status_timestamp > 60 or time.time() - self.log_timestamp > 60:
+                logger.debug('Trying to connect to %s:%s', self.server_address, self.server_port)
+                if self.hostname:
+                    ServerDisconnect(self.module, server=self, hostname=self.hostname).fire()
+                    self.hostname = None
+                await self.connect_cmd()
+                await self.connect_log()
+                status = await self.update_server_status()
+                if status:
+                    ServerConnect(self.module, server=self, hostname=self.hostname).fire()
+            await asyncio.sleep(30)
 
     async def connect_cmd(self):
         rcon_command_protocol = rcon_protocol_factory(self.password,
@@ -73,6 +90,7 @@ class RconServer:
     def receive_log_response(self, data, addr):
         if addr[0] != self.server_address or addr[1] != self.server_port:
             return
+        self.log_timestamp = time.time()
         if self.raw_log:
             self.raw_log.write(data)
         self.log_parser.feed(data)
@@ -97,11 +115,15 @@ class RconServer:
             if m:
                 maplist_output = m.group(1)
             self.map_list = sorted(maplist_output.decode('utf8').split(' '))
-        logger.info('Got %s on the map list', len(self.map_list))
-        logger.debug(self.map_list)
+            logger.info('Got %s on the map list', len(self.map_list))
+            logger.debug(self.map_list)
 
     async def update_server_status(self):
         status_output = await self.execute('status 1')
+        if status_output:
+            self.status_timestamp = time.time()
+        else:
+            return False
         lines = status_output.split(b'\n')
         for i in lines:
             if not i.strip():
@@ -115,6 +137,7 @@ class RconServer:
                 self.timing = i[len(b'timing') + 1:].strip().decode('utf8')
             if i.startswith(b'^2IP '):
                 break
+        return True
 
     async def update_server_stats(self):
         if self.config.get('server_stats_url'):

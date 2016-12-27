@@ -105,7 +105,6 @@ class FakeIRCServer:
             if t == 'c':
                 timeout = 10
                 while not self.connected:
-                    print('Not connected, waiting')
                     await asyncio.sleep(1)
                     timeout -= 1
                     if timeout == 0:
@@ -113,7 +112,6 @@ class FakeIRCServer:
             elif t == 'd':
                 timeout = 10
                 while self.connected:
-                    print('Not disconnected, waiting')
                     await asyncio.sleep(1)
                     timeout -= 1
                     if timeout == 0:

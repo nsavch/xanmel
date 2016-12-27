@@ -2,13 +2,16 @@ import asyncio
 
 from xanmel import Xanmel
 from .fake_irc import FakeIRCServer
+from .fake_xon import FakeXonServer
 
 
 class IntTester:
     def __init__(self):
         self.loop = asyncio.get_event_loop()
         self.irc = FakeIRCServer(self.loop)
+        self.xon = FakeXonServer(self.loop)
         self.loop.run_until_complete(self.irc.start_server())
+        self.loop.run_until_complete(self.xon.start_server())
         self.xanmel = Xanmel(self.loop, 'integr_config.yaml')
         self.xanmel.load_modules()
 
