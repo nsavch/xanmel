@@ -49,7 +49,7 @@ class RconServer:
 
     async def check_connection(self):
         while True:
-            if time.time() - self.status_timestamp > 60 or time.time() - self.log_timestamp > 60:
+            if time.time() - self.status_timestamp > 60:
                 logger.debug('Trying to connect to %s:%s', self.server_address, self.server_port)
                 if self.hostname:
                     ServerDisconnect(self.module, server=self, hostname=self.hostname).fire()
