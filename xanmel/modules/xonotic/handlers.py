@@ -10,17 +10,21 @@ from xanmel.modules.irc.actions import ChannelMessage, ChannelMessages
 import xanmel.modules.irc.events as irc_events
 
 
-class ServerConnectHandler(Handler):
+class ServerConnectedBase(Handler):
+    async def report(self, server, hostname):
+        msg = '\00303Xonotic Server Connected:\x0f \00312%(hostname)s\x0f; join now: \2xonotic +connect %(sv_ip)s:%(sv_port)s' % {
+            'hostname': hostname,
+            'sv_ip': server.config['public_ip'],
+            'sv_port': server.config['public_port']
+        }
+        await self.run_action(ChannelMessage, message=msg, prefix=server.config['out_prefix'])
+
+
+class ServerConnectHandler(ServerConnectedBase):
     events = [ServerConnect]
 
     async def handle(self, event):
-        msg = '\00303Xonotic Server Connected:\x0f \00312%(hostname)s\x0f; join now: \2xonotic +connect %(sv_ip)s:%(sv_port)s' % {
-            'hostname': event.properties['hostname'],
-            'sv_ip': event.properties['server'].config['public_ip'],
-            'sv_port': event.properties['server'].config['public_port']
-        }
-        await self.run_action(ChannelMessage, message=msg,
-                              prefix=event.properties['server'].config['out_prefix'])
+        await self.report(event.properties['server'], event.properties['hostname'])
 
 
 class ServerDisconnectHandler(Handler):
@@ -31,7 +35,6 @@ class ServerDisconnectHandler(Handler):
         await self.run_action(ChannelMessage,
                               message='\00304Xonotic Server Disconnected:\x0f \00312%s\x0f' % hostname,
                               prefix=event.properties['server'].config['out_prefix'])
-
 
 
 class ChatMessageHandler(Handler):
@@ -284,3 +287,12 @@ class IRCMessageHandler(Handler):
                 else:
                     with server.sv_adminnick(irc_nick):
                         server.send('say %s' % message)
+
+
+class IRCConnected(ServerConnectedBase):
+    events = [irc_events.ConnectedAndJoined]
+
+    async def handle(self, event):
+        for server in self.module.servers:
+            if server.hostname:
+                await self.report(server, server.hostname)

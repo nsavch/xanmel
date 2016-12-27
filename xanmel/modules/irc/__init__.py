@@ -59,6 +59,7 @@ class IRCModule(Module):
         if self.config.get('greeting'):
             self.send('PRIVMSG', target=self.config['channel'], message=self.config['greeting'])
         self.joined = True
+        ConnectedAndJoined(self).fire()
         self.reconnect_interval = 0
 
     def send(self, command, **kwargs):
@@ -72,6 +73,7 @@ class IRCModule(Module):
         self.send('PONG', message=message)
 
     async def disconnect(self):
+        Disconnected(self).fire()
         self.connected = False
 
     async def check_connection(self):
