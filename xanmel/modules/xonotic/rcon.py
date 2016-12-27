@@ -24,7 +24,9 @@ class RconServer:
         self.password = config['rcon_password']
         self.secure = int(config.get('rcon_secure', RCON_SECURE_TIME))
         self.admin_nick = ''
+        self.command_transport = None
         self.command_protocol = None
+        self.log_transport = None
         self.log_protocol = None
         self.command_lock = asyncio.Lock()
         self.command_response = b''
@@ -49,7 +51,7 @@ class RconServer:
 
     async def check_connection(self):
         while True:
-            if time.time() - self.status_timestamp > 60:
+            if time.time() - self.status_timestamp > 120 or time.time() - self.log_timestamp > 120:
                 logger.debug('Trying to connect to %s:%s', self.server_address, self.server_port)
                 if self.hostname:
                     ServerDisconnect(self.module, server=self, hostname=self.hostname).fire()
@@ -59,28 +61,33 @@ class RconServer:
                 status = await self.update_server_status()
                 if status:
                     ServerConnect(self.module, server=self, hostname=self.hostname).fire()
+                await asyncio.sleep(10)
             else:
                 await self.update_server_status()
-                await asyncio.sleep(30)
+                await asyncio.sleep(25)
 
     async def connect_cmd(self):
+        if self.command_transport:
+            self.command_transport.abort()
         rcon_command_protocol = rcon_protocol_factory(self.password,
                                                       self.secure,
                                                       self.receive_command_response,
                                                       local_ip=self.log_listener_ip)
-        _, self.command_protocol = await self.loop.create_datagram_endpoint(
+        self.command_transport, self.command_protocol = await self.loop.create_datagram_endpoint(
             rcon_command_protocol, remote_addr=(self.server_address, self.server_port))
         await self.update_server_status()
         await self.update_maplist()
         await self.update_server_stats()
 
     async def connect_log(self):
+        if self.log_transport:
+            self.log_transport.abort()
         rcon_log_protocol = rcon_protocol_factory(self.password,
                                                   self.secure,
                                                   self.receive_log_response,
                                                   self.subscribe_to_log,
                                                   local_ip=self.log_listener_ip)
-        await self.loop.create_datagram_endpoint(
+        self.log_transport, self.log_protocol = await self.loop.create_datagram_endpoint(
             rcon_log_protocol, remote_addr=(self.server_address, self.server_port)
         )
 
