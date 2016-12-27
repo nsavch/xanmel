@@ -50,11 +50,15 @@ class IRCModule(Module):
         if self.config.get('greeting'):
             self.client.send('PRIVMSG', target=self.config['channel'], message=self.config['greeting'])
 
+    async def disconnect(self):
+        print('Server disconnected!')
+
     async def pong(self, message, **kwargs):
         self.client.send('PONG', message=message)
 
     def setup_event_generators(self):
         self.client.on('CLIENT_CONNECT', self.connect)
+        self.client.on('CLIENT_DISCONNECT', self.disconnect)
         self.client.on('PING', self.pong)
         self.client.on('PRIVMSG', self.process_message)
         self.loop.create_task(self.client.connect())
@@ -78,3 +82,4 @@ class IRCModule(Module):
 
     def teardown(self):
         self.loop.run_until_complete(self.client.disconnect())
+        self.client.protocol = None
