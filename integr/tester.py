@@ -46,4 +46,8 @@ class IntTester:
         self.irc.expect_connection()
         self.irc.expect(command='USER', kwargs={'user': 'xanmel'})
         self.irc.expect(command='NICK', kwargs={'new_nick': 'xanmel', 'host': ''})
+        self.irc.send(command='RPL_ENDOFMOTD', kwargs={})
+        self.irc.expect(command='JOIN', kwargs={'channel': '#xanmel'})
+        self.irc.expect(command='PRIVMSG', kwargs={'target': '#xanmel', 'message': 'HELLO WORLD!'})
+        await asyncio.sleep(30)
         await self.irc.execute()

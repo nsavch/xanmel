@@ -1,4 +1,5 @@
 import asyncio
+import random
 
 import bottom
 
@@ -29,6 +30,8 @@ class IRCChatUser(ChatUser):
 
 class IRCModule(Module):
     def __init__(self, xanmel, config):
+        self.connected = False
+        self.first_time = True
         super(IRCModule, self).__init__(xanmel, config)
         self.client = bottom.Client(host=config['host'],
                                     port=config['port'],
@@ -36,6 +39,7 @@ class IRCModule(Module):
                                     loop=self.loop)
 
     async def connect(self):
+        self.first_time = False
         self.client.send('USER', user=self.config['nick'], realname=self.config['realname'])
         self.client.send('NICK', nick=self.config['nick'])
 
@@ -49,19 +53,31 @@ class IRCModule(Module):
             future.cancel()
         if self.config.get('greeting'):
             self.client.send('PRIVMSG', target=self.config['channel'], message=self.config['greeting'])
-
-    async def disconnect(self):
-        print('Server disconnected!')
+        self.connected = True
 
     async def pong(self, message, **kwargs):
         self.client.send('PONG', message=message)
+
+    async def disconnect(self):
+        self.connected = False
+
+    async def check_connection(self):
+        while True:
+            if not self.connected:
+                if not self.first_time:
+                    # Large sleeping interval to prevent throttling disconnections
+                    await asyncio.sleep(5 + random.random()*5)
+                if self.client.protocol:
+                    await self.client.disconnect()
+                await self.client.connect()
+            await asyncio.sleep(10)
 
     def setup_event_generators(self):
         self.client.on('CLIENT_CONNECT', self.connect)
         self.client.on('CLIENT_DISCONNECT', self.disconnect)
         self.client.on('PING', self.pong)
         self.client.on('PRIVMSG', self.process_message)
-        self.loop.create_task(self.client.connect())
+        self.loop.create_task(self.check_connection())
 
     async def process_message(self, target, message, **kwargs):
         kwargs['chat_user'] = IRCChatUser(self,
