@@ -5,8 +5,9 @@ from xanmel.modules.irc.handlers import MentionMessageHandler, PrivateMessageHan
 
 
 def test_connect(xanmel, mocker, mocked_coro, irc_module):
-    patched_send = mocker.patch.object(irc_module.client, 'send')
+    patched_send = mocker.patch.object(irc_module, 'send')
     irc_module.client.wait = mocked_coro()
+    irc_module.connected = True
     xanmel.loop.run_until_complete(irc_module.connect())
     assert patched_send.call_count == 4
 
@@ -30,7 +31,7 @@ def test_process_message(xanmel, mocker, irc_module):
 
 
 def test_channel_message_action(xanmel, mocker, irc_module):
-    send = mocker.patch.object(irc_module.client, 'send')
+    send = mocker.patch.object(irc_module, 'send')
     channel_message = xanmel.actions[actions.ChannelMessage]
     xanmel.loop.run_until_complete(channel_message.run(message='Hello', prefix='pref'))
     xanmel.loop.run_until_complete(channel_message.run(message='Hi'))
@@ -46,7 +47,7 @@ def test_channel_message_action(xanmel, mocker, irc_module):
 
 
 def test_channel_messages_action(xanmel, mocker, irc_module):
-    send = mocker.patch.object(irc_module.client, 'send')
+    send = mocker.patch.object(irc_module, 'send')
     channel_messages = xanmel.actions[actions.ChannelMessages]
     xanmel.loop.run_until_complete(channel_messages.run(messages=['Hello', 'World'], prefix='pref'))
     xanmel.loop.run_until_complete(channel_messages.run(messages=['Hi', 'There']))
@@ -62,7 +63,7 @@ def test_channel_messages_action(xanmel, mocker, irc_module):
 
 
 def test_private_message_action(xanmel, mocker, irc_module):
-    send = mocker.patch.object(irc_module.client, 'send')
+    send = mocker.patch.object(irc_module, 'send')
     private_message = xanmel.actions[actions.PrivateMessage]
     xanmel.loop.run_until_complete(private_message.run(target='username', message='Hello', prefix='pref'))
     xanmel.loop.run_until_complete(private_message.run(target='username', message='Hi'))
@@ -76,7 +77,7 @@ def test_private_message_action(xanmel, mocker, irc_module):
 
 
 def test_private_messages_action(xanmel, mocker, irc_module):
-    send = mocker.patch.object(irc_module.client, 'send')
+    send = mocker.patch.object(irc_module, 'send')
     private_messages = xanmel.actions[actions.PrivateMessages]
     xanmel.loop.run_until_complete(private_messages.run(target='username', messages=['Hello', 'World'], prefix='pref'))
     xanmel.loop.run_until_complete(private_messages.run(target='username', messages=['Hi', 'There']))
@@ -90,7 +91,7 @@ def test_private_messages_action(xanmel, mocker, irc_module):
 
 
 def test_mention_message_handler(xanmel, mocker, irc_module, mocked_coro):
-    mocker.patch.object(irc_module.client, 'send')
+    mocker.patch.object(irc_module, 'send')
     msg_handler = MentionMessageHandler(irc_module)
     chat_user = IRCChatUser(irc_module, 'johndoe', irc_user='~johndoe@127.0.0.1')
     event = events.MentionMessage(irc_module, message='excuse', chat_user=chat_user)
@@ -102,7 +103,7 @@ def test_mention_message_handler(xanmel, mocker, irc_module, mocked_coro):
 
 
 def test_private_message_handler(xanmel, mocker, irc_module, mocked_coro):
-    mocker.patch.object(irc_module.client, 'send')
+    mocker.patch.object(irc_module, 'send')
     msg_handler = PrivateMessageHandler(irc_module)
     chat_user = IRCChatUser(irc_module, 'johndoe', irc_user='~johndoe@127.0.0.1')
     event = events.PrivateMessage(irc_module, message='excuse', chat_user=chat_user)

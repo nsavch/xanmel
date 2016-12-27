@@ -37,8 +37,10 @@ def event_loop():
 
 
 @pytest.fixture
-def irc_module(xanmel):
-    return xanmel.modules['xanmel.modules.irc.IRCModule']
+def irc_module(xanmel, mocked_coro):
+    mdl = xanmel.modules['xanmel.modules.irc.IRCModule']
+    mdl.check_connection = mocked_coro()
+    return mdl
 
 
 @pytest.fixture
