@@ -42,7 +42,7 @@ class IRCModule(Module):
                                     port=config['port'],
                                     ssl=config['ssl'],
                                     loop=self.loop)
-        self.message_queue = asyncio.Queue(maxsize=config['flood_max_queue_size'])
+        self.message_queue = asyncio.Queue(maxsize=config.get('flood_max_queue_size', 1024))
 
     async def connect(self):
         if not self.connected:
@@ -81,9 +81,9 @@ class IRCModule(Module):
         self.connected = False
 
     async def process_queue(self):
-        fb = int(self.config['flood_burst'])
-        fr = int(self.config['flood_rate'])
-        frd = int(self.config['flood_rate_delay'])
+        fb = int(self.config.get('flood_burst', 5))
+        fr = int(self.config.get('flood_rate', 4))
+        frd = int(self.config.get('flood_rate_delay', 20))
         current_burst = 0
         while True:
             if not self.client.protocol:
