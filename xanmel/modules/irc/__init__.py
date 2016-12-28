@@ -3,6 +3,7 @@ import logging
 import random
 
 import bottom
+import time
 
 from xanmel import Module, ChatUser
 from .events import *
@@ -41,6 +42,7 @@ class IRCModule(Module):
                                     port=config['port'],
                                     ssl=config['ssl'],
                                     loop=self.loop)
+        self.message_queue = asyncio.Queue(maxsize=config['flood_max_queue_size'])
 
     async def connect(self):
         if not self.connected:
@@ -61,13 +63,15 @@ class IRCModule(Module):
         self.joined = True
         ConnectedAndJoined(self).fire()
         self.reconnect_interval = 0
+        if self.config.get('flood_test_mode'):
+            self.loop.create_task(self.test_flood())
 
     def send(self, command, **kwargs):
         # TODO: catch 40* errors here
-        if not self.client.protocol:
-            logger.debug('Skipping command %s while not connected', command)
-            return
-        self.client.send(command, **kwargs)
+        if not self.message_queue.full():
+            self.message_queue.put_nowait((command, kwargs))
+        else:
+            logger.info('Dropping command %s(%s) - message queue is full', command, kwargs)
 
     async def pong(self, message, **kwargs):
         self.send('PONG', message=message)
@@ -75,6 +79,35 @@ class IRCModule(Module):
     async def disconnect(self):
         Disconnected(self).fire()
         self.connected = False
+
+    async def process_queue(self):
+        fb = int(self.config['flood_burst'])
+        fr = int(self.config['flood_rate'])
+        frd = int(self.config['flood_rate_delay'])
+        current_burst = 0
+        while True:
+            print(self.message_queue.qsize())
+            if not self.client.protocol:
+                await asyncio.sleep(10)
+                continue
+            t = time.time()
+            cmd, kwargs = await self.message_queue.get()
+            if current_burst + 1 < fb:
+                self.client.send(cmd, **kwargs)
+                if time.time() - t < 1:
+                    current_burst += 1
+                else:
+                    current_burst = 0
+            else:
+                logger.debug('FLOOD BURST! Slowing down.')
+                await asyncio.sleep(frd / fr)
+                self.client.send(cmd, **kwargs)
+                while time.time() - t < frd:
+                    cmd, kwargs = await self.message_queue.get()
+                    await asyncio.sleep(frd / fr)
+                    self.client.send(cmd, **kwargs)
+                logger.debug('End of flood delay')
+                current_burst = 0
 
     async def check_connection(self):
         while True:
@@ -103,8 +136,13 @@ class IRCModule(Module):
             else:
                 # send a keepalive message. PING would probably fit better, but parsing PONG isn't
                 # supported in python-bottom
-                self.send('NOTICE', target="#xanmel", message=random.randint(0, 1024*1024))
+                self.send('NOTICE', target=self.config['channel'], message=random.randint(0, 1024*1024))
             await asyncio.sleep(30)
+
+    async def test_flood(self):
+        while True:
+            self.send('PRIVMSG', target='#xanmel', message='TEST')
+            await asyncio.sleep(0.1)
 
     def setup_event_generators(self):
         self.client.on('CLIENT_CONNECT', self.connect)
@@ -112,6 +150,7 @@ class IRCModule(Module):
         self.client.on('PING', self.pong)
         self.client.on('PRIVMSG', self.process_message)
         self.loop.create_task(self.check_connection())
+        self.loop.create_task(self.process_queue())
 
     async def process_message(self, target, message, **kwargs):
         kwargs['chat_user'] = IRCChatUser(self,

@@ -271,7 +271,8 @@ class GameEndedHandler(Handler):
             messages.append('Spectators: %s' % ' | '.join(spectators))
 
         await self.run_action(ChannelMessages, messages=messages,
-                              prefix=event.properties['server'].config['out_prefix'])
+                              prefix=event.properties['server'].config['out_prefix'],
+                              interval=0.5)
 
 
 class IRCMessageHandler(Handler):

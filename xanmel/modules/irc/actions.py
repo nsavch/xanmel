@@ -1,3 +1,5 @@
+import asyncio
+
 from xanmel import Action
 
 
@@ -10,9 +12,11 @@ class ChannelMessage(Action):
 
 class ChannelMessages(Action):
     async def run(self, messages, prefix='', **kwargs):
+        interval = kwargs.pop('interval', 0)
         for message in messages:
             if prefix:
                 message = prefix + message
+            await asyncio.sleep(interval)
             self.module.send('PRIVMSG', target=self.module.config['channel'], message=message)
 
 
@@ -25,7 +29,9 @@ class PrivateMessage(Action):
 
 class PrivateMessages(Action):
     async def run(self, target, messages, prefix='', **kwargs):
+        interval = kwargs.pop('interval', 0)
         for message in messages:
             if prefix:
                 message = prefix + message
+            await asyncio.sleep(interval)
             self.module.send('PRIVMSG', target=target, message=message)

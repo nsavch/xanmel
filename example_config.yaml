@@ -11,6 +11,11 @@ modules:
     greeting: HELLO WORLD!
     mention_delimeters: [' ', ':', ',']
     admin_users: ['~johndoe@127.0.0.1']
+    flood_burst: 5 # The maximum amount of lines bot sends at once.
+    flood_rate: 5 # The number of lines per flood_rate_delay seconds bot sends after reaching flood_burst limit
+    flood_rate_delay: 20 # The bot will send flood_rate messages per flood_rate_delay seconds
+    flood_max_queue_size: 1024 # Max number of lines to store in the queue. If the queue is full new messages will be dropped
+    flood_test_mode: false # if set to true bot will flood the channel so you can test if it gets kicked. Useful to find out optimal flood burst/rate values
   xanmel.modules.xonotic.XonoticModule:
     servers:
       - name: Local Xonotic Server
