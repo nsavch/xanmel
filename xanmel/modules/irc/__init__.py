@@ -141,7 +141,7 @@ class IRCModule(Module):
     async def test_flood(self):
         while True:
             self.send('PRIVMSG', target='#xanmel', message='TEST')
-            await asyncio.sleep(0.1)
+            await asyncio.sleep(0.8)
 
     def setup_event_generators(self):
         self.client.on('CLIENT_CONNECT', self.connect)
