@@ -86,7 +86,6 @@ class IRCModule(Module):
         frd = int(self.config['flood_rate_delay'])
         current_burst = 0
         while True:
-            print(self.message_queue.qsize())
             if not self.client.protocol:
                 await asyncio.sleep(10)
                 continue
