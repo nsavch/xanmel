@@ -92,6 +92,7 @@ class IRCModule(Module):
             t = time.time()
             cmd, kwargs = await self.message_queue.get()
             if current_burst + 1 < fb:
+                logger.debug('SENDING %s(%s)', cmd, kwargs)
                 self.client.send(cmd, **kwargs)
                 if time.time() - t < 1:
                     current_burst += 1

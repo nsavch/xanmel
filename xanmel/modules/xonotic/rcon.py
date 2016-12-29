@@ -48,6 +48,7 @@ class RconServer:
         self.map_list = []
         self.status_timestamp = 0
         self.log_timestamp = 0
+        self.log_dest_udp_history = []
 
     async def check_connection(self):
         while True:
@@ -61,10 +62,12 @@ class RconServer:
                 status = await self.update_server_status()
                 if status:
                     ServerConnect(self.module, server=self, hostname=self.hostname).fire()
-                await asyncio.sleep(10)
+                    await self.subscribe_to_log()
+                    await self.update_maplist()
+                    await self.update_server_stats()
             else:
                 await self.update_server_status()
-                await asyncio.sleep(25)
+            await asyncio.sleep(25)
 
     async def connect_cmd(self):
         if self.command_transport:
@@ -75,9 +78,6 @@ class RconServer:
                                                       local_ip=self.log_listener_ip)
         self.command_transport, self.command_protocol = await self.loop.create_datagram_endpoint(
             rcon_command_protocol, remote_addr=(self.server_address, self.server_port))
-        await self.update_server_status()
-        await self.update_maplist()
-        await self.update_server_stats()
 
     async def connect_log(self):
         if self.log_transport:
@@ -85,7 +85,6 @@ class RconServer:
         rcon_log_protocol = rcon_protocol_factory(self.password,
                                                   self.secure,
                                                   self.receive_log_response,
-                                                  self.subscribe_to_log,
                                                   local_ip=self.log_listener_ip)
         self.log_transport, self.log_protocol = await self.loop.create_datagram_endpoint(
             rcon_log_protocol, remote_addr=(self.server_address, self.server_port)
@@ -104,8 +103,25 @@ class RconServer:
             self.raw_log.write(data)
         self.log_parser.feed(data)
 
-    def subscribe_to_log(self, proto):
-        proto.subscribe_to_log()
+    async def subscribe_to_log(self):
+        old_log_output = await self.execute('log_dest_udp')
+        prefix = b'"log_dest_udp" is '
+        if not old_log_output.startswith(prefix):
+            return
+        m = re.match(b'"log_dest_udp" is "([^"]*)"', old_log_output)
+        if m:
+            old_log_output = m.group(1)
+        else:
+            return
+        old_log_dests = old_log_output.decode('utf8').split(' ')
+        for i in old_log_dests:
+            if i.rsplit(':', 1)[0] == self.log_protocol.local_host:
+                self.send('sv_cmd removefromlist log_dest_udp %s' % i)
+        self.send("sv_cmd addtolist log_dest_udp %s:%s" % (self.log_protocol.local_host, self.log_protocol.local_port))
+        self.send("sv_logscores_console 0")
+        self.send("sv_logscores_bots 1")
+        self.send("sv_eventlog 1")
+        self.send("sv_eventlog_console 1")
 
     @contextmanager
     def sv_adminnick(self, new_nick):
@@ -197,14 +213,6 @@ def rcon_protocol_factory(password, secure, received_callback=None, connection_m
 
         def error_received(self, exc):
             pass
-
-        def subscribe_to_log(self):
-            # TODO: is there a way to minimize amount of data which gets pushed to log_dest_udp?
-            self.send("sv_cmd addtolist log_dest_udp %s:%s" % (self.local_host, self.local_port))
-            self.send("sv_logscores_console 0")
-            self.send("sv_logscores_bots 1")
-            self.send("sv_eventlog 1")
-            self.send("sv_eventlog_console 1")
 
         def send(self, command):
             msg = None
