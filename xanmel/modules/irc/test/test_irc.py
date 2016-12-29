@@ -5,9 +5,10 @@ from xanmel.modules.irc.handlers import MentionMessageHandler, PrivateMessageHan
 
 
 def test_connect(xanmel, mocker, mocked_coro, irc_module):
-    patched_send = mocker.patch.object(irc_module, 'send')
+    patched_send = mocker.patch.object(irc_module.client, 'send')
     irc_module.client.wait = mocked_coro()
     irc_module.connected = True
+    irc_module.client.protocol = True
     xanmel.loop.run_until_complete(irc_module.connect())
     assert patched_send.call_count == 4
 

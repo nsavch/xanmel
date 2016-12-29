@@ -45,21 +45,21 @@ class IRCModule(Module):
         self.message_queue = asyncio.Queue(maxsize=config.get('flood_max_queue_size', 1024))
 
     async def connect(self):
-        if not self.connected:
+        if not self.connected or not self.client.protocol:
             return
-        self.send('USER', user=self.config['nick'], realname=self.config['realname'])
-        self.send('NICK', nick=self.config['nick'])
+        self.client.send('USER', user=self.config['nick'], realname=self.config['realname'])
+        self.client.send('NICK', nick=self.config['nick'])
 
         done, pending = await asyncio.wait(
             [self.client.wait("RPL_ENDOFMOTD"), self.client.wait("ERR_NOMOTD")],
             loop=self.loop,
             return_when=asyncio.FIRST_COMPLETED)
-        self.send('JOIN', channel=self.config['channel'])
+        self.client.send('JOIN', channel=self.config['channel'])
         # Cancel whichever waiter's event didn't come in.
         for future in pending:
             future.cancel()
         if self.config.get('greeting'):
-            self.send('PRIVMSG', target=self.config['channel'], message=self.config['greeting'])
+            self.client.send('PRIVMSG', target=self.config['channel'], message=self.config['greeting'])
         self.joined = True
         ConnectedAndJoined(self).fire()
         self.reconnect_interval = 0
@@ -74,7 +74,7 @@ class IRCModule(Module):
             logger.info('Dropping command %s(%s) - message queue is full', command, kwargs)
 
     async def pong(self, message, **kwargs):
-        self.send('PONG', message=message)
+        self.client.send('PONG', message=message)
 
     async def disconnect(self):
         Disconnected(self).fire()
@@ -86,13 +86,13 @@ class IRCModule(Module):
         frd = int(self.config.get('flood_rate_delay', 20))
         current_burst = 0
         while True:
-            if not self.client.protocol:
+            if not self.client.protocol or not self.joined:
                 await asyncio.sleep(10)
                 continue
             t = time.time()
             cmd, kwargs = await self.message_queue.get()
             if current_burst + 1 < fb:
-                logger.debug('SENDING %s(%s)', cmd, kwargs)
+                # logger.debug('SENDING %s(%s)', cmd, kwargs)
                 self.client.send(cmd, **kwargs)
                 if time.time() - t < 1:
                     current_burst += 1
