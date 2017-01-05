@@ -20,7 +20,7 @@ modules:
     servers:
       - name: Local Xonotic Server
         rcon_ip: 127.0.0.1
-        rcon_port: 26005
+        rcon_port: 26000
         log_listener_ip: 127.0.0.1
         public_ip: 94.23.207.83
         public_port: 26000

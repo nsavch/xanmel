@@ -13,12 +13,12 @@ def test_ensure_bytes():
 def test_hax0r(xon_server):
     xon_server.receive_command_response(b'test', ('127.0.1.1', 14000))
     assert xon_server.command_response == b''
-    xon_server.receive_command_response(b'test', ('127.0.0.1', 26005))
+    xon_server.receive_command_response(b'test', ('127.0.0.1', 26000))
     assert xon_server.command_response == b'test'
 
     xon_server.receive_log_response(b'test', ('127.0.1.1', 14000))
     assert xon_server.log_parser.current == b''
-    xon_server.receive_log_response(b'test', ('127.0.0.1', 26005))
+    xon_server.receive_log_response(b'test', ('127.0.0.1', 26000))
     assert xon_server.log_parser.current == b'test'
 
 
@@ -58,7 +58,7 @@ def test_datagram_received(event_loop, xon_server, mocked_coro):
     asyncio.sleep = mocked_coro()
     event_loop.run_until_complete(xon_server.connect_cmd())
     proto = xon_server.command_protocol
-    proto.datagram_received(b'\xff\xff\xff\xffntest', ('127.0.0.1', 26005))
+    proto.datagram_received(b'\xff\xff\xff\xffntest', ('127.0.0.1', 26000))
     assert xon_server.command_response == b'test'
 
 

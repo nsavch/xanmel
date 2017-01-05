@@ -4,6 +4,7 @@ import re
 from .colors import Color
 from .events import *
 from .players import Player
+from .rcon_parser import BaseMultilineParser, BaseOneLineParser, CombinedParser
 
 logger = logging.getLogger(__name__)
 
@@ -34,60 +35,7 @@ ipv6_address_or_addrz = re.compile(
             b'^(?:(?:[0-9A-Fa-f]{1,4}:){6}(?:[0-9A-Fa-f]{1,4}:[0-9A-Fa-f]{1,4}|(?:(?:[0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\\.){3}(?:[0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5]))|::(?:[0-9A-Fa-f]{1,4}:){5}(?:[0-9A-Fa-f]{1,4}:[0-9A-Fa-f]{1,4}|(?:(?:[0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\\.){3}(?:[0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5]))|(?:[0-9A-Fa-f]{1,4})?::(?:[0-9A-Fa-f]{1,4}:){4}(?:[0-9A-Fa-f]{1,4}:[0-9A-Fa-f]{1,4}|(?:(?:[0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\\.){3}(?:[0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5]))|(?:[0-9A-Fa-f]{1,4}:[0-9A-Fa-f]{1,4})?::(?:[0-9A-Fa-f]{1,4}:){3}(?:[0-9A-Fa-f]{1,4}:[0-9A-Fa-f]{1,4}|(?:(?:[0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\\.){3}(?:[0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5]))|(?:(?:[0-9A-Fa-f]{1,4}:){,2}[0-9A-Fa-f]{1,4})?::(?:[0-9A-Fa-f]{1,4}:){2}(?:[0-9A-Fa-f]{1,4}:[0-9A-Fa-f]{1,4}|(?:(?:[0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\\.){3}(?:[0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5]))|(?:(?:[0-9A-Fa-f]{1,4}:){,3}[0-9A-Fa-f]{1,4})?::[0-9A-Fa-f]{1,4}:(?:[0-9A-Fa-f]{1,4}:[0-9A-Fa-f]{1,4}|(?:(?:[0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\\.){3}(?:[0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5]))|(?:(?:[0-9A-Fa-f]{1,4}:){,4}[0-9A-Fa-f]{1,4})?::(?:[0-9A-Fa-f]{1,4}:[0-9A-Fa-f]{1,4}|(?:(?:[0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\\.){3}(?:[0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5]))|(?:(?:[0-9A-Fa-f]{1,4}:){,5}[0-9A-Fa-f]{1,4})?::[0-9A-Fa-f]{1,4}|(?:(?:[0-9A-Fa-f]{1,4}:){,6}[0-9A-Fa-f]{1,4})?::)(?:%25(?:[A-Za-z0-9\\-._~]|%[0-9A-Fa-f]{2})+)?:')
 
 
-class BaseParser:
-    key = b''
-    is_multiline = False
-    terminator = b''
-
-    def __init__(self, rcon_server):
-        self.rcon_server = rcon_server
-        self.started = False
-        self.finished = False
-        self.received_eol = False
-        self.lines = []
-
-    def parse(self, data):
-        if b'\n' not in data:
-            return data
-        if not self.is_multiline:
-            line, new_data = data.split(b'\n', 1)
-            if line.startswith(self.key):
-                try:
-                    self.process(line[len(self.key):])
-                except:
-                    logger.warning('Exception during parsing line %r', line, exc_info=True)
-                return new_data
-            else:
-                return data
-        else:
-            if self.started:
-                line, data = data.split(b'\n', 1)
-                while not line.startswith(self.terminator):
-                    self.lines.append(line)
-                    if b'\n' not in data:
-                        return data
-                    else:
-                        line, data = data.split(b'\n', 1)
-                try:
-                    self.process(self.lines)
-                except:
-                    logger.warning('Exception during parsing multiline %r', self.lines, exc_info=True)
-                self.finished = True
-                return data
-            else:
-                if data.startswith(self.key):
-                    line, data = data.split(b'\n', 1)
-                    self.started = True
-                    self.lines.append(line[len(self.key):])
-                    return self.parse(data)
-                else:
-                    return data
-
-    def process(self, data):
-        raise NotImplementedError  # pragma: no cover
-
-
-class JoinParser(BaseParser):
+class JoinParser(BaseOneLineParser):
     key = b':join:'
 
     def process(self, data):
@@ -122,7 +70,7 @@ class JoinParser(BaseParser):
             Join(self.rcon_server.module, server=self.rcon_server, player=player).fire()
 
 
-class PartParser(BaseParser):
+class PartParser(BaseOneLineParser):
     key = b':part:'
 
     def process(self, data):
@@ -131,10 +79,9 @@ class PartParser(BaseParser):
             Part(self.rcon_server.module, server=self.rcon_server, player=player).fire()
 
 
-class ScoresParser(BaseParser):
+class ScoresParser(BaseMultilineParser):
     # TODO: currently only dm scores are supported.
     key = b':scores:'
-    is_multiline = True
     terminator = b':end'
     team_colors = {
         5: Color.RED,
@@ -226,7 +173,7 @@ class ScoresParser(BaseParser):
                 Part(self.rcon_server.module, server=self.rcon_server, player=player).fire()
 
 
-class GameStartedParser(BaseParser):
+class GameStartedParser(BaseOneLineParser):
     key = b':gamestart:'
 
     def process(self, data):
@@ -238,7 +185,7 @@ class GameStartedParser(BaseParser):
         self.rcon_server.players.clear_bots()
 
 
-class NameChangeParser(BaseParser):
+class NameChangeParser(BaseOneLineParser):
     key = b':name:'
 
     def process(self, data):
@@ -252,21 +199,21 @@ class NameChangeParser(BaseParser):
                        old_nickname=old_nickname).fire()
 
 
-class ChatMessageParser(BaseParser):
+class ChatMessageParser(BaseOneLineParser):
     key = b'\x01'
 
     def process(self, data):
-        ChatMessage(self.rcon_server.module, server=self.rcon_server, message=data).fire()
+        ChatMessage(self.rcon_server.module, server=self.rcon_server, message=data.strip()).fire()
 
 
-class EloParser(BaseParser):
+class EloParser(BaseOneLineParser):
     key = b'^7Retrieving playerstats from URL: '
 
     def process(self, data):
         self.rcon_server.players.current_url = data
 
 
-class RconLogParser:
+class RconLogParser(CombinedParser):
     parsers = [
         JoinParser,
         PartParser,
@@ -276,39 +223,3 @@ class RconLogParser:
         ChatMessageParser,
         EloParser
     ]
-
-    def __init__(self, rcon_server):
-        self.rcon_server = rcon_server
-        self.current = b''
-        self.active_parser = None
-
-    def feed(self, data):
-        self.current += data
-        self.parse()
-
-    def parse(self):
-        if self.active_parser:
-            self.current = self.active_parser.parse(self.current)
-            if self.active_parser.finished:
-                self.active_parser = None
-        else:
-            previous_length = len(self.current)
-            while len(self.current) > 0 and b'\n' in self.current:
-                for i in self.parsers:
-                    parser = i(self.rcon_server)
-                    self.current = parser.parse(self.current)
-                    if parser.is_multiline and parser.started and (not parser.finished):
-                        if len(self.current) != 0:
-                            if b'\n' in self.current:
-                                logger.warning('A multi-line parser %r did not finished but left some lines %r',
-                                               parser, self.current)
-                            else:
-                                logger.debug('Waiting for more input for parser %r', parser)
-                        self.active_parser = parser
-                if previous_length == len(self.current):
-                    if b'\n' in self.current:
-                        line, self.current = self.current.split(b'\n', 1)
-                        if line:
-                            pass
-                            # logger.debug('Unparsed log line %r', line)
-                previous_length = len(self.current)
