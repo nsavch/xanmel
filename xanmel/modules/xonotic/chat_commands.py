@@ -26,7 +26,7 @@ class Who(ChatCommand):
             reply = 'Server is empty'
         else:
             player_names = []
-            for player in rcon_server.players.players_by_number2.values():
+            for player in rcon_server.players.players_by_number1.values():
                 if not player.is_bot:
                     player_names.append(Color.dp_to_irc(player.nickname).decode('utf8'))
             reply = ' | '.join(player_names)

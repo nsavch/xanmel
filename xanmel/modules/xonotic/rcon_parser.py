@@ -27,6 +27,31 @@ class BaseOneLineParser:
         raise NotImplementedError  # pragma: no cover
 
 
+class BaseOneLineRegexParser:
+    regex = None
+    started = False
+    finished = True
+
+    def __init__(self, rcon_server):
+        self.rcon_server = rcon_server
+
+    def parse(self, lines):
+        if not lines:
+            return lines
+        m = self.regex.match(lines[0])
+        if m is None:
+            return lines
+        else:
+            try:
+                self.process(m)
+            except:
+                logger.warning('Exception during parsing line %r', lines[0], exc_info=True)
+            return lines[1:]
+
+    def process(self, data):
+        raise NotImplementedError
+
+
 class BaseMultilineParser:
     key = b''
     is_multiline = False

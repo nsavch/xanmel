@@ -159,7 +159,7 @@ class PlayerManager:
     @property
     def current(self):
         c = 0
-        for i in self.players_by_number2.values():
+        for i in self.players_by_number1.values():
             if not i.is_bot:
                 c += 1
         return c
@@ -167,7 +167,7 @@ class PlayerManager:
     @property
     def bots(self):
         res = []
-        for i in self.players_by_number2.values():
+        for i in self.players_by_number1.values():
             if i.is_bot:
                 res.append(i)
         return res
