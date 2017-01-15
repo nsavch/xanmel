@@ -112,7 +112,6 @@ class CombinedParser:
             if self.active_parser.finished:
                 self.active_parser = None
         while lines:
-            print(lines)
             prev_len = len(lines)
             for i in self.parsers:
                 parser = i(self.rcon_server)

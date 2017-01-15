@@ -145,7 +145,6 @@ class RconServer:
 
     async def update_server_status(self):
         status_output = await self.execute('status 1')
-        print(status_output)
         if status_output:
             self.status_timestamp = time.time()
         else:
