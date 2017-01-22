@@ -5,6 +5,7 @@ import logging
 import aiohttp
 
 from xanmel.modules.xonotic.events import ServerDisconnect, ServerConnect
+from xanmel.modules.xonotic.rcon_cmd import RconCmdParser
 from .rcon_log import RconLogParser
 from .rcon_utils import *
 from .players import PlayerManager
@@ -32,10 +33,11 @@ class RconServer:
         self.command_response = b''
         self.players = {}
         self.log_parser = RconLogParser(self)
+        self.cmd_parser = RconCmdParser(self)
         self.players = PlayerManager()
         self.current_map = ''
         self.current_gt = ''
-        self.hostname = ''
+        self.connected = False
         self.timing = ''
         self.server_stats = {}
         command_container = XonCommands(rcon_server=self)
@@ -46,25 +48,30 @@ class RconServer:
         else:
             self.raw_log = None
         self.map_list = []
-        self.status_timestamp = 0
+        self.status = {}
+        self.cvars = {}
+        self.cmd_timestamp = 0
         self.log_timestamp = 0
-        self.log_dest_udp_history = []
 
     async def check_connection(self):
         while True:
-            if time.time() - self.status_timestamp > 120 or time.time() - self.log_timestamp > 120:
+            if time.time() - self.cmd_timestamp > 120 or time.time() - self.log_timestamp > 120:
                 logger.debug('Trying to connect to %s:%s', self.server_address, self.server_port)
-                if self.hostname:
-                    ServerDisconnect(self.module, server=self, hostname=self.hostname).fire()
-                    self.hostname = None
+                if self.connected:
+                    ServerDisconnect(self.module, server=self, hostname=self.status['host']).fire()
+                    self.connected = None
                 await self.connect_cmd()
                 await self.connect_log()
                 status = await self.update_server_status()
                 if status:
-                    ServerConnect(self.module, server=self, hostname=self.hostname).fire()
-                    await self.subscribe_to_log()
-                    await self.update_maplist()
-                    await self.update_server_stats()
+                    self.connected = True
+                    ServerConnect(self.module, server=self, hostname=self.status['host']).fire()
+                    self.subscribe_to_log()
+                    await asyncio.wait([
+                        self.cleanup_log_dest_udp(),
+                        self.update_maplist(),
+                        self.update_server_stats()])
+
             else:
                 await self.update_server_status()
             await asyncio.sleep(25)
@@ -93,7 +100,8 @@ class RconServer:
     def receive_command_response(self, data, addr):
         if addr[0] != self.server_address or addr[1] != self.server_port:
             return
-        self.command_response += data
+        self.cmd_timestamp = time.time()
+        self.cmd_parser.feed(data)
 
     def receive_log_response(self, data, addr):
         if addr[0] != self.server_address or addr[1] != self.server_port:
@@ -103,20 +111,23 @@ class RconServer:
             self.raw_log.write(data)
         self.log_parser.feed(data)
 
-    async def subscribe_to_log(self):
-        old_log_output = await self.execute('log_dest_udp')
-        prefix = b'"log_dest_udp" is '
-        if not old_log_output.startswith(prefix):
-            return
-        m = re.match(b'"log_dest_udp" is "([^"]*)"', old_log_output)
-        if m:
-            old_log_output = m.group(1)
-        else:
-            return
-        old_log_dests = old_log_output.decode('utf8').split(' ')
+    async def cleanup_log_dest_udp(self):
+        self.cvars['log_dest_udp'] = None
+        self.send('log_dest_udp')
+        t = time.time()
+        while not self.cvars['log_dest_udp']:
+            await asyncio.sleep(0.1)
+            if time.time() - t > 10:
+                self.send('log_dest_udp')
+                t = time.time()
+        old_log_dests = self.cvars['log_dest_udp'].split(' ')
+        logger.debug('Old log_dest_udp list: %r', old_log_dests)
         for i in old_log_dests:
-            if i.rsplit(':', 1)[0] == self.log_protocol.local_host:
+            host, port = i.rsplit(':', 1)
+            if host == self.log_protocol.local_host and port != self.log_protocol.local_port:
                 self.send('sv_cmd removefromlist log_dest_udp %s' % i)
+
+    def subscribe_to_log(self):
         self.send("sv_cmd addtolist log_dest_udp %s:%s" % (self.log_protocol.local_host, self.log_protocol.local_port))
         self.send("sv_logscores_console 0")
         self.send("sv_logscores_bots 1")
@@ -133,35 +144,26 @@ class RconServer:
         self.command_protocol.send(command)
 
     async def update_maplist(self):
-        maplist_output = await self.execute('g_maplist')
-        prefix = b'"g_maplist" is '
-        if maplist_output.startswith(prefix) and b'\n' in maplist_output:
-            m = re.match(b'"g_maplist" is "([^"]+)"', maplist_output)
-            if m:
-                maplist_output = m.group(1)
-            self.map_list = sorted(maplist_output.decode('utf8').split(' '))
-            logger.info('Got %s on the map list', len(self.map_list))
-            logger.debug(self.map_list)
+        self.cvars['g_maplist'] = None
+        self.send('g_maplist')
+        t = time.time()
+        while not self.cvars['g_maplist']:
+            await asyncio.sleep(0.1)
+            if time.time() - t > 10:
+                self.send('g_maplist')
+                t = time.time()
+        self.map_list = sorted(self.cvars['g_maplist'].split(' '))
+        logger.info('Got %s on the map list', len(self.map_list))
+        logger.debug(self.map_list)
 
     async def update_server_status(self):
-        status_output = await self.execute('status 1')
-        if status_output:
-            self.status_timestamp = time.time()
-        else:
-            return False
-        lines = status_output.split(b'\n')
-        for i in lines:
-            if not i.strip():
-                continue
-            if i.startswith(b'players'):
-                m = re.match(rb'players:\s*(\d+)\s*active\s*\((\d+)\s*max', i)
-                self.players.max = int(m.group(2))
-            if i.startswith(b'host'):
-                self.hostname = i[len(b'host') + 1:].strip().decode('utf8')
-            if i.startswith(b'timing'):
-                self.timing = i[len(b'timing') + 1:].strip().decode('utf8')
-            if i.startswith(b'^2IP '):
-                break
+        self.status = {}
+        self.send('status 1')
+        t = time.time()
+        while 'players' not in self.status:
+            await asyncio.sleep(0.1)
+            if time.time() - t > 30:
+                return False
         return True
 
     async def update_server_stats(self):
@@ -178,16 +180,6 @@ class RconServer:
                         self.server_stats = await resp.json()
                     except:
                         logger.info('Could not parse stats', exc_info=True)
-
-    async def execute(self, command, timeout=1):
-        await self.command_lock.acquire()
-        self.command_response = b''
-        try:
-            self.command_protocol.send(command)
-            await asyncio.sleep(timeout)
-        finally:
-            self.command_lock.release()
-        return self.command_response
 
 
 def rcon_protocol_factory(password, secure, received_callback=None, connection_made_callback=None,

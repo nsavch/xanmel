@@ -50,13 +50,15 @@ class Maps(ChatCommand):
             await user.reply(rcon_server.config['out_prefix'] + 'Map List not initialized', is_private)
             return
         pattern = message.strip().split(' ')[0].strip()
-        pattern = '*%s*' % pattern
+        pattern = '*%s*' % pattern.lower()
         res = []
         for i in rcon_server.map_list:
-            if fnmatch.fnmatch(i, pattern):
+            if fnmatch.fnmatch(i.lower(), pattern):
                 res.append(i)
-        reply = ['[%s/%s]: %s' % (len(res), len(rcon_server.map_list), ', '.join(res[:10]))]
-        if len(res) > 10:
-            reply[0] += ' (%s more maps skipped)' % (len(res) - 10)
-        for i in reply:
-            await user.reply(rcon_server.config['out_prefix'] + i, is_private)
+        if not res:
+            reply = 'No maps match.'
+        else:
+            reply = '[%s/%s]: %s' % (len(res), len(rcon_server.map_list), ', '.join(res[:10]))
+            if len(res) > 10:
+                reply += ' (%s more maps skipped)' % (len(res) - 10)
+        await user.reply(rcon_server.config['out_prefix'] + reply, is_private)
