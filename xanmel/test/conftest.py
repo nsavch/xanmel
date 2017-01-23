@@ -44,8 +44,10 @@ def irc_module(xanmel, mocked_coro):
 
 
 @pytest.fixture
-def xon_module(xanmel):
-    return xanmel.modules['xanmel.modules.xonotic.XonoticModule']
+def xon_module(xanmel, mocked_coro):
+    mdl = xanmel.modules['xanmel.modules.xonotic.XonoticModule']
+    mdl.check_connection = mocked_coro()
+    return mdl
 
 
 @pytest.fixture

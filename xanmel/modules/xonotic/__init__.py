@@ -8,5 +8,7 @@ class XonoticModule(Module):
         self.servers = []
         for server in config['servers']:
             self.servers.append(RconServer(self, server))
+
+    def setup_event_generators(self):
         for i in self.servers:
             self.loop.create_task(i.check_connection())

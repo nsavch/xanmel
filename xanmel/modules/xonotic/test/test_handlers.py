@@ -140,7 +140,7 @@ def test_irc_message_handler(xanmel, xon_module, irc_module, xon_server, mocker)
     assert 'hello world' in msg
     xon_server.config['in_prefix'] = 'abraca'
     xanmel.loop.run_until_complete(h.handle(ev))
-    assert xon_server.send.call_count == 4
+    assert xon_server.send.call_count == 4, xon_server.send.call_args_list
 
 
 def test_scores_handler_empty(xanmel, xon_module, xon_server, mocked_coro):
