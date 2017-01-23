@@ -43,6 +43,7 @@ class IRCModule(Module):
                                     ssl=config['ssl'],
                                     loop=self.loop)
         self.message_queue = asyncio.Queue(maxsize=config.get('flood_max_queue_size', 1024))
+        self.msg_lock = asyncio.Lock()
 
     async def connect(self):
         if not self.connected or not self.client.protocol:
