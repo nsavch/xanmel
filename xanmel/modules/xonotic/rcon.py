@@ -31,7 +31,6 @@ class RconServer:
         self.log_protocol = None
         self.command_lock = asyncio.Lock()
         self.command_response = b''
-        self.players = {}
         self.log_parser = RconLogParser(self)
         self.cmd_parser = RconCmdParser(self)
         self.players = PlayerManager()
@@ -40,9 +39,9 @@ class RconServer:
         self.connected = False
         self.timing = ''
         self.server_stats = {}
-        command_container = XonCommands(rcon_server=self)
-        command_container.help_text = 'Commands for interacting with %s' % config['name']
-        self.module.xanmel.cmd_root.register_container(command_container, config['cmd_prefix'])
+        self.command_container = XonCommands(rcon_server=self)
+        self.command_container.help_text = 'Commands for interacting with %s' % config['name']
+        self.module.xanmel.cmd_root.register_container(self.command_container, config['cmd_prefix'])
         if config.get('raw_log'):
             self.raw_log = open(config['raw_log'], 'ab')
         else:
@@ -164,6 +163,10 @@ class RconServer:
             await asyncio.sleep(0.1)
             if time.time() - t > 30:
                 return False
+        m = re.match(b'(\d+)\s*active\s*\((\d+)\s*max', self.status['players'])
+        if m:
+            self.players.max = int(m.group(2))
+        self.command_container.help_text = 'Commands for interacting with %s' % self.status['host']
         return True
 
     async def update_server_stats(self):
