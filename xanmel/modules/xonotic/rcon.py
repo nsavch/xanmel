@@ -54,7 +54,7 @@ class RconServer:
 
     async def check_connection(self):
         while True:
-            if time.time() - self.cmd_timestamp > 120 or time.time() - self.log_timestamp > 120:
+            if time.time() - self.cmd_timestamp > 60 or time.time() - self.log_timestamp > 60:
                 logger.debug('Trying to connect to %s:%s', self.server_address, self.server_port)
                 if self.connected:
                     ServerDisconnect(self.module, server=self, hostname=self.status['host']).fire()
@@ -121,9 +121,10 @@ class RconServer:
                 t = time.time()
         old_log_dests = self.cvars['log_dest_udp'].split(' ')
         logger.debug('Old log_dest_udp list: %r', old_log_dests)
+        logger.debug('Current log listener: %r:%r', self.log_protocol.local_host, self.log_protocol.local_port)
         for i in old_log_dests:
             host, port = i.rsplit(':', 1)
-            if host == self.log_protocol.local_host and port != self.log_protocol.local_port:
+            if host == self.log_protocol.local_host and int(port) != self.log_protocol.local_port:
                 self.send('sv_cmd removefromlist log_dest_udp %s' % i)
 
     def subscribe_to_log(self):
@@ -163,7 +164,7 @@ class RconServer:
             await asyncio.sleep(0.1)
             if time.time() - t > 30:
                 return False
-        m = re.match(b'(\d+)\s*active\s*\((\d+)\s*max', self.status['players'])
+        m = re.match(r'(\d+)\s*active\s*\((\d+)\s*max', self.status['players'])
         if m:
             self.players.max = int(m.group(2))
         self.command_container.help_text = 'Commands for interacting with %s' % self.status['host']
