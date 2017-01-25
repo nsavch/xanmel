@@ -46,21 +46,22 @@ class Player:
                 async with session.post(self.elo_url,
                                         headers={'X-D0-Blind-ID-Detached-Signature': sig},
                                         data=b'\n') as response:
-                    if response.status_code != 404:
+                    if response.status != 404:
                         retries_left = 0
                     else:
                         retries_left -= 1
                         logger.debug('404 for %s, %s retries left', self.elo_url, retries_left)
                         await asyncio.sleep(1 + random.random() * 2)
                     if retries_left == 0:
-                        if response.status_code != 200:
-                            logger.debug('Got status code %s from %s, %s', response.status_code, self.elo_url,
+                        if response.status != 200:
+                            logger.debug('Got status code %s from %s, %s', response.status, self.elo_url,
                                          response.text)
                         else:
+                            text = await response.text()
                             try:
-                                self.parse_elo(response.text)
+                                self.parse_elo(text)
                             except:
-                                logger.debug('Failed to parse elo %s', response.text, exc_info=True)
+                                logger.debug('Failed to parse elo %s', text, exc_info=True)
                             else:
                                 # logger.debug('Got basic elo %r', self.elo_basic)
                                 await self.get_elo_advanced()
@@ -70,11 +71,11 @@ class Player:
         url = self.elo_basic.get('url')
         async with aiohttp.ClientSession() as session:
             async with session.get(url + '.json') as response:
-                if response.status_code != 200:
-                    logger.debug('Got status code %s from %s', response.status_code, self.elo_url)
+                if response.status != 200:
+                    logger.debug('Got status code %s from %s', response.status, self.elo_url)
                     return
                 try:
-                    self.elo_advanced = response.json()
+                    self.elo_advanced = await response.json()
                     # logger.debug('Got advanced elo %r', self.elo_advanced)
                 except:
                     logger.debug('Could not parse json %s', response.text, exc_info=True)
@@ -184,7 +185,7 @@ class PlayerManager:
 
     def join(self, player):
         if self.current_url:
-            player.elo_url = self.current_url
+            player.elo_url = self.current_url.decode('utf8')
             self.current_url = None
         if player.number2 in self.players_by_number2:
             old_player = self.players_by_number2[player.number2]
