@@ -2,9 +2,8 @@ import importlib
 import inspect
 import logging
 import os
-import warnings
 from collections import defaultdict
-from pkg_resources import resource_filename
+from pkg_resources import resource_filename, require
 
 import geoip2.database
 import asyncio
@@ -407,6 +406,16 @@ class FullHelp(ChatCommand):
         for i in reply:
             await asyncio.sleep(1)  # Sleep 1 second to prevent kicking for Excess Flood
             await user.private_reply(i)
+
+
+class Version(ChatCommand):
+    parent = HelpCommands
+    prefix = 'version'
+    help_text = 'Get the current version of the bot running'
+
+    async def run(self, user, message, is_private=False):
+        version = require('xanmel')[0].version
+        await user.reply(version, is_private=is_private)
 
 
 def main():

@@ -1,3 +1,4 @@
+import re
 import asyncio
 import random
 import string
@@ -214,3 +215,12 @@ def test_fullhelp(xanmel, mocker, dummy_chat_user, irc_module):
     xanmel.loop.run_until_complete(xanmel.cmd_root.run(chat_user, 'fullhelp', is_private=False))
     assert chat_user.public_reply.call_count == 0
     assert chat_user.private_reply.call_count > 0
+
+
+def test_version(xanmel, mocker, dummy_chat_user, irc_module):
+    chat_user = dummy_chat_user(module=irc_module,
+                                name=''.join(random.sample(string.ascii_letters, 10)))
+    chat_user.botnick = irc_module.config['nick']
+    xanmel.loop.run_until_complete(xanmel.cmd_root.run(chat_user, 'version', is_private=False))
+    assert chat_user.public_reply.call_count == 1
+    assert re.match('^\d+\.\d+(a|b|rc)\d+$', chat_user.public_reply.call_args[0][0])
