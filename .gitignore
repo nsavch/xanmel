@@ -3,3 +3,6 @@ __pycache__
 .cache
 config.yaml
 .coverage
+/build/
+/dist/
+/xanmel.egg-info/

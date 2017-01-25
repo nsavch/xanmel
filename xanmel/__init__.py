@@ -2,7 +2,9 @@ import importlib
 import inspect
 import logging
 import os
+import warnings
 from collections import defaultdict
+from pkg_resources import resource_filename
 
 import geoip2.database
 import asyncio
@@ -26,7 +28,7 @@ class Xanmel:
         self.handlers = defaultdict(list)
         self.actions = {}
         self.loop = loop
-        self.geoip = geoip2.database.Reader('GeoLite2-City.mmdb')
+        self.geoip = geoip2.database.Reader(resource_filename('xanmel', 'GeoLite2-City.mmdb'))
         self.cmd_root = CommandRoot(self)
         self.cmd_root.register_container(HelpCommands(), prefix='')
         with open(os.path.expanduser(config_path), 'r') as config_file:
@@ -405,3 +407,18 @@ class FullHelp(ChatCommand):
         for i in reply:
             await asyncio.sleep(1)  # Sleep 1 second to prevent kicking for Excess Flood
             await user.private_reply(i)
+
+
+def main():
+    logging.basicConfig(level=logging.DEBUG)
+    loop = asyncio.get_event_loop()
+    loop.set_debug(True)
+    logger.info('Starting event loop...')
+    xanmel = Xanmel(loop=loop, config_path='/etc/xanmel_config.yaml')
+    xanmel.load_modules()
+    try:
+        loop.run_forever()
+    except KeyboardInterrupt:
+        loop.stop()
+        loop.close()
+    return 0
