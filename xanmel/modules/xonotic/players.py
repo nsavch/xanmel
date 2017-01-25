@@ -52,17 +52,19 @@ class Player:
                         retries_left -= 1
                         logger.debug('404 for %s, %s retries left', self.elo_url, retries_left)
                         await asyncio.sleep(1 + random.random() * 2)
-                    if response.status_code != 200:
-                        logger.debug('Got status code %s from %s, %s', response.status_code, self.elo_url,
-                                     response.text)
+                    if retries_left == 0:
+                        if response.status_code != 200:
+                            logger.debug('Got status code %s from %s, %s', response.status_code, self.elo_url,
+                                         response.text)
+                        else:
+                            try:
+                                self.parse_elo(response.text)
+                            except:
+                                logger.debug('Failed to parse elo %s', response.text, exc_info=True)
+                            else:
+                                # logger.debug('Got basic elo %r', self.elo_basic)
+                                await self.get_elo_advanced()
                         return
-                    try:
-                        self.parse_elo(response.text)
-                    except:
-                        logger.debug('Failed to parse elo %s', response.text, exc_info=True)
-                    else:
-                        # logger.debug('Got basic elo %r', self.elo_basic)
-                        await self.get_elo_advanced()
 
     async def get_elo_advanced(self):
         url = self.elo_basic.get('url')
