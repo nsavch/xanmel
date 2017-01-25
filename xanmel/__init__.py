@@ -3,7 +3,7 @@ import inspect
 import logging
 import os
 from collections import defaultdict
-from pkg_resources import resource_filename, require
+from pkg_resources import resource_filename, require, DistributionNotFound
 
 import geoip2.database
 import asyncio
@@ -414,7 +414,10 @@ class Version(ChatCommand):
     help_text = 'Get the current version of the bot running'
 
     async def run(self, user, message, is_private=False):
-        version = require('xanmel')[0].version
+        try:
+            version = require('xanmel')[0].version
+        except DistributionNotFound:
+            version = 'Unknown version (please install xanmel using setuptools)'
         await user.reply(version, is_private=is_private)
 
 
