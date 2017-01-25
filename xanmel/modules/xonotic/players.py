@@ -1,4 +1,3 @@
-import functools
 import logging
 
 import asyncio
@@ -6,8 +5,7 @@ import random
 
 import geoip2.errors
 import math
-
-import requests
+import aiohttp
 
 from xanmel.modules.xonotic.colors import Color
 from xanmel.utils import current_time
@@ -37,49 +35,47 @@ class Player:
                 pass
 
     async def get_elo(self):
-        loop = self.server.module.xanmel.loop
         if self.elo_url is None:
             return
         sig = self.server.config.get('elo_request_signature')
         if not sig:
             return
         retries_left = 3
-        while retries_left > 0:
-            response = await loop.run_in_executor(None, functools.partial(
-                requests.request,
-                method='post',
-                url=self.elo_url,
-                headers={'X-D0-Blind-ID-Detached-Signature': sig},
-                data=b'\n'))
-            if response.status_code != 404:
-                retries_left = 0
-            else:
-                retries_left -= 1
-                logger.debug('404 for %s, %s retries left', self.elo_url, retries_left)
-                await asyncio.sleep(1 + random.random() * 2)
-        if response.status_code != 200:
-            logger.debug('Got status code %s from %s, %s', response.status_code, self.elo_url, response.text)
-            return
-        try:
-            self.parse_elo(response.text)
-        except:
-            logger.debug('Failed to parse elo %s', response.text, exc_info=True)
-        else:
-            # logger.debug('Got basic elo %r', self.elo_basic)
-            await self.get_elo_advanced()
+        async with aiohttp.ClientSession() as session:
+            while retries_left > 0:
+                async with session.post(self.elo_url,
+                                        headers={'X-D0-Blind-ID-Detached-Signature': sig},
+                                        data=b'\n') as response:
+                    if response.status_code != 404:
+                        retries_left = 0
+                    else:
+                        retries_left -= 1
+                        logger.debug('404 for %s, %s retries left', self.elo_url, retries_left)
+                        await asyncio.sleep(1 + random.random() * 2)
+                    if response.status_code != 200:
+                        logger.debug('Got status code %s from %s, %s', response.status_code, self.elo_url,
+                                     response.text)
+                        return
+                    try:
+                        self.parse_elo(response.text)
+                    except:
+                        logger.debug('Failed to parse elo %s', response.text, exc_info=True)
+                    else:
+                        # logger.debug('Got basic elo %r', self.elo_basic)
+                        await self.get_elo_advanced()
 
     async def get_elo_advanced(self):
-        loop = self.server.module.xanmel.loop
         url = self.elo_basic.get('url')
-        response = await loop.run_in_executor(None, requests.get, url + '.json')
-        if response.status_code != 200:
-            logger.debug('Got status code %s from %s', response.status_code, self.elo_url)
-            return
-        try:
-            self.elo_advanced = response.json()
-            # logger.debug('Got advanced elo %r', self.elo_advanced)
-        except:
-            logger.debug('Could not parse json %s', response.text, exc_info=True)
+        async with aiohttp.ClientSession() as session:
+            async with session.get(url + '.json') as response:
+                if response.status_code != 200:
+                    logger.debug('Got status code %s from %s', response.status_code, self.elo_url)
+                    return
+                try:
+                    self.elo_advanced = response.json()
+                    # logger.debug('Got advanced elo %r', self.elo_advanced)
+                except:
+                    logger.debug('Could not parse json %s', response.text, exc_info=True)
         if isinstance(self.elo_advanced, list) and len(self.elo_advanced) > 0:
             self.elo_advanced = self.elo_advanced[0]
         else:
@@ -190,7 +186,8 @@ class PlayerManager:
             self.current_url = None
         if player.number2 in self.players_by_number2:
             old_player = self.players_by_number2[player.number2]
-            if old_player.number1 in self.players_by_number1 and self.players_by_number1[old_player.number1].number2 == player.number2:
+            if old_player.number1 in self.players_by_number1 and self.players_by_number1[
+                old_player.number1].number2 == player.number2:
                 del self.players_by_number1[old_player.number1]
             self.players_by_number1[player.number1] = player
             self.players_by_number2[player.number2] = player
