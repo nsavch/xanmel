@@ -5,6 +5,7 @@ setup(
     name='xanmel',
     version='0.1a1',
     description='Extensible chatbot designed for gaming purposes',
+    long_description='TODO',
     url='https://gitlab.com/nsavch/xanmel',
     author='Nick Savchenko',
     author_email='nsavch@gmail.com',
@@ -13,6 +14,7 @@ setup(
     package_data={
         'xanmel': ['GeoLite2-City.mmdb'],
     },
+    keywords='xonotic irc chatbot',
     install_requires=[
         'setuptools',
         'aiodns==1.1.1',
