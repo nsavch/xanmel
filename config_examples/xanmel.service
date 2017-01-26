@@ -1,0 +1,14 @@
+[Unit]
+Description=Xanmel Chat Bot
+After=syslog.target
+
+[Service]
+ExecStart=/usr/bin/xanmel --config /etc/xanmel.yaml
+User=xanmel
+Group=xanmel
+Restart=always
+KillSignal=SIGQUIT
+StandardError=syslog
+
+[Install]
+WantedBy=multi-user.target
