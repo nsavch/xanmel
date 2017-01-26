@@ -20,7 +20,7 @@ def test_module_loading(xanmel, mocker):
 
 
 def test_setup_event_generators(event_loop, mocker, mocked_coro):
-    xanmel = Xanmel(event_loop, 'example_config.yaml')
+    xanmel = Xanmel(event_loop, 'xanmel.yaml')
     RconServer.update_server_stats = mocked_coro()
     RconServer.check_connection = mocked_coro()
     xanmel.load_modules()

@@ -1,8 +1,11 @@
+import argparse
 import importlib
 import inspect
 import logging
 import os
 from collections import defaultdict
+
+import sys
 from pkg_resources import resource_filename, require, DistributionNotFound
 
 import geoip2.database
@@ -27,11 +30,17 @@ class Xanmel:
         self.handlers = defaultdict(list)
         self.actions = {}
         self.loop = loop
+        # TODO: handle situation when geoip db isn't readable
         self.geoip = geoip2.database.Reader(resource_filename('xanmel', 'GeoLite2-City.mmdb'))
         self.cmd_root = CommandRoot(self)
         self.cmd_root.register_container(HelpCommands(), prefix='')
-        with open(os.path.expanduser(config_path), 'r') as config_file:
-            self.config = yaml.load(config_file)
+        try:
+            with open(os.path.expanduser(config_path), 'r') as config_file:
+                self.config = yaml.load(config_file)
+        except (OSError, IOError) as e:
+            print('Config file %s unreadable: %s' % (config_path, e))
+            sys.exit(1)
+        logger.info('Read configuration from %s', config_path)
         loop.set_debug(self.config['settings']['asyncio_debug'])
 
     def load_modules(self):
@@ -422,11 +431,28 @@ class Version(ChatCommand):
 
 
 def main():
+    parser = argparse.ArgumentParser(description='Extensible chat bot designed for gaming purposes.')
+    parser.add_argument('-c', '--config', help='Use a custom config file path', metavar='CONFIG', type=str)
+    args = parser.parse_args()
+    config = None
+    if args.config:
+        config = args.config
+    else:
+        tried = []
+        for i in ['/etc/', os.getcwd()]:
+            fn = os.path.join(i, 'xanmel.yaml')
+            tried.append(fn)
+            if os.path.isfile(fn):
+                config = fn
+                break
+        if config is None:
+            print('Could not find config file. Tried the following paths: %s' % ', '.join(tried))
+            return 1
     logging.basicConfig(level=logging.DEBUG)
     loop = asyncio.get_event_loop()
     loop.set_debug(True)
     logger.info('Starting event loop...')
-    xanmel = Xanmel(loop=loop, config_path='/etc/xanmel_config.yaml')
+    xanmel = Xanmel(loop=loop, config_path=config)
     xanmel.load_modules()
     try:
         loop.run_forever()
