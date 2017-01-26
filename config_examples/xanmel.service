@@ -3,7 +3,7 @@ Description=Xanmel Chat Bot
 After=syslog.target
 
 [Service]
-ExecStart=/usr/bin/xanmel --config /etc/xanmel.yaml
+ExecStart=/usr/local/bin/xanmel --config /etc/xanmel.yaml
 User=xanmel
 Group=xanmel
 Restart=always
