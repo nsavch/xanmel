@@ -11,9 +11,9 @@ import xanmel.modules.irc.events as irc_events
 
 
 class ServerConnectedBase(Handler):
-    async def report(self, server, hostname):
+    async def report(self, server):
         msg = '\00303Xonotic Server Connected:\x0f \00312%(hostname)s\x0f; join now: \2xonotic +connect %(sv_ip)s:%(sv_port)s' % {
-            'hostname': hostname,
+            'hostname': server.host,
             'sv_ip': server.config['public_ip'],
             'sv_port': server.config['public_port']
         }
@@ -24,14 +24,14 @@ class ServerConnectHandler(ServerConnectedBase):
     events = [ServerConnect]
 
     async def handle(self, event):
-        await self.report(event.properties['server'], event.properties['hostname'])
+        await self.report(event.properties['server'])
 
 
 class ServerDisconnectHandler(Handler):
     events = [ServerDisconnect]
 
     async def handle(self, event):
-        hostname = event.properties['hostname']
+        hostname = event.properties['server'].host
         await self.run_action(ChannelMessage,
                               message='\00304Xonotic Server Disconnected:\x0f \00312%s\x0f' % hostname,
                               prefix=event.properties['server'].config['out_prefix'])

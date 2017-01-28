@@ -47,6 +47,7 @@ class RconServer:
         else:
             self.raw_log = None
         self.map_list = []
+        self.host = self.config['name']
         self.status = {}
         self.cvars = {}
         self.cmd_timestamp = 0
@@ -54,17 +55,17 @@ class RconServer:
 
     async def check_connection(self):
         while True:
-            if time.time() - self.cmd_timestamp > 60 or time.time() - self.log_timestamp > 60:
-                logger.debug('Trying to connect to %s:%s', self.server_address, self.server_port)
+            if not self.status or time.time() - self.log_timestamp > 60:
                 if self.connected:
-                    ServerDisconnect(self.module, server=self, hostname=self.status['host']).fire()
-                    self.connected = None
+                    ServerDisconnect(self.module, server=self).fire()
+                    self.connected = False
+                logger.debug('Trying to connect to %s:%s', self.server_address, self.server_port)
                 await self.connect_cmd()
                 await self.connect_log()
                 status = await self.update_server_status()
                 if status:
                     self.connected = True
-                    ServerConnect(self.module, server=self, hostname=self.status['host']).fire()
+                    ServerConnect(self.module, server=self).fire()
                     self.subscribe_to_log()
                     await asyncio.wait([
                         self.cleanup_log_dest_udp(),
@@ -73,7 +74,7 @@ class RconServer:
 
             else:
                 await self.update_server_status()
-            await asyncio.sleep(25)
+            await asyncio.sleep(4)
 
     async def connect_cmd(self):
         if self.command_transport:
@@ -111,14 +112,19 @@ class RconServer:
         self.log_parser.feed(data)
 
     async def cleanup_log_dest_udp(self):
+        retries = 3
         self.cvars['log_dest_udp'] = None
         self.send('log_dest_udp')
         t = time.time()
         while not self.cvars['log_dest_udp']:
             await asyncio.sleep(0.1)
-            if time.time() - t > 10:
-                self.send('log_dest_udp')
-                t = time.time()
+            if time.time() - t > 5:
+                if retries > 0:
+                    self.send('log_dest_udp')
+                    t = time.time()
+                    retries -= 1
+                else:
+                    return
         old_log_dests = self.cvars['log_dest_udp'].split(' ')
         logger.debug('Old log_dest_udp list: %r', old_log_dests)
         logger.debug('Current log listener: %r:%r', self.log_protocol.local_host, self.log_protocol.local_port)
@@ -144,26 +150,37 @@ class RconServer:
         self.command_protocol.send(command)
 
     async def update_maplist(self):
+        retries = 3
         self.cvars['g_maplist'] = None
         self.send('g_maplist')
         t = time.time()
         while not self.cvars['g_maplist']:
             await asyncio.sleep(0.1)
-            if time.time() - t > 10:
-                self.send('g_maplist')
-                t = time.time()
+            if time.time() - t > 5:
+                if retries > 0:
+                    self.send('g_maplist')
+                    t = time.time()
+                    retries -= 1
+                else:
+                    return
         self.map_list = sorted(self.cvars['g_maplist'].split(' '))
         logger.info('Got %s on the map list', len(self.map_list))
         logger.debug(self.map_list)
 
     async def update_server_status(self):
+        retries = 3
         self.status = {}
         self.send('status 1')
         t = time.time()
         while 'players' not in self.status:
             await asyncio.sleep(0.1)
-            if time.time() - t > 30:
-                return False
+            if time.time() - t > 3:
+                if retries > 0:
+                    self.send('status 1')
+                    retries -= 1
+                else:
+                    return False
+        self.host = self.status['host']
         m = re.match(r'(\d+)\s*active\s*\((\d+)\s*max', self.status['players'])
         if m:
             self.players.max = int(m.group(2))
