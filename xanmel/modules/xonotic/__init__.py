@@ -3,6 +3,11 @@ from xanmel.modules.xonotic.rcon import RconServer
 
 
 class XonoticModule(Module):
+    db_indices = {
+        'maps': {},
+        'games': {}
+    }
+
     def __init__(self, xanmel, config):
         super(XonoticModule, self).__init__(xanmel, config)
         self.servers = []

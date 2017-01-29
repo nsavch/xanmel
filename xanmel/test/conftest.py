@@ -53,6 +53,7 @@ def xon_module(xanmel, mocked_coro):
 @pytest.fixture
 def xanmel(event_loop, mocker):
     xanmel = Xanmel(event_loop, 'xanmel.yaml')
+    xanmel.db.es = None
     mocker.patch.object(xanmel, 'setup_event_generators')
     xanmel.load_modules()
     return xanmel

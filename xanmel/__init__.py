@@ -2,6 +2,7 @@ import argparse
 import importlib
 import inspect
 import logging
+import logging.config
 import os
 from collections import defaultdict
 
@@ -14,8 +15,9 @@ import asyncio
 import time
 import yaml
 
+from .db import XanmelDB
 from .utils import current_time
-from .logcfg import *
+from .logcfg import logging_config
 
 logger = logging.getLogger(__name__)
 
@@ -40,8 +42,10 @@ class Xanmel:
         except (OSError, IOError) as e:
             print('Config file %s unreadable: %s' % (config_path, e))
             sys.exit(1)
+        logging.config.dictConfig(logging_config(self.config['settings'].get('log_level', 'INFO')))
         logger.info('Read configuration from %s', config_path)
         loop.set_debug(self.config['settings']['asyncio_debug'])
+        self.db = XanmelDB(self.config['settings'].get('es_cluster', []))
 
     def load_modules(self):
         for module_path, module_config in self.config['modules'].items():
@@ -52,6 +56,7 @@ class Xanmel:
             self.load_handlers(module, module_pkg_name)
             self.load_actions(module, module_pkg_name)
             self.setup_event_generators(module)
+            self.loop.create_task(self.db.create_module_indices(module))
 
     def load_handlers(self, module, module_pkg_name):
         try:
@@ -448,11 +453,10 @@ def main():
         if config is None:
             print('Could not find config file. Tried the following paths: %s' % ', '.join(tried))
             return 1
-    logging.basicConfig(level=logging.DEBUG)
     loop = asyncio.get_event_loop()
-    loop.set_debug(True)
-    logger.info('Starting event loop...')
     xanmel = Xanmel(loop=loop, config_path=config)
+    logger.info('Starting event loop...')
+
     xanmel.load_modules()
     try:
         loop.run_forever()
