@@ -1,5 +1,7 @@
 settings:
   asyncio_debug: false
+  log_level: DEBUG
+  es_cluster: ['127.0.0.1:9200']
 modules:
   xanmel.modules.irc.IRCModule:
     host: irc.quakenet.org

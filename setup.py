@@ -25,7 +25,7 @@ setup(
         'maxminddb==1.2.2',
         'pytz==2016.10',
         'PyYAML==3.12',
-        'aioes=0.6.1'
+        'aioes==0.6.1'
     ],
     classifiers=[
         'Development Status :: 3 - Alpha',
