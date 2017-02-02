@@ -1,3 +1,5 @@
+import logging
+
 import geoip2.errors
 
 from xanmel import Handler
@@ -8,6 +10,9 @@ from .events import *
 from .rcon_log import GAME_TYPES
 from xanmel.modules.irc.actions import ChannelMessage, ChannelMessages
 import xanmel.modules.irc.events as irc_events
+
+
+logger = logging.getLogger(__name__)
 
 
 class ServerConnectedBase(Handler):
@@ -69,6 +74,7 @@ class GameStartedHandler(Handler):
     events = [GameStarted]
 
     async def handle(self, event):
+        event.properties['server'].current_dyn_fraglimit = 0
         if event.properties['server'].players.current == 0:
             return
         message = 'Playing \00310%(gametype)s\x0f on \00304%(map)s\x0f [%(current)s/%(max)s]; join now: \2xonotic +connect %(sv_ip)s:%(sv_port)s' % {
@@ -90,6 +96,19 @@ class JoinHandler(Handler):
     async def handle(self, event):
         player = event.properties['player']
         server = event.properties['server']
+        if server.config.get('dynamic_frag_limit'):
+            trigger_player_num, new_fraglimit = server.config['dynamic_frag_limit']
+            logger.debug('Dynamic frag limit %s, current players %s', trigger_player_num, server.players.current)
+            if server.players.current > trigger_player_num and new_fraglimit > server.current_dyn_fraglimit:
+                in_game_message = '^2Frag limit increased to %d because there are more than %d players^7' % (new_fraglimit, trigger_player_num)
+                if server.config['say_type'] == 'ircmsg':
+                    server.send('sv_cmd ircmsg ^7%s' % in_game_message)
+                else:
+                    with server.sv_adminnick('*'):
+                        server.send('say %s' % in_game_message)
+                server.send('fraglimit %d' % new_fraglimit)
+                server.current_dyn_fraglimit = new_fraglimit
+
         enabled_ranks = server.config.get('player_rankings', ['dm', 'duel', 'ctf'])
         if player.elo_url:
             await player.get_elo()
@@ -216,6 +235,7 @@ class GameEndedHandler(Handler):
             return '%d:%02d' % (seconds // 60, seconds % 60)
 
     async def handle(self, event):
+        event.properties['server'].current_dyn_fraglimit = 0
         if not event.properties['players']:
             return
         messages = ['%(gametype)s on \00304%(map)s\017 ended (%(duration)s)' % {

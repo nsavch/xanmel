@@ -41,4 +41,5 @@ modules:
         # none, stats-enabled, all
         show_geolocation_for: stats-enabled
         raw_log: /tmp/xonotic.log
+        dynamic_frag_limit: [5, 50]
   xanmel.modules.fun.FunModule: {}
