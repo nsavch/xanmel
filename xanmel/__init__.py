@@ -118,18 +118,23 @@ class Module:
 
 
 class Event:
+    log = True
+
     def __init__(self, module, **kwargs):
         self.module = module
         self.properties = kwargs
         self.timestamp = current_time()
 
     def fire(self):
-        logger.info('Firing event %s', self)
+        if self.log:
+            logger.info(str(self))
+        else:
+            logger.debug(str(self))
         for i in self.module.xanmel.handlers[type(self)]:
             self.module.loop.create_task(i.handle(self))
 
     def __str__(self):
-        return '%s(%r)' % (type(self), self.properties)
+        return '%s(%r)' % (type(self).__name__, self.properties)
 
 
 class Action:
