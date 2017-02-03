@@ -164,26 +164,30 @@ class NewPlayerActiveHandler(Handler):
         if server.current_gt != 'dm':
             return
         if server.config.get('dynamic_frag_limit'):
-            server.send('fraglimit')
-            await asyncio.sleep(1)
-            trigger_player_num, new_fraglimit = server.config['dynamic_frag_limit']
-            logger.debug('Dynamic frag limit %s, current players %s',
-                         trigger_player_num, server.players.active)
-            if server.players.active > trigger_player_num and new_fraglimit > int(server.cvars.get('fraglimit', 0)):
-                server.send('fraglimit %d' % new_fraglimit)
-                await self.run_action(
-                    ChannelMessage,
-                    message='\00303Frag limit increased to \x0f\00304%d\x0f\00303 because more than \x0f\00304%d\x0f\00303 players playing\x0f' % (
-                        new_fraglimit, trigger_player_num))
-                in_game_message = '^2Frag limit increased to ^3%d^2 because more than ^3%d^2 players playing^7' % (
-                new_fraglimit, trigger_player_num)
-                if server.config['say_type'] == 'ircmsg':
-                    server.send('sv_cmd ircmsg ^7%s' % in_game_message)
-                else:
-                    with server.sv_adminnick('*'):
-                        server.send('say %s' % in_game_message)
-                await asyncio.sleep(1)
+            await server.dyn_fraglimit_lock.acquire()
+            try:
                 server.send('fraglimit')
+                await asyncio.sleep(1)
+                trigger_player_num, new_fraglimit = server.config['dynamic_frag_limit']
+                logger.debug('Dynamic frag limit %s, current players %s',
+                             trigger_player_num, server.players.active)
+                if server.players.active > trigger_player_num and new_fraglimit > int(server.cvars.get('fraglimit', 0)):
+                    server.send('fraglimit %d' % new_fraglimit)
+                    await self.run_action(
+                        ChannelMessage,
+                        message='\00303Frag limit increased to \x0f\00304%d\x0f\00303 because more than \x0f\00304%d\x0f\00303 players playing\x0f' % (
+                            new_fraglimit, trigger_player_num))
+                    in_game_message = '^2Frag limit increased to ^3%d^2 because more than ^3%d^2 players playing^7' % (
+                    new_fraglimit, trigger_player_num)
+                    if server.config['say_type'] == 'ircmsg':
+                        server.send('sv_cmd ircmsg ^7%s' % in_game_message)
+                    else:
+                        with server.sv_adminnick('*'):
+                            server.send('say %s' % in_game_message)
+                    await asyncio.sleep(1)
+                    server.send('fraglimit')
+            finally:
+                server.dyn_fraglimit_lock.release()
 
 
 class PartHandler(Handler):
