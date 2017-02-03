@@ -43,7 +43,8 @@ def test_chat_message_command_from_non_player(xanmel, xon_module, mocked_coro):
     assert h.run_action.call_args[1]['prefix'] == 'exe > '
 
 
-def test_game_started_handler_empty(xanmel, xon_module, mocked_coro):
+def test_game_started_handler_empty(xanmel, xon_server, xon_module, mocked_coro, mocker):
+    mocker.patch.object(xon_server, 'send')
     srv = xon_module.servers[0]
     ev = GameStarted(xon_module, server=srv)
     h = xanmel.handlers[GameStarted][0]
@@ -52,7 +53,8 @@ def test_game_started_handler_empty(xanmel, xon_module, mocked_coro):
     assert not h.run_action.called
 
 
-def test_game_started_handler(xanmel, xon_module, xon_server, mocked_coro):
+def test_game_started_handler(xanmel, xon_module, xon_server, mocked_coro, mocker):
+    mocker.patch.object(xon_server,'send')
     xon_server.players.max = 12
     xon_server.players.join(Player(xon_server, b'meme police ', 1, 2, '127.0.0.1'))
     xon_server.players.join(Player(xon_server, b'test ', 3, 4, '127.0.0.1'))

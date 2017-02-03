@@ -1,5 +1,6 @@
 import logging
 
+import asyncio
 import geoip2.errors
 
 from xanmel import Handler
@@ -74,7 +75,7 @@ class GameStartedHandler(Handler):
     events = [GameStarted]
 
     async def handle(self, event):
-        event.properties['server'].current_dyn_fraglimit = 0
+        event.properties['server'].send('fraglimit')
         if event.properties['server'].players.current == 0:
             return
         message = 'Playing \00310%(gametype)s\x0f on \00304%(map)s\x0f [%(current)s/%(max)s]; join now: \2xonotic +connect %(sv_ip)s:%(sv_port)s' % {
@@ -160,11 +161,14 @@ class NewPlayerActiveHandler(Handler):
 
     async def handle(self, event):
         server = event.properties['server']
+        if 'fraglimit' not in server.cvars:
+            server.send('fraglimit')
+            await asyncio.sleep(1)
         if server.config.get('dynamic_frag_limit'):
             trigger_player_num, new_fraglimit = server.config['dynamic_frag_limit']
             logger.debug('Dynamic frag limit %s, current players %s',
                          trigger_player_num, server.players.active)
-            if server.players.active > trigger_player_num and new_fraglimit > server.current_dyn_fraglimit:
+            if server.players.active > trigger_player_num and new_fraglimit > int(server.cvars.get('fraglimit', 0)):
                 server.send('fraglimit %d' % new_fraglimit)
                 await self.run_action(
                     ChannelMessage,
@@ -177,7 +181,8 @@ class NewPlayerActiveHandler(Handler):
                 else:
                     with server.sv_adminnick('*'):
                         server.send('say %s' % in_game_message)
-                server.current_dyn_fraglimit = new_fraglimit
+                await asyncio.sleep(1)
+                server.send('fraglimit')
 
 
 class PartHandler(Handler):

@@ -52,7 +52,6 @@ class RconServer:
         self.cvars = {}
         self.cmd_timestamp = 0
         self.log_timestamp = 0
-        self.current_dyn_fraglimit = 0
         self.status_poll_interval = 6
 
     async def check_connection(self):

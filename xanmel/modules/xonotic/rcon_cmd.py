@@ -1,9 +1,13 @@
 import re
+import logging
 
 import time
 
 from .events import NewPlayerActive
 from .rcon_parser import CombinedParser, BaseOneLineRegexParser
+
+
+logger = logging.getLogger(__name__)
 
 
 class StatusItemParser(BaseOneLineRegexParser):
@@ -42,6 +46,7 @@ class CvarParser(BaseOneLineRegexParser):
 
     def process(self, data):
         self.rcon_server.cvars[data.group(1).decode('utf8')] = data.group(2).decode('utf8')
+        logger.debug('Set cvar %s to %r', data.group(1).decode('utf8'), data.group(2).decode('utf8'))
 
 
 class RconCmdParser(CombinedParser):
