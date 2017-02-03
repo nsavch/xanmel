@@ -193,6 +193,8 @@ class RconServer:
                 to_remove.append(n2)
         for n2 in to_remove:
             del self.players.status[n2]
+        for n2, v in self.players.status.items():
+            logger.debug('%s: %s', n2, v)
         return True
 
     async def update_server_stats(self):

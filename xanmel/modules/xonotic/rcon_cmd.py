@@ -22,7 +22,7 @@ class StatusPlayerParser(BaseOneLineRegexParser):
             return
         number2 = int(g('number2'))
         old_active = self.rcon_server.players.active
-        if number2 not in self.rcon_server.players.status:
+        if number2 not in self.rcon_server.players.status or number2 not in self.rcon_server.players.players_by_number2:
             frags = -666
         else:
             frags = int(g('frags'))

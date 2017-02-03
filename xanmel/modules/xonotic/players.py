@@ -158,7 +158,11 @@ class PlayerManager:
 
     @property
     def active(self):
-        return len([v for v in self.status.values() if v['frags'] >= 0])
+        num_active = 0
+        for n2, v in self.status.items():
+            if n2 in self.players_by_number2 and v['frags'] != -666:
+                num_active += 1
+        return num_active
 
     @property
     def current(self):
