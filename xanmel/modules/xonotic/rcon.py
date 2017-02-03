@@ -53,6 +53,7 @@ class RconServer:
         self.cmd_timestamp = 0
         self.log_timestamp = 0
         self.current_dyn_fraglimit = 0
+        self.status_poll_interval = 4
 
     async def check_connection(self):
         while True:
@@ -75,7 +76,7 @@ class RconServer:
 
             else:
                 await self.update_server_status()
-            await asyncio.sleep(4)
+            await asyncio.sleep(self.status_poll_interval)
 
     async def connect_cmd(self):
         if self.command_transport:
@@ -186,6 +187,12 @@ class RconServer:
         if m:
             self.players.max = int(m.group(2))
         self.command_container.help_text = 'Commands for interacting with %s' % self.status['host']
+        to_remove = []
+        for n2, v in self.players.status.items():
+            if time.time() - v['timestamp'] > self.status_poll_interval * 4:
+                to_remove.append(n2)
+        for n2 in to_remove:
+            del self.players.status[n2]
         return True
 
     async def update_server_stats(self):

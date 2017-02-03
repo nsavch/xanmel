@@ -96,18 +96,6 @@ class JoinHandler(Handler):
     async def handle(self, event):
         player = event.properties['player']
         server = event.properties['server']
-        if server.config.get('dynamic_frag_limit'):
-            trigger_player_num, new_fraglimit = server.config['dynamic_frag_limit']
-            logger.debug('Dynamic frag limit %s, current players %s', trigger_player_num, server.players.current)
-            if server.players.current > trigger_player_num and new_fraglimit > server.current_dyn_fraglimit:
-                in_game_message = '^2Frag limit increased to %d because there are more than %d players^7' % (new_fraglimit, trigger_player_num)
-                if server.config['say_type'] == 'ircmsg':
-                    server.send('sv_cmd ircmsg ^7%s' % in_game_message)
-                else:
-                    with server.sv_adminnick('*'):
-                        server.send('say %s' % in_game_message)
-                server.send('fraglimit %d' % new_fraglimit)
-                server.current_dyn_fraglimit = new_fraglimit
 
         enabled_ranks = server.config.get('player_rankings', ['dm', 'duel', 'ctf'])
         if player.elo_url:
@@ -165,6 +153,27 @@ class JoinHandler(Handler):
                 server.send('say %s' % in_game_message)
         await self.run_action(ChannelMessage, message=message,
                               prefix=event.properties['server'].config['out_prefix'])
+
+
+class NewPlayerActiveHandler(Handler):
+    events = [NewPlayerActive]
+
+    async def handle(self, event):
+        server = event.properties['server']
+        if server.config.get('dynamic_frag_limit'):
+            trigger_player_num, new_fraglimit = server.config['dynamic_frag_limit']
+            logger.debug('Dynamic frag limit %s, current players %s',
+                         trigger_player_num, server.players.active)
+            if server.players.active > trigger_player_num and new_fraglimit > server.current_dyn_fraglimit:
+                in_game_message = '^2Frag limit increased to ^3%d^2 because more than ^3%d^2 players playing^7' % (
+                new_fraglimit, trigger_player_num)
+                if server.config['say_type'] == 'ircmsg':
+                    server.send('sv_cmd ircmsg ^7%s' % in_game_message)
+                else:
+                    with server.sv_adminnick('*'):
+                        server.send('say %s' % in_game_message)
+                server.send('fraglimit %d' % new_fraglimit)
+                server.current_dyn_fraglimit = new_fraglimit
 
 
 class PartHandler(Handler):
@@ -235,7 +244,6 @@ class GameEndedHandler(Handler):
             return '%d:%02d' % (seconds // 60, seconds % 60)
 
     async def handle(self, event):
-        event.properties['server'].current_dyn_fraglimit = 0
         if not event.properties['players']:
             return
         messages = ['%(gametype)s on \00304%(map)s\017 ended (%(duration)s)' % {

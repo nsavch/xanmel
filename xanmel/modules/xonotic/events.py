@@ -49,4 +49,11 @@ class ChatMessage(Event):
     log = False
 
     def __str__(self):
-        return '%s chat message' % (self.properties['server'].config['out_prefix'])
+        return '%s chat message' % self.properties['server'].config['out_prefix']
+
+
+class NewPlayerActive(Event):
+    log = False
+
+    def __str__(self):
+        return '%s new player active' % self.properties['server'].config['out_prefix']

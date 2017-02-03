@@ -151,9 +151,14 @@ class PlayerManager:
     def __init__(self):
         self.players_by_number1 = {}
         self.players_by_number2 = {}
+        self.status = {}
         self.elo_data = {}
         self.current_url = None
         self.max = 0
+
+    @property
+    def active(self):
+        return len([v for v in self.status.values() if v['frags'] >= 0])
 
     @property
     def current(self):
@@ -212,6 +217,7 @@ class PlayerManager:
     def clear(self):
         self.players_by_number1 = {}
         self.players_by_number2 = {}
+        self.status = {}
 
     def get_elo(self, number1, game_type):
         res = '--'
