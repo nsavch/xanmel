@@ -165,6 +165,11 @@ class NewPlayerActiveHandler(Handler):
             logger.debug('Dynamic frag limit %s, current players %s',
                          trigger_player_num, server.players.active)
             if server.players.active > trigger_player_num and new_fraglimit > server.current_dyn_fraglimit:
+                server.send('fraglimit %d' % new_fraglimit)
+                await self.run_action(
+                    ChannelMessage,
+                    message='\00303Frag limit increased to \x0f\00304%d\x0f\00303 because more than \x0f\00304%d\x0f\00303 players playing\x0f' % (
+                        new_fraglimit, trigger_player_num))
                 in_game_message = '^2Frag limit increased to ^3%d^2 because more than ^3%d^2 players playing^7' % (
                 new_fraglimit, trigger_player_num)
                 if server.config['say_type'] == 'ircmsg':
@@ -172,7 +177,6 @@ class NewPlayerActiveHandler(Handler):
                 else:
                     with server.sv_adminnick('*'):
                         server.send('say %s' % in_game_message)
-                server.send('fraglimit %d' % new_fraglimit)
                 server.current_dyn_fraglimit = new_fraglimit
 
 
