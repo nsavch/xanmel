@@ -22,11 +22,15 @@ class StatusPlayerParser(BaseOneLineRegexParser):
             return
         number2 = int(g('number2'))
         old_active = self.rcon_server.players.active
+        if number2 not in self.rcon_server.players.status:
+            frags = -666
+        else:
+            frags = int(g('frags'))
         self.rcon_server.players.status[number2] = {'ip': g('ip'),
                                                     'pl': g('pl'),
                                                     'ping': g('ping'),
                                                     'time': g('time'),
-                                                    'frags': int(g('frags')),
+                                                    'frags': frags,
                                                     'nickname': g('nickname'),
                                                     'timestamp': time.time()}
         if self.rcon_server.players.active > old_active:
