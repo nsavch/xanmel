@@ -161,9 +161,8 @@ class NewPlayerActiveHandler(Handler):
 
     async def handle(self, event):
         server = event.properties['server']
-        if 'fraglimit' not in server.cvars:
-            server.send('fraglimit')
-            await asyncio.sleep(1)
+        server.send('fraglimit')
+        await asyncio.sleep(1)
         if server.config.get('dynamic_frag_limit'):
             trigger_player_num, new_fraglimit = server.config['dynamic_frag_limit']
             logger.debug('Dynamic frag limit %s, current players %s',
