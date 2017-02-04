@@ -22,7 +22,7 @@ class StatusPlayerParser(BaseOneLineRegexParser):
 
     def process(self, data):
         g = data.group
-        if time.time() - self.rcon_server.game_start_timestamp < 15:
+        if not (self.rcon_server.game_start_timestamp and time.time() - self.rcon_server.game_start_timestamp > 15):
             return
         if g('ip') == b'botclient':
             return

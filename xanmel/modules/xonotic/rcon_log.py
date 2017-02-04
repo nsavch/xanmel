@@ -96,6 +96,7 @@ class ScoresParser(BaseMultilineParser):
         return bytes([i for i in s if chr(i).isalpha()]).decode('utf8')
 
     def process(self, lines):
+        self.rcon_server.game_start_timestamp = 0
         gt_map, game_duration = lines[0].split(b':')
         game_duration = int(game_duration)
         gt, map = gt_map.decode('utf8').split('_', 1)
@@ -181,7 +182,7 @@ class GameStartedParser(BaseOneLineParser):
     def process(self, data):
         gt_map = data.split(b':')[0].decode('utf8')
         gt, map = gt_map.split('_', 1)
-        self.game_start_timestamp = time.time()
+        self.rcon_server.game_start_timestamp = time.time()
         self.rcon_server.players.status = {}
         self.rcon_server.current_map = map
         self.rcon_server.current_gt = gt
