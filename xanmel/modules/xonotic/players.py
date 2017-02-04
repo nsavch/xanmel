@@ -216,6 +216,8 @@ class PlayerManager:
             del self.players_by_number1[player.number1]
             if player.number2 in self.players_by_number2:
                 del self.players_by_number2[player.number2]
+            if player.number2 in self.status:
+                del self.status[player.number2]
             return player
 
     def clear(self):
