@@ -1,6 +1,8 @@
 import logging
 import re
 
+import time
+
 from .colors import Color
 from .events import *
 from .players import Player
@@ -179,6 +181,7 @@ class GameStartedParser(BaseOneLineParser):
     def process(self, data):
         gt_map = data.split(b':')[0].decode('utf8')
         gt, map = gt_map.split('_', 1)
+        self.game_start_timestamp = time.time()
         self.rcon_server.players.status = {}
         self.rcon_server.current_map = map
         self.rcon_server.current_gt = gt

@@ -54,6 +54,7 @@ class RconServer:
         self.log_timestamp = 0
         self.status_poll_interval = 6
         self.dyn_fraglimit_lock = asyncio.Lock()
+        self.game_start_timestamp = 0
 
     async def check_connection(self):
         while True:

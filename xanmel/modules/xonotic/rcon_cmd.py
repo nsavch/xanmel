@@ -22,6 +22,8 @@ class StatusPlayerParser(BaseOneLineRegexParser):
 
     def process(self, data):
         g = data.group
+        if time.time() - self.rcon_server.game_start_timestamp < 15:
+            return
         if g('ip') == b'botclient':
             return
         number2 = int(g('number2'))
