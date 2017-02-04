@@ -137,7 +137,7 @@ class IRCModule(Module):
             else:
                 # send a keepalive message. PING would probably fit better, but parsing PONG isn't
                 # supported in python-bottom
-                self.send('NOTICE', target=self.config['channel'], message=random.randint(0, 1024*1024))
+                self.client.send('NOTICE', target=self.config['channel'], message=random.randint(0, 1024*1024))
             await asyncio.sleep(30)
 
     async def test_flood(self):

@@ -282,8 +282,7 @@ class GameEndedHandler(Handler):
         if event.properties['teams']:
             messages.append(
                 'Team scores: %s' % ':'.join(self.__team_scores(event.properties['teams'],
-                                                                event.properties['team_sort_column']))
-            )
+                                                                event.properties['team_sort_column'])))
             for i in event.properties['teams']:
                 table = []
                 for player in event.properties['players']:
