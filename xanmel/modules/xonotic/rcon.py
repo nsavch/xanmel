@@ -190,7 +190,7 @@ class RconServer:
         self.command_container.help_text = 'Commands for interacting with %s' % self.status['host']
         to_remove = []
         for n2, v in self.players.status.items():
-            if time.time() - v['timestamp'] > self.status_poll_interval * 4:
+            if time.time() - v['timestamp'] > self.status_poll_interval * 3:
                 to_remove.append(n2)
         for n2 in to_remove:
             del self.players.status[n2]

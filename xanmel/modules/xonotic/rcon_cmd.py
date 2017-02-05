@@ -21,14 +21,16 @@ class StatusPlayerParser(BaseOneLineRegexParser):
     regex = re.compile(rb'^\^(?:3|7)(?P<ip>[^ ]+)\s+(?P<pl>[^ ]+)\s+(?P<ping>[^ ]+)\s+(?P<time>[^ ]+)\s+(?P<frags>-?\d+)\s+#(?P<number2>\d+)\s+(?P<nickname>.*)$')
 
     def process(self, data):
-        g = data.group
         if not (self.rcon_server.game_start_timestamp and time.time() - self.rcon_server.game_start_timestamp > 15):
             return
+        g = data.group
         if g('ip') == b'botclient':
+            return
+        if g('ping') == b'0':
             return
         number2 = int(g('number2'))
         old_active = self.rcon_server.players.active
-        if number2 not in self.rcon_server.players.status or number2 not in self.rcon_server.players.players_by_number2:
+        if number2 not in self.rcon_server.players.status:
             frags = -666
         else:
             frags = int(g('frags'))
