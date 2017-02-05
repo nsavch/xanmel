@@ -38,7 +38,7 @@ class RconServer:
         self.current_gt = ''
         self.connected = False
         self.timing = ''
-        self.server_stats = {}
+        self.server_rating = []
         self.command_container = XonCommands(rcon_server=self)
         self.command_container.help_text = 'Commands for interacting with %s' % config['name']
         self.module.xanmel.cmd_root.register_container(self.command_container, config['cmd_prefix'])
@@ -200,18 +200,24 @@ class RconServer:
 
     async def update_server_stats(self):
         if self.config.get('server_stats_url'):
-            async with aiohttp.ClientSession() as session:
-                async with session.get(self.config['server_stats_url'] + '/topscorers',
-                                       headers={'Accept': 'application/json'}) as resp:
-                    if resp.status != 200:
-                        logger.info('Could not download server stats from %s, got status %s',
-                                    self.config.get['server_stats_url'],
-                                    resp.status)
-                        return
-                    try:
-                        self.server_stats = await resp.json()
-                    except:
-                        logger.info('Could not parse stats', exc_info=True)
+            self.server_rating = []
+            while True:
+                async with aiohttp.ClientSession() as session:
+                    async with session.get(self.config['server_stats_url'] + ('/topscorers?last=%s' % len(self.server_rating)),
+                                           headers={'Accept': 'application/json'}) as resp:
+                        if resp.status != 200:
+                            logger.info('Could not download server stats from %s, got status %s',
+                                        self.config.get['server_stats_url'],
+                                        resp.status)
+                            return
+                        try:
+                            players = await resp.json()
+                            if len(players.get('top_scorers', [])) == 0:
+                                break
+                            else:
+                                self.server_rating += players['top_scorers']
+                        except:
+                            logger.info('Could not parse stats', exc_info=True)
 
 
 def rcon_protocol_factory(password, secure, received_callback=None, connection_made_callback=None,

@@ -133,11 +133,10 @@ class Player:
         return geoloc
 
     def get_server_rank(self):
-        if self.elo_basic and self.server.server_stats:
-            top_players = self.server.server_stats.get('top_scorers', [])
-            for i in top_players:
+        if self.elo_basic and self.server.server_rating:
+            for i in self.server.server_rating:
                 if self.elo_basic.get('player_id') == i.get('player_id'):
-                    return i['rank'], len(top_players)
+                    return i['rank'], len(self.server.server_rating)
 
     @property
     def is_bot(self):
