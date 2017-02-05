@@ -175,9 +175,9 @@ class NewPlayerActiveHandler(Handler):
                         server.send('fraglimit %d' % new_fraglimit)
                         await self.run_action(
                             ChannelMessage,
-                            message='\00303Frag limit increased to \x0f\00304%d\x0f\00303 because more than \x0f\00304%d\x0f\00303 players playing\x0f' % (
+                            message='\00303Frag limit increased to \x0f\00304%d\x0f\00303 because there are more than \x0f\00304%d\x0f\00303 players\x0f' % (
                                 new_fraglimit, trigger_player_num))
-                        in_game_message = '^2Frag limit increased to ^3%d^2 because more than ^3%d^2 players playing^7' % (
+                        in_game_message = '^2Frag limit increased to ^3%d^2 because there are more than ^3%d^2 players^7' % (
                         new_fraglimit, trigger_player_num)
                         if server.config['say_type'] == 'ircmsg':
                             server.send('sv_cmd ircmsg ^7%s' % in_game_message)
