@@ -115,7 +115,7 @@ class JoinHandler(Handler):
                 formatted_ranks = ', '.join(['%s:%s/%s' % (k, v['rank'], v['max_rank']) for k, v in ranks])
         server_rank = player.get_server_rank()
         if server_rank:
-            server_rank_fmt = ' [server rank: %s] ' % server_rank
+            server_rank_fmt = ' [server rank: %s/%s] ' % server_rank
         else:
             server_rank_fmt = ' '
 
@@ -130,7 +130,7 @@ class JoinHandler(Handler):
         }
         highest_rank = player.get_highest_rank()
         if server_rank:
-            server_rank_game_fmt = ' ^3server:%s/10^x4F0' % server_rank
+            server_rank_game_fmt = ' ^3server:%s/%s^x4F0' % server_rank
         else:
             server_rank_game_fmt = ''
         if highest_rank:

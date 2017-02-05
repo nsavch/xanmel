@@ -65,6 +65,6 @@ def test_datagram_received(event_loop, xon_server, mocked_coro):
 def test_update_server_stats(event_loop, xon_server, example_server_stats):
     xon_server.update_server_stats = xon_server.update_server_stats_orig
     with aioresponses() as m:
-        m.get('http://stats.xonotic.org/server/7975', status=200, payload=example_server_stats)
+        m.get('http://stats.xonotic.org/server/7975/topscorers', status=200, payload=example_server_stats)
         event_loop.run_until_complete(xon_server.update_server_stats())
-    assert len(xon_server.server_stats['top_scorers']['top_scorers']) == 10
+    assert len(xon_server.server_stats['top_scorers']) == 20

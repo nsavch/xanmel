@@ -201,7 +201,7 @@ class RconServer:
     async def update_server_stats(self):
         if self.config.get('server_stats_url'):
             async with aiohttp.ClientSession() as session:
-                async with session.get(self.config['server_stats_url'],
+                async with session.get(self.config['server_stats_url'] + '/topscorers',
                                        headers={'Accept': 'application/json'}) as resp:
                     if resp.status != 200:
                         logger.info('Could not download server stats from %s, got status %s',
