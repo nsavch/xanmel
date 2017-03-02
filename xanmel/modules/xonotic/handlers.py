@@ -323,13 +323,15 @@ class IRCMessageHandler(Handler):
     async def handle(self, event):
         irc_nick = Color.irc_to_none(event.properties['nick'].encode('utf8')).decode('utf8')
         message = Color.irc_to_none(event.properties['message'].encode('utf8')).decode('utf8')
-        for server in self.module.servers:
+        for server in sorted(self.module.servers, key=lambda x: len(x.config['in_prefix']), reverse=True):
             if message.startswith(server.config['in_prefix']):
                 if server.config['say_type'] == 'ircmsg':
                     server.send('sv_cmd ircmsg [IRC] %s^7: %s' % (irc_nick, message))
                 else:
                     with server.sv_adminnick(irc_nick):
                         server.send('say %s' % message)
+                if server.config['in_prefix']:
+                    break
 
 
 # class IRCConnected(ServerConnectedBase):
