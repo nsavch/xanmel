@@ -9,6 +9,7 @@ modules:
     ssl: false
     nick: xanmel
     realname: Xanmel BOT
+    quakenet_auth: ['username', 'password']
     channel: '#xanmel'
     greeting: HELLO WORLD!
     mention_delimeters: [' ', ':', ',']

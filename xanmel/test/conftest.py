@@ -40,6 +40,7 @@ def event_loop():
 def irc_module(xanmel, mocked_coro):
     mdl = xanmel.modules['xanmel.modules.irc.IRCModule']
     mdl.check_connection = mocked_coro()
+    mdl.quakenet_auth = mocked_coro()
     return mdl
 
 

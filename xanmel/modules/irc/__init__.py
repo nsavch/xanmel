@@ -1,4 +1,6 @@
 import asyncio
+import hashlib
+import hmac
 import logging
 import random
 
@@ -44,6 +46,28 @@ class IRCModule(Module):
                                     loop=self.loop)
         self.message_queue = asyncio.Queue(maxsize=config.get('flood_max_queue_size', 1024))
         self.msg_lock = asyncio.Lock()
+        self.challenge_reply = None
+
+    async def quakenet_auth(self):
+        if not self.config['quakenet_auth']:
+            return
+        username, password = self.config['quakenet_auth']
+        self.challenge_reply = None
+        self.client.send('PRIVMSG', target='Q@CServe.quakenet.org', message='CHALLENGE')
+        start_time = time.time()
+        while time.time() - start_time < 60:
+            await self.client.wait('NOTICE')
+            if self.challenge_reply is not None:
+                break
+        if self.challenge_reply is None:
+            return
+        lcase_username = username.lower().encode('ascii')  # TODO: use RFC1459 lowercasing here
+        truncated_password = password[:10].encode('ascii')
+        phash = hashlib.sha256(truncated_password).hexdigest().encode('ascii')
+        key = hashlib.sha256(lcase_username + b':' + phash).hexdigest()
+        challenge_auth = hmac.new(key.encode('ascii'), self.challenge_reply.encode('ascii'), hashlib.sha256).hexdigest()
+        self.client.send('PRIVMSG', target='Q@CServe.quakenet.org',
+                         message='CHALLENGEAUTH %s %s HMAC-SHA-256' % (username, challenge_auth))
 
     async def connect(self):
         if not self.connected or not self.client.protocol:
@@ -55,6 +79,7 @@ class IRCModule(Module):
             [self.client.wait("RPL_ENDOFMOTD"), self.client.wait("ERR_NOMOTD")],
             loop=self.loop,
             return_when=asyncio.FIRST_COMPLETED)
+        await self.quakenet_auth()
         self.client.send('JOIN', channel=self.config['channel'])
         # Cancel whichever waiter's event didn't come in.
         for future in pending:
@@ -150,6 +175,7 @@ class IRCModule(Module):
         self.client.on('CLIENT_DISCONNECT', self.disconnect)
         self.client.on('PING', self.pong)
         self.client.on('PRIVMSG', self.process_message)
+        self.client.on('NOTICE', self.process_notice)
         self.loop.create_task(self.check_connection())
         self.loop.create_task(self.process_queue())
 
@@ -169,6 +195,10 @@ class IRCModule(Module):
                 MentionMessage(self, message=message, **kwargs).fire()
             else:
                 ChannelMessage(self, message=message, **kwargs).fire()
+
+    async def process_notice(self, target, message, **kwargs):
+        if message.startswith('CHALLENGE'):
+            self.challenge_reply = message.split(' ')[1]
 
     def teardown(self):
         self.loop.run_until_complete(self.client.disconnect())
