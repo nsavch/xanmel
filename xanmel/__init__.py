@@ -257,7 +257,10 @@ class CommandRoot:
             await user.reply(reply, is_private)
         else:
             child = self.children[prefix]
-            await child.run(user, message[len(prefix):], is_private, root=self)
+            if child.is_allowed_for(user):
+                await child.run(user, message[len(prefix):], is_private, root=self)
+            else:
+                await user.reply('Access Denied', is_private)
 
 
 class CommandContainer:
@@ -277,7 +280,7 @@ class CommandContainer:
             self.children[k].parent = self
 
     def is_allowed_for(self, user):
-        return any([i.is_allowed_for(user) for i in self.children.values()])
+        return not self.children or any([i.is_allowed_for(user) for i in self.children.values()])
 
     async def run(self, user, message, is_private=False, root=None):
         message = message.lstrip()
@@ -415,7 +418,6 @@ class FullHelp(ChatCommand):
     parent = HelpCommands
     prefix = 'fullhelp'
     help_text = 'Send a documentation for all commands in a private message'
-    allowed_user_types = ['irc']
 
     async def run(self, user, message, is_private=False, root=None):
         reply = ['Angle brackets designate <required> command parameters.',

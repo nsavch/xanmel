@@ -18,7 +18,6 @@ class XonoticModule(Module):
     def after_load(self):
         raw_root = self.xanmel.cmd_root.copy()
         for i in self.servers:
-            print(i.config['cmd_prefix'])
             self.xanmel.cmd_root.register_container(i.command_container, i.config['cmd_prefix'])
             i.local_cmd_root = raw_root.copy()
             i.local_cmd_root.register_container(XonCommands(rcon_server=i), '')

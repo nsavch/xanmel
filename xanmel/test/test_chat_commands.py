@@ -169,7 +169,7 @@ def test_unknown_container_command(xanmel, mocker, dummy_chat_user, irc_module):
     xanmel.cmd_root.register_container(EmptyContainer(), prefix='empty')
     prev_call_count = chat_user.public_reply.call_count
     xanmel.loop.run_until_complete(xanmel.cmd_root.run(chat_user, 'empty', is_private=False))
-    assert chat_user.public_reply.call_count == prev_call_count
+    assert chat_user.public_reply.call_count == prev_call_count, chat_user.public_reply.call_args_list[-1][0][0]
 
 
 def test_help(xanmel, mocker, dummy_chat_user, irc_module):

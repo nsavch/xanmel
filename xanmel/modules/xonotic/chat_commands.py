@@ -9,7 +9,7 @@ logger = logging.getLogger(__name__)
 
 
 class XonCommands(CommandContainer):
-    help_text = 'Commands for interaction with a Xonotic server'
+    help_text = 'Commands for interaction with Xonotic server'
 
 
 class Who(ChatCommand):
