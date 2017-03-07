@@ -18,7 +18,7 @@ class Who(ChatCommand):
     help_text = 'Lists players connected to the server (one-line format)'
     allowed_user_types = ['irc']
 
-    async def run(self, user, message, is_private=True):
+    async def run(self, user, message, is_private=True, root=None):
         rcon_server = self.parent.properties['rcon_server']
         logger.debug(rcon_server.players.players_by_number1)
         logger.debug(rcon_server.players.players_by_number2)
@@ -44,7 +44,7 @@ class Maps(ChatCommand):
     help_text = 'Lists maps matching a glob-style PATTERN. If PATTERN not supplied output list of all maps. In ' \
                 'non-private mode outputs only first 10 matches. '
 
-    async def run(self, user, message, is_private=True):
+    async def run(self, user, message, is_private=True, root=None):
         rcon_server = self.parent.properties['rcon_server']
         if not rcon_server.map_list:
             await user.reply(rcon_server.config['out_prefix'] + 'Map List not initialized', is_private)

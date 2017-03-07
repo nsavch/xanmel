@@ -18,7 +18,7 @@ class Excuse(ChatCommand):
     help_args = '[USERNAME]'
     help_text = 'Finds an excuse for you or USERNAME after a bad game round.'
 
-    async def run(self, user, message, is_private=False):
+    async def run(self, user, message, is_private=False, root=None):
         message = message.strip()
         if message:
             username = message

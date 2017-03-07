@@ -39,9 +39,9 @@ class RconServer:
         self.connected = False
         self.timing = ''
         self.server_rating = []
+        self.local_cmd_root = None
         self.command_container = XonCommands(rcon_server=self)
         self.command_container.help_text = 'Commands for interacting with %s' % config['name']
-        self.module.xanmel.cmd_root.register_container(self.command_container, config['cmd_prefix'])
         if config.get('raw_log'):
             self.raw_log = open(config['raw_log'], 'ab')
         else:

@@ -7,6 +7,8 @@ import os
 from collections import defaultdict
 
 import sys
+
+import copy
 from pkg_resources import resource_filename, require, DistributionNotFound
 
 import geoip2.database
@@ -57,6 +59,7 @@ class Xanmel:
             self.load_actions(module, module_pkg_name)
             self.setup_event_generators(module)
             self.loop.create_task(self.db.create_module_indices(module))
+        self.run_after_load_hooks()
 
     def load_handlers(self, module, module_pkg_name):
         try:
@@ -84,6 +87,10 @@ class Xanmel:
     def setup_event_generators(self, module):
         module.setup_event_generators()
 
+    def run_after_load_hooks(self):
+        for i in self.modules.values():
+            i.after_load()
+
     def teardown(self):
         for i in self.modules.values():
             i.teardown()
@@ -109,6 +116,9 @@ class Module:
         self.config = config
         self.xanmel = xanmel
         self.loop = xanmel.loop
+
+    def after_load(self):
+        pass
 
     def setup_event_generators(self):
         pass  # pragma: no cover
@@ -196,6 +206,12 @@ class CommandRoot:
         self.throttling = defaultdict(lambda: defaultdict(list))
         self.disabled_users = defaultdict(dict)
 
+    def copy(self):
+        new_root = CommandRoot(self.xanmel)
+        new_root.children = copy.copy(self.children)
+        new_root.merged_containers = copy.copy(self.merged_containers)
+        return new_root
+
     def register_container(self, container, prefix):
         container.root = self
         container.prefix = prefix
@@ -241,7 +257,7 @@ class CommandRoot:
             await user.reply(reply, is_private)
         else:
             child = self.children[prefix]
-            await child.run(user, message[len(prefix):], is_private)
+            await child.run(user, message[len(prefix):], is_private, root=self)
 
 
 class CommandContainer:
@@ -263,7 +279,7 @@ class CommandContainer:
     def is_allowed_for(self, user):
         return any([i.is_allowed_for(user) for i in self.children.values()])
 
-    async def run(self, user, message, is_private=False):
+    async def run(self, user, message, is_private=False, root=None):
         message = message.lstrip()
         if not self.children:
             logger.info('Request to a container without children %s', self)
@@ -288,7 +304,7 @@ class CommandContainer:
             child = self.children[prefix]
 
             if child.is_allowed_for(user):
-                await child.run(user, message[len(prefix):], is_private)
+                await child.run(user, message[len(prefix):], is_private, root=root)
             else:
                 await user.reply('Access Denied', is_private)
 
@@ -347,19 +363,18 @@ class Help(ChatCommand):
     help_args = '[CMDNAME] [SUBCMDNAME]'
     help_text = 'Provide useful and friendly help.'
 
-    async def run(self, user, message, is_private=False):
+    async def run(self, user, message, is_private=False, root=None):
         if is_private:
             help_base = 'help'
         else:
             help_base = '%s: help' % user.botnick
-        root_cmd = self.parent.root
         message = message.strip()
         if message:
             prefix = message.split(' ', 1)[0]
-            if prefix not in root_cmd.children:
+            if prefix not in root.children:
                 reply = ['Unknown command %s. Use "%s" to list available commands' % (prefix, help_base)]
             else:
-                child = root_cmd.children[prefix]
+                child = root.children[prefix]
                 if isinstance(child, CommandContainer):
                     rest = message[len(prefix):].strip()
                     if not rest:
@@ -390,7 +405,7 @@ class Help(ChatCommand):
                     else:
                         reply = ['Unavailable command %s' % prefix]
         else:
-            cmds = root_cmd.children
+            cmds = root.children
             reply = ['Available commands: ' + ', '.join(sorted([i for i in cmds if cmds[i].is_allowed_for(user)]))]
         for i in reply:
             await user.reply(i, is_private)
@@ -402,19 +417,18 @@ class FullHelp(ChatCommand):
     help_text = 'Send a documentation for all commands in a private message'
     allowed_user_types = ['irc']
 
-    async def run(self, user, message, is_private=False):
-        root_cmd = self.parent.root
+    async def run(self, user, message, is_private=False, root=None):
         reply = ['Angle brackets designate <required> command parameters.',
                  'Square brackets designate [optional] command parameters']
-        for i in root_cmd.merged_containers:
+        for i in root.merged_containers:
             if i.is_allowed_for(user):
                 reply.append('-- ' + i.help_text + ' --')
                 for child_prefix in sorted(i.children):
-                    if child_prefix in root_cmd.children:
-                        if root_cmd.children[child_prefix].is_allowed_for(user):
-                            reply.append(root_cmd.children[child_prefix].format_help())
-        for child_prefix in sorted(root_cmd.children):
-            child = root_cmd.children[child_prefix]
+                    if child_prefix in root.children:
+                        if root.children[child_prefix].is_allowed_for(user):
+                            reply.append(root.children[child_prefix].format_help())
+        for child_prefix in sorted(root.children):
+            child = root.children[child_prefix]
             if not isinstance(child, CommandContainer):
                 continue
             if child.is_allowed_for(user):
@@ -432,7 +446,7 @@ class Version(ChatCommand):
     prefix = 'version'
     help_text = 'Get the current version of the bot running'
 
-    async def run(self, user, message, is_private=False):
+    async def run(self, user, message, is_private=False, root=None):
         try:
             version = require('xanmel')[0].version
         except DistributionNotFound:

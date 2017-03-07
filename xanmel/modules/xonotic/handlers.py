@@ -63,12 +63,20 @@ class ChatMessageHandler(Handler):
                                        rcon_server=server)
                 message = Color.dp_to_none(msg[len(prefix1):]).decode('utf8')
                 break
-        if not user or not message.startswith(user.botnick + ': '):
+        message_is_cmd = False
+        if user:
+            if message.startswith(user.botnick + ': '):
+                message_is_cmd = True
+                message = message[len(user.botnick)+1:]
+            elif message.startswith('/'):
+                message_is_cmd = True
+                message = message[1:]
+        if not user or not message_is_cmd:
             await self.run_action(ChannelMessage,
                                   message=Color.dp_to_irc(event.properties['message']).decode('utf8'),
                                   prefix=event.properties['server'].config['out_prefix'])
         else:
-            await cmd_root.run(user, message[len(user.botnick)+1:], is_private=False)
+            await server.local_cmd_root.run(user, message, is_private=False)
 
 
 class GameStartedHandler(Handler):
