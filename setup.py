@@ -20,7 +20,7 @@ setup(
         'aiodns==1.1.1',
         'aiohttp==1.0.5',
         'bottom==1.0.4',
-        'cchardet==1.1.2',
+        'cchardet==2.3.0',
         'geoip2==2.4.2',
         'maxminddb==1.2.2',
         'pytz==2016.10',
