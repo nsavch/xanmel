@@ -5,7 +5,41 @@ from xanmel.modules.xonotic.rcon import RconServer
 
 class XonoticModule(Module):
     db_indices = {
-        'map_rating': {}
+        'map_rating': {
+            "vote": {
+                "properties": {
+                    "map": {
+                        "type": "keyword",
+                        "index": "not_analyzed"
+                    },
+                    "message": {
+                        "type": "string",
+                        "analyzer": "english"
+                    },
+                    "nickname": {
+                        "type": "keyword",
+                        "index": "not_analyzed"
+                    },
+                    "raw_nickname": {
+                        "type": "keyword",
+                        "index": "not_analyzed"
+                    },
+                    "server_id": {
+                        "type": "long"
+                    },
+                    "stats_id": {
+                        "type": "long"
+                    },
+                    "timestamp": {
+                        "type": "date",
+                        "format": "strict_date_optional_time||epoch_millis"
+                    },
+                    "vote": {
+                        "type": "long"
+                    }
+                }
+            }
+        }
     }
 
     def __init__(self, xanmel, config):

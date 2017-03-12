@@ -86,6 +86,60 @@ class MapChangeHandler(Handler):
         await server.map_voter.store(event.properties['new_map'])  # what if someone votes while this is executing? Oh shi...
 
 
+class RatingReportHandler(Handler):
+    events = [MapChange]
+
+    async def handle(self, event):
+        server = event.properties['server']
+        map_name = server.status['map']
+        es = server.module.xanmel.db.es
+        if es is None:
+            return
+        await asyncio.sleep(15)
+        data = await es.search('map_rating', doc_type='vote', body={
+            'size': 0,
+            'query': {
+                'bool': {
+                    'must': [
+                        {'term': {'map': map_name}},
+                        {'term': {'server_id': server.config['unique_id']}}
+                    ]
+                }
+            },
+            'aggs': {
+                'rating': {'sum': {'field': 'vote'}}
+            }
+        })
+        total_votes = data.get('hits', {}).get('total', 0)
+        rating = data.get('aggregations', {}).get('rating', {}).get('value', 0)
+        rating = int(rating)
+        if total_votes == 0:
+            message = '^3%(map_name)s ^7has not yet been rated - Use ^7/^2+++^7,^2++^7,^2+^7,^1-^7,^1--^7,^1--- ^7to rate the map.'
+        else:
+            message = '^3%(map_name)s ^7has ^2%(rating)s ^7points. ^5[%(total_votes)s votes]^7 - Use ^7/^2+++^7,^2++^7,^2+^7,^1-^7,^1--^7,^1--- ^7to rate the map.'
+        msg_args = {'map_name': map_name, 'rating': rating, 'total_votes': total_votes}
+        in_game_message = message % msg_args
+        if server.config['say_type'] == 'ircmsg':
+            server.send('sv_cmd ircmsg ^7%s' % in_game_message)
+        else:
+            with server.sv_adminnick('*'):
+                server.send('say %s' % in_game_message)
+        await self.run_action(ChannelMessage, message='\00303%(map_name)s\x0f: \00304%(rating)s\x0f points (\00312%(total_votes)s\x0f votes)' % msg_args,
+                              prefix=server.config['out_prefix'])
+
+
+class PlayerRatedMapHandler(Handler):
+    events = [PlayerRatedMap]
+
+    async def handle(self, event):
+        msg = '\00303*\x0f %(player_name)s rated map \00304%(map_name)s\x0f: \00312%(vote)s\x0f'
+        await self.run_action(ChannelMessage, message=msg % {
+            'player_name': Color.dp_to_irc(event.properties['player'].nickname).decode('utf8'),
+            'map_name': event.properties['map_name'],
+            'vote': event.properties['vote']
+        }, prefix=event.properties['server'].config['out_prefix'])
+
+
 class GameStartedHandler(Handler):
     events = [GameStarted]
 
