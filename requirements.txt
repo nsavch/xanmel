@@ -32,7 +32,7 @@ Pygments==2.2.0
 pytest==3.0.6
 pytest-cov==2.4.0
 pytest-cover==3.0.0
-pytest-coverage==0.0
+pytest-coverage==0.0.1
 pytest-mock==1.5.0
 pytz==2016.10
 PyYAML==3.12
