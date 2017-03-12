@@ -95,7 +95,7 @@ class RatingReportHandler(Handler):
         es = server.module.xanmel.db.es
         if es is None:
             return
-        await asyncio.sleep(7)
+        await asyncio.sleep(15)
         data = await es.search('map_rating', doc_type='vote', body={
             'size': 0,
             'query': {
