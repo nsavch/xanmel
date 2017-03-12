@@ -29,6 +29,7 @@ class MapVoter:
         if es:
             for vote in self.votes.values():
                 await es.index('map-rating', 'vote', {
+                    'map': self.map_name,
                     'timestamp': ts.strftime('%Y-%m-%dT%H:%M:%S'),
                     'vote': vote['vote'],
                     'message': vote['message'],
