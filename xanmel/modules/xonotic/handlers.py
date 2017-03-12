@@ -83,8 +83,7 @@ class MapChangeHandler(Handler):
 
     async def handle(self, event):
         server = event.properties['server']
-        await server.map_voter.store()  # what if someone votes while this is executing? Oh shi...
-        server.map_voter.reset(event.properties['new_map'])
+        await server.map_voter.store(event.properties['new_map'])  # what if someone votes while this is executing? Oh shi...
 
 
 class GameStartedHandler(Handler):

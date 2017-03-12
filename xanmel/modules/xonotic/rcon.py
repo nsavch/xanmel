@@ -22,14 +22,16 @@ class MapVoter:
         self.map_name = ''
         self.votes = {}  # number2 -> vote
 
-    async def store(self):
+    async def store(self, new_map_name):
         ts = current_time()
+        map_name = self.map_name
+        self.map_name = new_map_name
         logger.debug('GOING TO STORE VOTES %s:%r', ts, self.votes)
         es = self.server.module.xanmel.db.es
         if es:
             for vote in self.votes.values():
                 await es.index('map_rating', 'vote', {
-                    'map': self.map_name,
+                    'map': map_name,
                     'timestamp': ts.strftime('%Y-%m-%dT%H:%M:%S'),
                     'vote': vote['vote'],
                     'message': vote['message'],
@@ -37,9 +39,6 @@ class MapVoter:
                     'raw_nickname': vote['player'].nickname.decode('utf8'),
                     'stats_id': vote['player'].elo_basic and vote['player'].elo_basic.get('player_id')
                 })
-
-    def reset(self, new_map_name):
-        self.map_name = new_map_name
         self.votes = {}
 
 
