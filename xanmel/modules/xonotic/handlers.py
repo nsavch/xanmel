@@ -95,7 +95,7 @@ class RatingReportHandler(Handler):
         es = server.module.xanmel.db.es
         if es is None:
             return
-        await asyncio.sleep(15)
+        await asyncio.sleep(7)
         data = await es.search('map_rating', doc_type='vote', body={
             'size': 0,
             'query': {
@@ -124,7 +124,19 @@ class RatingReportHandler(Handler):
         else:
             with server.sv_adminnick('*'):
                 server.send('say %s' % in_game_message)
-        await self.run_action(ChannelMessage, message='\003%(map_name)s\x0f: %(rating)s points (%(total_votes)s votes)' % msg_args)
+        await self.run_action(ChannelMessage, message='\00303%(map_name)s\x0f: \00304%(rating)s\x0f points (\00312%(total_votes)s\x0f votes)' % msg_args)
+
+
+class PlayerRatedMapHandler(Handler):
+    events = [PlayerRatedMap]
+
+    async def handle(self, event):
+        msg = '\00303*\x0f %(player_name)s rated map \00304%(map_name)s\x0f: \00312%(vote)s\x0f'
+        await self.run_action(ChannelMessage, message=msg % {
+            'player_name': Color.dp_to_irc(event.properties['player'].nickname).decode('utf8'),
+            'map_name': event.properties['map_name'],
+            'vote': event.properties['vote']
+        })
 
 
 class GameStartedHandler(Handler):
