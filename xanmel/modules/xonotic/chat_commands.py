@@ -12,6 +12,70 @@ class XonCommands(CommandContainer):
     help_text = 'Commands for interaction with Xonotic server'
 
 
+class VoteBaseMixin:
+    allowed_user_types = ['xonotic']
+
+    async def run(self, user, message, is_private=True, root=None):
+        if not user.number2:
+            await user.private_reply('Sorry, your nickname cannot be identified. Try to use another nickname, '
+                                     'or reconnect to the server.')
+            return
+        rcon_server = self.parent.properties['rcon_server']
+        if not rcon_server.map_voter.map_name:
+            await user.private_reply('Map voter is not initialized, please try later')
+            return
+        if user.number2 in rcon_server.map_voter.votes:
+            old_vote = rcon_server.map_voter.votes[user.number2]
+            if old_vote['vote'] == self.vote and old_vote['message'] == message:
+                await user.private_reply('You have already voted this round. Enough. You can change your vote though.')
+        rcon_server.map_voter.votes[user.number2] = {
+            'vote': self.vote,
+            'message': message,
+            'player': rcon_server.players.players_by_number2[user.number2]
+        }
+        await user.private_reply('Your vote for map %s is accepted: %s%s' % (
+            rcon_server.map_voter.map_name,
+            self.prefix,
+            message
+        ))
+
+
+class VotePlus(VoteBaseMixin, ChatCommand):
+    prefix = '+'
+    vote = 1
+    parent = XonCommands
+
+
+class VotePlusPlus(VoteBaseMixin, ChatCommand):
+    prefix = '++'
+    vote = 2
+    parent = XonCommands
+
+
+class VotePlusPlusPlus(VoteBaseMixin, ChatCommand):
+    prefix = '+++'
+    vote = 3
+    parent = XonCommands
+
+
+class VoteMinus(VoteBaseMixin, ChatCommand):
+    prefix = '-'
+    vote = -1
+    parent = XonCommands
+
+
+class VoteMinusMinus(VoteBaseMixin, ChatCommand):
+    prefix = '--'
+    vote = -2
+    parent = XonCommands
+
+
+class VoteMinusMinusMinus(VoteBaseMixin, ChatCommand):
+    prefix = '---'
+    vote = -3
+    parent = XonCommands
+
+
 class Who(ChatCommand):
     prefix = 'who'
     parent = XonCommands

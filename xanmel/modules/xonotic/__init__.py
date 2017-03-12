@@ -5,8 +5,7 @@ from xanmel.modules.xonotic.rcon import RconServer
 
 class XonoticModule(Module):
     db_indices = {
-        'maps': {},
-        'games': {}
+        'map_rating': {}
     }
 
     def __init__(self, xanmel, config):

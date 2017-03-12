@@ -3,7 +3,7 @@ import logging
 
 import time
 
-from .events import NewPlayerActive
+from .events import NewPlayerActive, MapChange
 from .rcon_parser import CombinedParser, BaseOneLineRegexParser
 
 
@@ -14,7 +14,12 @@ class StatusItemParser(BaseOneLineRegexParser):
     regex = re.compile(rb'^(host|version|protocol|map|timing|players):\s*(.*)$')
 
     def process(self, data):
-        self.rcon_server.status[data.group(1).decode('utf8')] = data.group(2).decode('utf8')
+        key = data.group(1).decode('utf8')
+        value = data.group(2).decode('utf8')
+        self.rcon_server.status[key] = value
+        if key == 'map' and self.rcon_server.map_voter.map_name != value:
+            MapChange(self.rcon_server.module, server=self.rcon_server,
+                      old_map=self.rcon_server.map_voter.map_name, new_map=value).fire()
 
 
 class StatusPlayerParser(BaseOneLineRegexParser):

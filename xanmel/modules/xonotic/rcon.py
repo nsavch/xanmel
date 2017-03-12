@@ -4,14 +4,42 @@ import logging
 
 import aiohttp
 
+from xanmel.modules.xonotic.colors import Color
 from xanmel.modules.xonotic.events import ServerDisconnect, ServerConnect
 from xanmel.modules.xonotic.rcon_cmd import RconCmdParser
+from xanmel.utils import current_time
 from .rcon_log import RconLogParser
 from .rcon_utils import *
 from .players import PlayerManager
 from .chat_commands import XonCommands
 
 logger = logging.getLogger(__name__)
+
+
+class MapVoter:
+    def __init__(self, server):
+        self.server = server
+        self.map_name = ''
+        self.votes = {}  # number2 -> vote
+
+    async def store(self):
+        ts = current_time()
+        logger.debug('GOING TO STORE VOTES %s:%r', ts, self.votes)
+        es = self.server.module.xanmel.db.es
+        if es:
+            for vote in self.votes.values():
+                await es.index('map-rating', 'vote', {
+                    'timestamp': ts.strftime('%Y-%m-%dT%H:%M:%S'),
+                    'vote': vote['vote'],
+                    'message': vote['message'],
+                    'nickname': Color.dp_to_none(vote['player'].nickname).decode('utf8'),
+                    'raw_nickname': vote['player'].nickname.decode('utf8'),
+                    'stats_id': vote['player'].elo_basic and vote['player'].elo_basic.get('player_id')
+                })
+
+    def reset(self, new_map_name):
+        self.map_name = new_map_name
+        self.votes = {}
 
 
 class RconServer:
@@ -55,6 +83,7 @@ class RconServer:
         self.status_poll_interval = 6
         self.dyn_fraglimit_lock = asyncio.Lock()
         self.game_start_timestamp = 0
+        self.map_voter = MapVoter(self)
 
     async def check_connection(self):
         while True:

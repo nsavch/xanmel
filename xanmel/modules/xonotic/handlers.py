@@ -47,7 +47,6 @@ class ChatMessageHandler(Handler):
     events = [ChatMessage]
 
     async def handle(self, event):
-        cmd_root = self.module.xanmel.cmd_root
         server = event.properties['server']
         msg = event.properties['message']
         nicknames = sorted([i.nickname for i in server.players.players_by_number2.values()],
@@ -77,6 +76,15 @@ class ChatMessageHandler(Handler):
                                   prefix=event.properties['server'].config['out_prefix'])
         else:
             await server.local_cmd_root.run(user, message, is_private=False)
+
+
+class MapChangeHandler(Handler):
+    events = [MapChange]
+
+    async def handle(self, event):
+        server = event.properties['server']
+        await server.map_voter.store()  # what if someone votes while this is executing? Oh shi...
+        server.map_voter.reset(event.properties['new_map'])
 
 
 class GameStartedHandler(Handler):

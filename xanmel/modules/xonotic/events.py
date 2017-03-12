@@ -57,3 +57,10 @@ class NewPlayerActive(Event):
 
     def __str__(self):
         return '%s new player active' % self.properties['server'].config['out_prefix']
+
+
+class MapChange(Event):
+    log = False
+
+    def __str__(self):
+        return 'Map change: %s -> %s' % (self.properties['old_map'], self.properties['new_map'])
