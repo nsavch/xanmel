@@ -41,7 +41,7 @@ requests-toolbelt==0.7.1
 simplegeneric==0.8.1
 simplex==0.1.2
 six==1.10.0
-traitlets==4.3.1
+traitlets==4.3.2
 twine==1.8.1
 wcwidth==0.1.7
 yarl==0.8.1
