@@ -44,4 +44,4 @@ six==1.10.0
 traitlets==4.3.2
 twine==1.8.1
 wcwidth==0.1.7
-yarl==0.8.1
+yarl==0.9.8
