@@ -35,7 +35,8 @@ class VoteBaseMixin:
             'message': message,
             'player': player
         }
-        PlayerRatedMap(rcon_server.module, player=player, map_name=rcon_server.map_voter.map_name, vote=self.vote).fire()
+        PlayerRatedMap(rcon_server.module, server=rcon_server, player=player,
+                       map_name=rcon_server.map_voter.map_name, vote=self.vote).fire()
         await user.private_reply('Your vote for map %s is accepted: %s%s' % (
             rcon_server.map_voter.map_name,
             self.prefix,
