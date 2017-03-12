@@ -1,5 +1,5 @@
 aiodns==1.1.1
--e git+ssh://git@github.com/nsavch/aioes#egg=aioes
+-e git+https://github.com/nsavch/aioes#egg=aioes
 aiohttp==1.0.5
 aioresponses==0.1.2
 appnope==0.1.0
