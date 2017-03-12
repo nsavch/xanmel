@@ -64,3 +64,10 @@ class MapChange(Event):
 
     def __str__(self):
         return 'Map change: %s -> %s' % (self.properties['old_map'], self.properties['new_map'])
+
+
+class PlayerRatedMap(Event):
+    def __str__(self):
+        return 'Player %s rated map %s: %s' % (Color.dp_to_none(self.properties['player'].nickname),
+                                               self.properties['map_name'],
+                                               self.properties['vote'])

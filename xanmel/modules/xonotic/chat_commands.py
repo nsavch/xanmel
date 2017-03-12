@@ -4,6 +4,7 @@ import fnmatch
 from xanmel import CommandContainer, ChatCommand
 
 from .colors import Color
+from .events import PlayerRatedMap
 
 logger = logging.getLogger(__name__)
 
@@ -28,11 +29,14 @@ class VoteBaseMixin:
             old_vote = rcon_server.map_voter.votes[user.number2]
             if old_vote['vote'] == self.vote and old_vote['message'] == message:
                 await user.private_reply('You have already voted this round. Enough. You can change your vote though.')
+        player = rcon_server.players.players_by_number2[user.number2]
         rcon_server.map_voter.votes[user.number2] = {
             'vote': self.vote,
             'message': message,
-            'player': rcon_server.players.players_by_number2[user.number2]
+            'player': player
         }
+        PlayerRatedMap(rcon_server.module, server=rcon_server, player=player,
+                       map_name=rcon_server.map_voter.map_name, vote=self.vote).fire()
         await user.private_reply('Your vote for map %s is accepted: %s%s' % (
             rcon_server.map_voter.map_name,
             self.prefix,
