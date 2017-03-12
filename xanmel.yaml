@@ -9,7 +9,7 @@ modules:
     ssl: false
     nick: xanmel
     realname: Xanmel BOT
-    quakenet_auth: ['username', 'password']
+    quakenet_auth: ['xanmel', 'xX6T2WYi6z']
     channel: '#xanmel'
     greeting: HELLO WORLD!
     mention_delimeters: [' ', ':', ',']
@@ -22,6 +22,7 @@ modules:
   xanmel.modules.xonotic.XonoticModule:
     servers:
       - name: Local Xonotic Server
+        unique_id: 1
         rcon_ip: 127.0.0.1
         rcon_port: 26000
         log_listener_ip: 127.0.0.1

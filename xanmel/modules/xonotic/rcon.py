@@ -32,6 +32,7 @@ class MapVoter:
             for vote in self.votes.values():
                 await es.index('map_rating', 'vote', {
                     'map': map_name,
+                    'server_id': self.server.config['unique_id'],
                     'timestamp': ts.strftime('%Y-%m-%dT%H:%M:%S'),
                     'vote': vote['vote'],
                     'message': vote['message'],
