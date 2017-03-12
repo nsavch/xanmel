@@ -17,7 +17,7 @@ geoip2==2.4.2
 inflection==0.3.1
 ipython==5.1.0
 ipython-genutils==0.1.0
-maxminddb==1.2.2
+maxminddb==1.2.3
 multidict==2.1.4
 pexpect==4.2.1
 pickleshare==0.7.4
