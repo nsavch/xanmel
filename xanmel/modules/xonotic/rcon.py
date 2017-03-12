@@ -28,7 +28,7 @@ class MapVoter:
         es = self.server.module.xanmel.db.es
         if es:
             for vote in self.votes.values():
-                await es.index('map-rating', 'vote', {
+                await es.index('map_rating', 'vote', {
                     'map': self.map_name,
                     'timestamp': ts.strftime('%Y-%m-%dT%H:%M:%S'),
                     'vote': vote['vote'],
