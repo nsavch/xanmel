@@ -6,7 +6,7 @@ appnope==0.1.0
 args==0.1.0
 async-timeout==1.1.0
 asynctest==0.10.0
-bottom==1.0.4
+bottom==1.1.0
 cchardet==1.1.2
 chardet==2.3.0
 clint==0.5.1
