@@ -3,7 +3,7 @@ aiodns==1.1.1
 aiohttp==1.0.5
 aioresponses==0.1.4
 appnope==0.1.0
-async-timeout==1.1.0
+async-timeout==1.2.0
 asynctest==0.10.0
 bottom==1.1.0
 cchardet==1.1.3
