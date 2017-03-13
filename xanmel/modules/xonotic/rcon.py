@@ -35,7 +35,7 @@ class MapVoter:
                     'server_id': self.server.config['unique_id'],
                     'timestamp': ts.strftime('%Y-%m-%dT%H:%M:%S'),
                     'vote': vote['vote'],
-                    'message': vote['message'],
+                    'message': vote['message'].strip() or None,
                     'nickname': Color.dp_to_none(vote['player'].nickname).decode('utf8'),
                     'raw_nickname': vote['player'].nickname.decode('utf8'),
                     'stats_id': vote['player'].elo_basic and vote['player'].elo_basic.get('player_id')
