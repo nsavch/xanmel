@@ -18,11 +18,11 @@ setup(
     install_requires=[
         'setuptools',
         'aiodns==1.1.1',
-        'aiohttp==1.0.5',
-        'bottom==1.0.4',
+        'aiohttp==1.3.3',
+        'bottom==1.1.0',
         'cchardet==1.1.3',
         'geoip2==2.4.2',
-        'maxminddb==1.2.2',
+        'maxminddb==1.2.3',
         'pytz==2016.10',
         'PyYAML==3.12',
         # 'aioes==0.6.1'
