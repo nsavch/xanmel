@@ -124,8 +124,6 @@ class RatingReportHandler(Handler):
         else:
             with server.sv_adminnick('*'):
                 server.send('say %s' % in_game_message)
-        await self.run_action(ChannelMessage, message='\00303%(map_name)s\x0f: \00304%(rating)s\x0f points (\00312%(total_votes)s\x0f votes)' % msg_args,
-                              prefix=server.config['out_prefix'])
 
 
 class PlayerRatedMapHandler(Handler):
