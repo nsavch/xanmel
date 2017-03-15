@@ -42,6 +42,7 @@ modules:
         server_stats_url: http://stats.xonotic.org/server/7975
         # none, stats-enabled, all
         show_geolocation_for: stats-enabled
+        disable_geolocation_for: [75981, 93567]
         raw_log: /tmp/xonotic.log
         dynamic_frag_limit: [[4, 40], [6, 50], [8, 60]]
   xanmel.modules.fun.FunModule: {}

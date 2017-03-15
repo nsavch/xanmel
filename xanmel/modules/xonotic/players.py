@@ -123,7 +123,9 @@ class Player:
     @property
     def country(self):
         mode = self.server.config.get('show_geolocation_for', 'none')
-        if mode == 'all' or (mode == 'stats-enabled' and self.elo_basic):
+        if mode == 'all' or (mode == 'stats-enabled' and
+                             self.elo_basic and
+                             self.elo_basic.get('player_id') not in self.server.config.get('disable_geolocation_for')):
             if self.geo_response:
                 geoloc = self.geo_response.country.name
             else:

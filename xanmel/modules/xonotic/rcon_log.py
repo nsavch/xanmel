@@ -218,6 +218,41 @@ class EloParser(BaseOneLineParser):
         self.rcon_server.players.current_url = data
 
 
+class VoteKeeptwoParser(BaseOneLineParser):
+    key = b':vote:keeptwo:'
+
+    def process(self, data):
+        pass
+
+
+class VoteFinishedParser(BaseOneLineParser):
+    key = b':vote:finished:'
+
+    def process(self, data):
+        pass
+
+
+class VoteVcallParser(BaseOneLineParser):
+    key = b':vote:vcall:'
+
+    def process(self, data):
+        pass
+
+
+class VoteVyesParser(BaseOneLineParser):
+    key = b':vote:vyes:'
+
+    def process(self, data):
+        pass
+
+
+class VoteVnoParser(BaseOneLineParser):
+    key = b':vote:vno:'
+
+    def process(self, data):
+        pass
+
+
 class RconLogParser(CombinedParser):
     parsers = [
         JoinParser,
@@ -226,5 +261,10 @@ class RconLogParser(CombinedParser):
         GameStartedParser,
         NameChangeParser,
         ChatMessageParser,
-        EloParser
+        EloParser,
+        VoteKeeptwoParser,
+        VoteFinishedParser,
+        VoteVcallParser,
+        VoteVyesParser,
+        VoteVnoParser
     ]
