@@ -2,8 +2,10 @@ import logging
 
 import asyncio
 import geoip2.errors
+import time
 
 from xanmel import Handler
+from xanmel import current_time
 
 from .chat_user import XonoticChatUser
 from .colors import Color
@@ -11,7 +13,6 @@ from .events import *
 from .rcon_log import GAME_TYPES
 from xanmel.modules.irc.actions import ChannelMessage, ChannelMessages
 import xanmel.modules.irc.events as irc_events
-
 
 logger = logging.getLogger(__name__)
 
@@ -66,7 +67,7 @@ class ChatMessageHandler(Handler):
         if user:
             if message.startswith(user.botnick + ': '):
                 message_is_cmd = True
-                message = message[len(user.botnick)+1:]
+                message = message[len(user.botnick) + 1:]
             elif message.startswith('/'):
                 message_is_cmd = True
                 message = message[1:]
@@ -83,7 +84,8 @@ class MapChangeHandler(Handler):
 
     async def handle(self, event):
         server = event.properties['server']
-        await server.map_voter.store(event.properties['new_map'])  # what if someone votes while this is executing? Oh shi...
+        await server.map_voter.store(
+            event.properties['new_map'])  # what if someone votes while this is executing? Oh shi...
 
 
 class RatingReportHandler(Handler):
@@ -95,7 +97,7 @@ class RatingReportHandler(Handler):
         es = server.module.xanmel.db.es
         if es is None:
             return
-        await asyncio.sleep(15)
+        await asyncio.sleep(10)
         data = await es.search('map_rating', doc_type='vote', body={
             'size': 0,
             'query': {
@@ -238,14 +240,15 @@ class NewPlayerActiveHandler(Handler):
                 for trigger_player_num, new_fraglimit in reversed(server.config['dynamic_frag_limit']):
                     logger.debug('Dynamic frag limit %s, current players %s',
                                  trigger_player_num, server.players.active)
-                    if server.players.active > trigger_player_num and new_fraglimit > int(server.cvars.get('fraglimit', 0)):
+                    if server.players.active > trigger_player_num and new_fraglimit > int(
+                            server.cvars.get('fraglimit', 0)):
                         server.send('fraglimit %d' % new_fraglimit)
                         await self.run_action(
                             ChannelMessage,
                             message='\00303Frag limit increased to \x0f\00304%d\x0f\00303 because there are more than \x0f\00304%d\x0f\00303 players\x0f' % (
                                 new_fraglimit, trigger_player_num))
                         in_game_message = '^2Frag limit increased to ^3%d^2 because there are more than ^3%d^2 players^7' % (
-                        new_fraglimit, trigger_player_num)
+                            new_fraglimit, trigger_player_num)
                         if server.config['say_type'] == 'ircmsg':
                             server.send('sv_cmd ircmsg ^7%s' % in_game_message)
                         else:
@@ -401,10 +404,38 @@ class IRCMessageHandler(Handler):
                     break
 
 
-# class IRCConnected(ServerConnectedBase):
-#     events = [irc_events.ConnectedAndJoined]
-#
-#     async def handle(self, event):
-#         for server in self.module.servers:
-#             if server.hostname:
-#                 await self.report(server, server.hostname)
+class VoteAcceptedHandler(Handler):
+    events = [VoteAccepted]
+
+    async def handle(self, event):
+        server = event.properties['server']
+        vote = event.properties['vote']
+        if server.game_start_timestamp:
+            time_from_start = time.time() - server.game_start_timestamp
+        else:
+            time_from_start = -1
+        es = server.module.xanmel.db.es
+        if not es:
+            return
+        ts = current_time()
+        if vote['type'] in ('endmatch', 'gotomap'):
+            await es.index('vote_stats', 'called_votes', {
+                'map': server.status.get('map'),
+                'nickname': Color.dp_to_none(vote['player'].nickname).decode('utf8'),
+                'raw_nickname': vote['player'].nickname.decode('utf8'),
+                'stats_id': vote['player'].elo_basic and vote['player'].elo_basic.get('player_id'),
+                'timestamp': ts.strftime('%Y-%m-%dT%H:%M:%S'),
+                'vote_type': 'endmatch',
+                'server_id': server.config['unique_id'],
+                'time_since_round_start': time_from_start
+            })
+        if vote['type'] in ('gotomap', 'nextmap'):
+            await es.index('vote_stats', 'called_votes', {
+                'map': vote['map_name'],
+                'nickname': Color.dp_to_none(vote['player'].nickname).decode('utf8'),
+                'raw_nickname': vote['player'].nickname.decode('utf8'),
+                'stats_id': vote['player'].elo_basic and vote['player'].elo_basic.get('player_id'),
+                'timestamp': ts.strftime('%Y-%m-%dT%H:%M:%S'),
+                'vote_type': 'gotomap',
+                'server_id': server.config['unique_id'],
+            })

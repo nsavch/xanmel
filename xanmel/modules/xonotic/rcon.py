@@ -85,6 +85,7 @@ class RconServer:
         self.dyn_fraglimit_lock = asyncio.Lock()
         self.game_start_timestamp = 0
         self.map_voter = MapVoter(self)
+        self.active_vote = None
 
     async def check_connection(self):
         while True:

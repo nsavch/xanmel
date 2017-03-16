@@ -39,6 +39,41 @@ class XonoticModule(Module):
                     }
                 }
             }
+        },
+        'vote_stats': {
+            'called_votes': {
+                'properties': {
+                    'map': {
+                        'type': 'keyword',
+                        'index': 'not_analyzed',
+                    },
+                    'nickname': {
+                        'type': 'keyword',
+                        'index': 'not_analyzed'
+                    },
+                    "raw_nickname": {
+                        "type": "keyword",
+                        "index": "not_analyzed"
+                    },
+                    "server_id": {
+                        "type": "long"
+                    },
+                    "stats_id": {
+                        "type": "long"
+                    },
+                    "timestamp": {
+                        "type": "date",
+                        "format": "strict_date_optional_time||epoch_millis"
+                    },
+                    'vote_type': {
+                        'type': 'keyword',
+                        'index': 'not_analyzed',
+                    },
+                    'time_since_round_start': {
+                        'type': 'long'
+                    }
+                }
+            }
         }
     }
 

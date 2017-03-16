@@ -236,21 +236,76 @@ class VoteVcallParser(BaseOneLineParser):
     key = b':vote:vcall:'
 
     def process(self, data):
-        pass
+        slot_number, vote = data.split(b':', 1)
+        player = self.rcon_server.players.players_by_number1.get(int(slot_number))
+        vote = Color.dp_to_none(vote)
+        if b' ' in vote:
+            vote_command, rest = vote.split(b' ', 1)
+        else:
+            vote_command = vote
+            rest = b''
+        if vote_command == b'gotomap':
+            map_name = rest.decode('utf8').strip()
+            if not map_name:
+                return
+            self.rcon_server.active_vote = {
+                'type': 'gotomap',
+                'map_name': map_name,
+                'player': player
+            }
+        elif vote_command == b'nextmap':
+            c = 0
+            map_name = None
+            for i in self.rcon_server.map_list:
+                if i.startswith(rest.decode('utf8').strip()):
+                    c += 1
+                    map_name = i
+            if map_name is None or c > 1:
+                # invalid nextmap vote
+                return
+            self.rcon_server.active_vote = {
+                'type': 'nextmap',
+                'map_name': map_name,
+                'player': player
+            }
+        elif vote_command == b'endmatch':
+            self.rcon_server.active_vote = {
+                'type': 'endmatch',
+                'player': player
+            }
+        else:
+            return
+        VoteCalled(self.rcon_server.module, server=self.rcon_server, vote=self.rcon_server.active_vote).fire()
 
 
 class VoteVyesParser(BaseOneLineParser):
     key = b':vote:vyes:'
 
     def process(self, data):
-        pass
+        if not self.rcon_server.active_vote:
+            return
+        VoteAccepted(self.rcon_server.module, server=self.rcon_server, vote=self.rcon_server.active_vote).fire()
+        self.rcon_server.active_vote = None
 
 
 class VoteVnoParser(BaseOneLineParser):
     key = b':vote:vno:'
 
     def process(self, data):
-        pass
+        if not self.rcon_server.active_vote:
+            return
+        VoteRejected(self.rcon_server.module, server=self.rcon_server, vote=self.rcon_server.active_vote).fire()
+        self.rcon_server.active_vote = None
+
+
+class VoteStopParser(BaseOneLineParser):
+    key = b':vote:vstop:'
+
+    def process(self, data):
+        if not self.rcon_server.active_vote:
+            return
+        VoteStopped(self.rcon_server.module, server=self.rcon_server, vote=self.rcon_server.active_vote).fire()
+        self.rcon_server.active_vote = None
 
 
 class RconLogParser(CombinedParser):
@@ -266,5 +321,6 @@ class RconLogParser(CombinedParser):
         VoteFinishedParser,
         VoteVcallParser,
         VoteVyesParser,
-        VoteVnoParser
+        VoteVnoParser,
+        VoteStopParser
     ]

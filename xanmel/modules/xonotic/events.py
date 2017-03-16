@@ -71,3 +71,23 @@ class PlayerRatedMap(Event):
         return 'Player %s rated map %s: %s' % (Color.dp_to_none(self.properties['player'].nickname),
                                                self.properties['map_name'],
                                                self.properties['vote'])
+
+
+class VoteCalled(Event):
+    def __str__(self):
+        return '%s Vote called %s' % (self.properties['server'].config['out_prefix'], self.properties['vote']['type'])
+
+
+class VoteAccepted(Event):
+    def __str__(self):
+        return '%s Vote accepted' % (self.properties['server'].config['out_prefix'])
+
+
+class VoteRejected(Event):
+    def __str__(self):
+        return '%s Vote rejected' % (self.properties['server'].config['out_prefix'])
+
+
+class VoteStopped(Event):
+    def __str__(self):
+        return '%s Vote stopped' % (self.properties['server'].config['out_prefix'])
