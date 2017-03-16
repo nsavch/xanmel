@@ -411,31 +411,38 @@ class VoteAcceptedHandler(Handler):
         server = event.properties['server']
         vote = event.properties['vote']
         if server.game_start_timestamp:
-            time_from_start = time.time() - server.game_start_timestamp
+            time_from_start = int(time.time() - server.game_start_timestamp)
         else:
             time_from_start = -1
         es = server.module.xanmel.db.es
         if not es:
             return
         ts = current_time()
+        vote_data = {
+            'nickname': Color.dp_to_none(vote['player'].nickname).decode('utf8'),
+            'raw_nickname': vote['player'].nickname.decode('utf8'),
+            'stats_id': vote['player'].elo_basic and vote['player'].elo_basic.get('player_id'),
+            'timestamp': ts.strftime('%Y-%m-%dT%H:%M:%S'),
+            'server_id': server.config['unique_id'],
+        }
         if vote['type'] in ('endmatch', 'gotomap'):
-            await es.index('vote_stats', 'called_votes', {
+            vote_data.update({
                 'map': server.status.get('map'),
-                'nickname': Color.dp_to_none(vote['player'].nickname).decode('utf8'),
-                'raw_nickname': vote['player'].nickname.decode('utf8'),
-                'stats_id': vote['player'].elo_basic and vote['player'].elo_basic.get('player_id'),
-                'timestamp': ts.strftime('%Y-%m-%dT%H:%M:%S'),
                 'vote_type': 'endmatch',
-                'server_id': server.config['unique_id'],
                 'time_since_round_start': time_from_start
             })
+            await es.index('vote_stats', 'called_votes', vote_data)
         if vote['type'] in ('gotomap', 'nextmap'):
-            await es.index('vote_stats', 'called_votes', {
+            vote_data.update({
                 'map': vote['map_name'],
-                'nickname': Color.dp_to_none(vote['player'].nickname).decode('utf8'),
-                'raw_nickname': vote['player'].nickname.decode('utf8'),
-                'stats_id': vote['player'].elo_basic and vote['player'].elo_basic.get('player_id'),
-                'timestamp': ts.strftime('%Y-%m-%dT%H:%M:%S'),
                 'vote_type': 'gotomap',
-                'server_id': server.config['unique_id'],
+                'time_since_round_start': None
             })
+            await es.index('vote_stats', 'called_votes', vote_data)
+        if vote['type'] == 'restart':
+            vote_data.update({
+                'map': server.status.get('map'),
+                'vote_type': 'restart',
+                'time_since_round_start': time_from_start
+            })
+            await es.index('vote_stats', 'called_votes', vote_data)

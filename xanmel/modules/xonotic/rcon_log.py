@@ -273,6 +273,11 @@ class VoteVcallParser(BaseOneLineParser):
                 'type': 'endmatch',
                 'player': player
             }
+        elif vote_command == b'restart':
+            self.rcon_server.active_vote = {
+                'type': 'restart',
+                'player': player
+            }
         else:
             return
         VoteCalled(self.rcon_server.module, server=self.rcon_server, vote=self.rcon_server.active_vote).fire()
