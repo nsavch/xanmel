@@ -68,6 +68,7 @@ class IRCModule(Module):
         challenge_auth = hmac.new(key.encode('ascii'), self.challenge_reply.encode('ascii'), hashlib.sha256).hexdigest()
         self.client.send('PRIVMSG', target='Q@CServe.quakenet.org',
                          message='CHALLENGEAUTH %s %s HMAC-SHA-256' % (username, challenge_auth))
+        self.client.send('CHANNELMODE', channel=self.config['nick'], modes='+x')
 
     async def connect(self):
         if not self.connected or not self.client.protocol:
