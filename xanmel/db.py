@@ -33,6 +33,8 @@ class XanmelDB:
             self.db = None
 
     def create_tables(self, module_pkg_name):
+        if not self.is_up:
+            return
         try:
             models = importlib.import_module(module_pkg_name + '.models')
         except ImportError:
