@@ -22,7 +22,7 @@ setup(
         'bottom==1.1.0',
         'cchardet==1.1.3',
         'geoip2==2.4.2',
-        'maxminddb==1.2.3',
+        'maxminddb==1.3.0',
         'pytz==2016.10',
         'PyYAML==3.12',
         'aiopg==0.13.0',

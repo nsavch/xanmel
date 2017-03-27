@@ -413,7 +413,7 @@ class VoteAcceptedHandler(Handler):
             'timestamp': ts.strftime('%Y-%m-%dT%H:%M:%S'),
             'server_id': server.config['unique_id'],
         }
-        if vote['type'] in ('endmatch', 'gotomap'):
+        if vote['type'] in ('endmatch', 'gotomap') and server.status.get('map'):
             vote_data.update({
                 'map': server.status.get('map'),
                 'vote_type': 'endmatch',
@@ -427,7 +427,7 @@ class VoteAcceptedHandler(Handler):
                 'time_since_round_start': 0
             })
             await db.mgr.create(CalledVote, **vote_data)
-        if vote['type'] == 'restart':
+        if vote['type'] == 'restart' and server.status.get('map'):
             vote_data.update({
                 'map': server.status.get('map'),
                 'vote_type': 'restart',
