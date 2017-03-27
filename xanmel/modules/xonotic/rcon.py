@@ -12,6 +12,7 @@ from .rcon_log import RconLogParser
 from .rcon_utils import *
 from .players import PlayerManager
 from .chat_commands import XonCommands
+from .models import MapRating
 
 logger = logging.getLogger(__name__)
 
@@ -23,23 +24,23 @@ class MapVoter:
         self.votes = {}  # number2 -> vote
 
     async def store(self, new_map_name):
+        db = self.server.module.xanmel.db
+        if not db.is_up:
+            return
         ts = current_time()
         map_name = self.map_name
         self.map_name = new_map_name
         logger.debug('GOING TO STORE VOTES %s:%r', ts, self.votes)
-        es = self.server.module.xanmel.db.es
-        if es:
-            for vote in self.votes.values():
-                await es.index('map_rating', 'vote', {
-                    'map': map_name,
-                    'server_id': self.server.config['unique_id'],
-                    'timestamp': ts.strftime('%Y-%m-%dT%H:%M:%S'),
-                    'vote': vote['vote'],
-                    'message': vote['message'].strip() or None,
-                    'nickname': Color.dp_to_none(vote['player'].nickname).decode('utf8'),
-                    'raw_nickname': vote['player'].nickname.decode('utf8'),
-                    'stats_id': vote['player'].elo_basic and vote['player'].elo_basic.get('player_id')
-                })
+        for vote in self.votes.values():
+            await db.mgr.create(
+                MapRating,
+                map=map_name,
+                server_id=self.server.config['unique_id'],
+                vote=vote['vote'],
+                message=vote['message'],
+                nickname=Color.dp_to_none(vote['player'].nickname).decode('utf8'),
+                raw_nickname=vote['player'].nickname.decode('utf8'),
+                stats_id=vote['player'].elo_basic and vote['player'].elo_basic.get('player_id'))
         self.votes = {}
 
 

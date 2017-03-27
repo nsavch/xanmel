@@ -1,30 +1,47 @@
-import asyncio
+import importlib
+import inspect
 import logging
 
-from aioes import Elasticsearch
+import peewee
+import peewee_async
+from playhouse.db_url import connect, register_database
+
+
+register_database(peewee_async.PostgresqlDatabase, 'postgres')
+register_database(peewee_async.PooledPostgresqlDatabase, 'postgres+pool')
+register_database(peewee_async.PostgresqlDatabase, 'postgresql')
+register_database(peewee_async.PooledPostgresqlDatabase, 'postgresql+pool')
 
 
 logger = logging.getLogger(__name__)
 
+database_proxy = peewee.Proxy()
+
+
+class BaseModel(peewee.Model):
+    class Meta:
+        database = database_proxy
+
 
 class XanmelDB:
-    def __init__(self, cluster_urls):
-        if cluster_urls:
-            self.es = Elasticsearch(cluster_urls)
+    def __init__(self, db_url):
+        if db_url:
+            self.db = connect(db_url)
+            self.mgr = peewee_async.Manager(database_proxy)
+            database_proxy.initialize(self.db)
         else:
-            self.es = None
+            self.db = None
 
-    async def create_index_if_not_exist(self, index, mappings):
-        # TODO: check if mapping is up-to-date
-        res = await self.es.indices.exists(index=index)
-        if not res:
-            await self.es.indices.create(index=index, body={'mappings': mappings})
-
-    async def create_module_indices(self, module):
-        if self.es is None:
+    def create_tables(self, module_pkg_name):
+        try:
+            models = importlib.import_module(module_pkg_name + '.models')
+        except ImportError:
             return
-        tasks = []
-        for index, mappings in getattr(module, 'db_indices', {}).items():
-            tasks.append(self.create_index_if_not_exist(index, mappings))
-        if tasks:
-            await asyncio.wait(tasks)
+        for model_name, model in inspect.getmembers(models, inspect.isclass):
+            if issubclass(model, BaseModel) and model is not BaseModel:
+                logger.debug('Creating table for model %s', model_name)
+                self.db.create_table(model, safe=True)
+
+    @property
+    def is_up(self):
+        return self.db is not None

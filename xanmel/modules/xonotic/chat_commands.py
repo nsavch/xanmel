@@ -29,6 +29,7 @@ class VoteBaseMixin:
             old_vote = rcon_server.map_voter.votes[user.number2]
             if old_vote['vote'] == self.vote and old_vote['message'] == message:
                 await user.private_reply('You have already voted this round. Enough. You can change your vote though.')
+                return
         if not message.strip() and self.vote == -3:
             await user.private_reply('You can not vote --- without specifying a reason why you hate the map. Use '
                                      '"/--- [YOUR COMPLAINT]" instead')

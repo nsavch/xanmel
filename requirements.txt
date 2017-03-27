@@ -1,5 +1,4 @@
 aiodns==1.1.1
--e git+https://github.com/nsavch/aioes#egg=aioes
 aiohttp==1.3.5
 aioresponses==0.1.4
 appnope==0.1.0
@@ -40,3 +39,7 @@ traitlets==4.3.2
 twine==1.8.1
 wcwidth==0.1.7
 yarl==0.10.0
+aiopg=0.13.0
+peewee=2.9.1
+peewee-async=0.5.7
+psycopg2=2.7.1

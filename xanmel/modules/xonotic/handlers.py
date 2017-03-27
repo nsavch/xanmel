@@ -1,18 +1,17 @@
-import logging
-
 import asyncio
-import geoip2.errors
+import logging
 import time
 
+from peewee import fn
+
+import xanmel.modules.irc.events as irc_events
 from xanmel import Handler
 from xanmel import current_time
-
+from xanmel.modules.irc.actions import ChannelMessage, ChannelMessages
+from xanmel.modules.xonotic.models import CalledVote, MapRating
 from .chat_user import XonoticChatUser
-from .colors import Color
 from .events import *
 from .rcon_log import GAME_TYPES
-from xanmel.modules.irc.actions import ChannelMessage, ChannelMessages
-import xanmel.modules.irc.events as irc_events
 
 logger = logging.getLogger(__name__)
 
@@ -94,28 +93,17 @@ class RatingReportHandler(Handler):
     async def handle(self, event):
         server = event.properties['server']
         map_name = server.status['map']
-        es = server.module.xanmel.db.es
-        if es is None:
+        db = server.module.xanmel.db
+        if not db.is_up:
             return
         await asyncio.sleep(10)
-        data = await es.search('map_rating', doc_type='vote', body={
-            'size': 0,
-            'query': {
-                'bool': {
-                    'must': [
-                        {'term': {'map': map_name}},
-                        {'term': {'server_id': server.config['unique_id']}}
-                    ]
-                }
-            },
-            'aggs': {
-                'rating': {'sum': {'field': 'vote'}}
-            }
-        })
-        total_votes = data.get('hits', {}).get('total', 0)
-        rating = data.get('aggregations', {}).get('rating', {}).get('value', 0)
-        rating = int(rating)
-        if total_votes == 0:
+        result = await db.mgr.execute(
+            MapRating.select(fn.Sum(MapRating.vote).alias('rating'),
+                             fn.Count(MapRating.id).alias('total')).where(
+                MapRating.server_id == server.config['unique_id'], MapRating.map == map_name))
+        total_votes = result[0].total
+        rating = result[0].rating
+        if total_votes == 0 or rating is None:
             message = '^3%(map_name)s ^7has not yet been rated - Use ^7/^2+++^7,^2++^7,^2+^7,^1-^7,^1--^7,^1--- ^7to rate the map.'
         else:
             message = '^3%(map_name)s ^7has ^2%(rating)s ^7points. ^5[%(total_votes)s votes]^7 - Use ^7/^2+++^7,^2++^7,^2+^7,^1-^7,^1--^7,^1--- ^7to rate the map.'
@@ -414,8 +402,8 @@ class VoteAcceptedHandler(Handler):
             time_from_start = int(time.time() - server.game_start_timestamp)
         else:
             time_from_start = -1
-        es = server.module.xanmel.db.es
-        if not es:
+        db = server.module.xanmel.db
+        if not db.is_up:
             return
         ts = current_time()
         vote_data = {
@@ -431,18 +419,18 @@ class VoteAcceptedHandler(Handler):
                 'vote_type': 'endmatch',
                 'time_since_round_start': time_from_start
             })
-            await es.index('vote_stats', 'called_votes', vote_data)
+            await db.mgr.create(CalledVote, **vote_data)
         if vote['type'] in ('gotomap', 'nextmap'):
             vote_data.update({
                 'map': vote['map_name'],
                 'vote_type': 'gotomap',
-                'time_since_round_start': None
+                'time_since_round_start': 0
             })
-            await es.index('vote_stats', 'called_votes', vote_data)
+            await db.mgr.create(CalledVote, **vote_data)
         if vote['type'] == 'restart':
             vote_data.update({
                 'map': server.status.get('map'),
                 'vote_type': 'restart',
                 'time_since_round_start': time_from_start
             })
-            await es.index('vote_stats', 'called_votes', vote_data)
+            await db.mgr.create(CalledVote, **vote_data)

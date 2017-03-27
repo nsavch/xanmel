@@ -1,7 +1,7 @@
 settings:
   asyncio_debug: false
   log_level: DEBUG
-  es_cluster: ['127.0.0.1:9200']
+  db_url: postgresql:///xanmel
 modules:
   xanmel.modules.irc.IRCModule:
     host: irc.quakenet.org

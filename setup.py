@@ -3,7 +3,7 @@ from setuptools import setup, find_packages
 
 setup(
     name='xanmel',
-    version='0.1a1',
+    version='0.2a1',
     description='Extensible chatbot designed for gaming purposes',
     long_description='TODO',
     url='https://gitlab.com/nsavch/xanmel',
@@ -25,7 +25,10 @@ setup(
         'maxminddb==1.2.3',
         'pytz==2016.10',
         'PyYAML==3.12',
-        # 'aioes==0.6.1'
+        'aiopg=0.13.0',
+        'peewee=2.9.1',
+        'peewee-async=0.5.7',
+        'psycopg2=2.7.1'
     ],
     classifiers=[
         'Development Status :: 3 - Alpha',

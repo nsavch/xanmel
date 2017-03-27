@@ -47,7 +47,7 @@ class Xanmel:
         logging.config.dictConfig(logging_config(self.config['settings'].get('log_level', 'INFO')))
         logger.info('Read configuration from %s', config_path)
         loop.set_debug(self.config['settings']['asyncio_debug'])
-        self.db = XanmelDB(self.config['settings'].get('es_cluster', []))
+        self.db = XanmelDB(self.config['settings'].get('db_url'))
 
     def load_modules(self):
         for module_path, module_config in self.config['modules'].items():
@@ -58,7 +58,7 @@ class Xanmel:
             self.load_handlers(module, module_pkg_name)
             self.load_actions(module, module_pkg_name)
             self.setup_event_generators(module)
-            self.loop.create_task(self.db.create_module_indices(module))
+            self.db.create_tables(module_pkg_name)
         self.run_after_load_hooks()
 
     def load_handlers(self, module, module_pkg_name):
