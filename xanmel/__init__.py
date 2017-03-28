@@ -40,7 +40,7 @@ class Xanmel:
         self.cmd_root.register_container(HelpCommands(), prefix='')
         try:
             with open(os.path.expanduser(config_path), 'r') as config_file:
-                self.config = yaml.load(config_file)
+                self.config = yaml.safe_load(config_file)
         except (OSError, IOError) as e:
             print('Config file %s unreadable: %s' % (config_path, e))
             sys.exit(1)

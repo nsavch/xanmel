@@ -1,5 +1,4 @@
 import string
-import asynctest
 from xanmel.test.conftest import *
 
 

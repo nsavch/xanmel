@@ -1,5 +1,3 @@
-import copy
-
 from aioresponses import aioresponses
 
 from xanmel.modules.xonotic.rcon import *
