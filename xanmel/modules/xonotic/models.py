@@ -12,6 +12,7 @@ class MapRating(BaseModel):
     stats_id = IntegerField(index=True, null=True)
     timestamp = DateTimeField(default=current_time)
     vote = IntegerField()
+    message = CharField()
 
     class Meta:
         db_table = 'map_rating'
