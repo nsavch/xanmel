@@ -1,5 +1,6 @@
 Xanmel
 ------
+[![Codacy Badge](https://api.codacy.com/project/badge/Grade/3d0ba1bff5154dbd8c65b28d5a7b94ca)](https://www.codacy.com/app/nsavch/xanmel?utm_source=github.com&utm_medium=referral&utm_content=nsavch/xanmel&utm_campaign=badger)
 [![Build Status](https://travis-ci.org/nsavch/xanmel.svg?branch=master)](https://travis-ci.org/nsavch/xanmel)
 [![Coverage Status](https://coveralls.io/repos/github/nsavch/xanmel/badge.svg?branch=master)](https://coveralls.io/github/nsavch/xanmel?branch=master)
 [![Python Versions](https://img.shields.io/badge/python-3.5%2C%203.6--dev-blue.svg)](https://img.shields.io/badge/python-3.5%2C%203.6--dev-blue.svg)
