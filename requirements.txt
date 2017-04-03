@@ -30,7 +30,7 @@ Pygments==2.2.0
 pytest==3.0.7
 pytest-cov==2.4.0
 pytest-mock==1.6.0
-pytz==2016.10
+pytz==2017.2
 PyYAML==3.12
 simplegeneric==0.8.1
 simplex==0.1.2
