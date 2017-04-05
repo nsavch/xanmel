@@ -33,7 +33,7 @@ class MapRating(BaseModel):
         db_table = 'map_rating'
 
     def __repr__(self):
-        return 'MapRating(nicname=%r, map=%r, vote=%r)' % (self.player, self.map, self.vote)
+        return 'MapRating(nickname=%r, map=%r, vote=%r)' % (self.player, self.map, self.vote)
 
 
 class CalledVote(BaseModel):
@@ -47,7 +47,7 @@ class CalledVote(BaseModel):
         db_table = 'called_vote'
 
     def __repr__(self):
-        return 'CalledVote(nicname=%r, map=%r, vote_type=%r)' % (self.player, self.map, self.vote_type)
+        return 'CalledVote(nickname=%r, map=%r, vote_type=%r)' % (self.player, self.map, self.vote_type)
 
 
 class XDFTimeRecord(BaseModel):
