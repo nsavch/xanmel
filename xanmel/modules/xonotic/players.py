@@ -1,14 +1,18 @@
 import logging
-
+from urllib.parse import unquote
 import asyncio
 import random
 
 import geoip2.errors
 import math
 import aiohttp
+import peewee
 
 from xanmel.modules.xonotic.colors import Color
 from xanmel.utils import current_time
+
+from .models import Player as DBPlayer
+
 
 logger = logging.getLogger(__name__)
 
@@ -28,11 +32,21 @@ class Player:
 
         self.elo_basic = None
         self.elo_advanced = None
+        self.player_db_obj = None
         if not self.is_bot:
             try:
                 self.geo_response = self.server.module.xanmel.geoip.city(self.ip_address)
             except (ValueError, geoip2.errors.AddressNotFoundError):
                 pass
+
+    async def get_db_obj_anon(self):
+        raw_nickname = self.nickname.decode('utf8')
+        nickname = Color.dp_to_none(self.nickname).decode('utf8')
+        query = await self.server.db.mgr.execute(DBPlayer.select().where(DBPlayer.raw_nickname == raw_nickname))
+        if len(query) == 1:
+            return query[0]
+        else:
+            return await self.server.db.mgr.create(DBPlayer, raw_nickname=raw_nickname, nickname=nickname)
 
     async def get_elo(self):
         if self.elo_url is None:
@@ -64,8 +78,26 @@ class Player:
                                 logger.debug('Failed to parse elo %s', text, exc_info=True)
                             else:
                                 # logger.debug('Got basic elo %r', self.elo_basic)
+                                await self.update_db()
                                 await self.get_elo_advanced()
                         return
+
+    async def update_db(self):
+        crypto_idfp = unquote(unquote(self.elo_url.split('/')[-2]))
+        stats_id = self.elo_basic['player_id']
+        nickname = Color.dp_to_none(self.nickname).decode('utf8')
+        raw_nickname = self.nickname.decode('utf8')
+        try:
+            player_obj = await self.server.db.mgr.get(DBPlayer, DBPlayer.stats_id == stats_id)
+        except peewee.DoesNotExist:
+            player_obj = await self.server.db.mgr.create(DBPlayer, crypto_idfp=crypto_idfp, stats_id=stats_id,
+                                                         nickname=nickname, raw_nickname=raw_nickname)
+        else:
+            player_obj.crypto_idfp = crypto_idfp
+            player_obj.nickname = nickname
+            player_obj.raw_nickname = raw_nickname
+            await self.server.db.mgr.update(player_obj)
+        self.player_db_obj = player_obj
 
     async def get_elo_advanced(self):
         url = self.elo_basic.get('url')

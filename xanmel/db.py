@@ -39,10 +39,12 @@ class XanmelDB:
             models = importlib.import_module(module_pkg_name + '.models')
         except ImportError:
             return
+        model_classes = []
         for model_name, model in inspect.getmembers(models, inspect.isclass):
             if issubclass(model, BaseModel) and model is not BaseModel:
                 logger.debug('Creating table for model %s', model_name)
-                self.db.create_table(model, safe=True)
+                model_classes.append(model)
+        self.db.create_tables(model_classes, safe=True)
 
     @property
     def is_up(self):

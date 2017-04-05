@@ -3,6 +3,7 @@ from contextlib import contextmanager
 import logging
 
 import aiohttp
+import peewee
 
 from xanmel.modules.xonotic.colors import Color
 from xanmel.modules.xonotic.events import ServerDisconnect, ServerConnect
@@ -12,7 +13,7 @@ from .rcon_log import RconLogParser
 from .rcon_utils import *
 from .players import PlayerManager
 from .chat_commands import XonCommands
-from .models import MapRating
+from .models import MapRating, Server, Map, Player
 
 logger = logging.getLogger(__name__)
 
@@ -30,23 +31,28 @@ class MapVoter:
         ts = current_time()
         map_name = self.map_name
         self.map_name = new_map_name
+        if len(self.votes) == 0:
+            return
+        map, _ = await db.mgr.get_or_create(Map, server=self.server.server_db_obj, name=map_name)
         logger.debug('GOING TO STORE VOTES %s:%r', ts, self.votes)
         for vote in self.votes.values():
+            if vote['player'].player_db_obj is None:
+                player = await vote['player'].get_db_obj_anon()
+            else:
+                player = vote['player'].player_db_obj
             await db.mgr.create(
                 MapRating,
-                map=map_name,
-                server_id=self.server.config['unique_id'],
+                map=map,
+                player=player,
                 vote=vote['vote'],
-                message=vote['message'],
-                nickname=Color.dp_to_none(vote['player'].nickname).decode('utf8'),
-                raw_nickname=vote['player'].nickname.decode('utf8'),
-                stats_id=vote['player'].elo_basic and vote['player'].elo_basic.get('player_id'))
+                message=vote['message'])
         self.votes = {}
 
 
 class RconServer:
     def __init__(self, module, config):
         self.module = module
+        self.db = self.module.xanmel.db
         self.loop = module.loop
         self.config = config
         self.server_address = config['rcon_ip']
@@ -87,6 +93,7 @@ class RconServer:
         self.game_start_timestamp = 0
         self.map_voter = MapVoter(self)
         self.active_vote = None
+        self.server_db_obj = None
 
     async def check_connection(self):
         while True:
@@ -105,7 +112,9 @@ class RconServer:
                     await asyncio.wait([
                         self.cleanup_log_dest_udp(),
                         self.update_maplist(),
-                        self.update_server_stats()])
+                        self.update_server_stats(),
+                        self.update_server_name()
+                    ])
 
             else:
                 await self.update_server_status()
@@ -250,6 +259,16 @@ class RconServer:
                                 self.server_rating += players['top_scorers']
                         except:
                             logger.info('Could not parse stats', exc_info=True)
+
+    async def update_server_name(self):
+        try:
+            srv = await self.db.mgr.get(Server, id=self.config['unique_id'])
+        except peewee.DoesNotExist:
+            srv = await self.db.mgr.create(Server, id=self.config['unique_id'], config_name=self.config['name'], name=self.status['host'])
+        else:
+            srv.name = self.status['host']
+            await self.db.mgr.update(srv)
+        self.server_db_obj = srv
 
 
 def rcon_protocol_factory(password, secure, received_callback=None, connection_made_callback=None,

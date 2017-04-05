@@ -2,13 +2,14 @@ import asyncio
 import logging
 import time
 
+import peewee
 from peewee import fn
 
 import xanmel.modules.irc.events as irc_events
 from xanmel import Handler
 from xanmel import current_time
 from xanmel.modules.irc.actions import ChannelMessage, ChannelMessages
-from xanmel.modules.xonotic.models import CalledVote, MapRating
+from xanmel.modules.xonotic.models import CalledVote, MapRating, Map
 from .chat_user import XonoticChatUser
 from .events import *
 from .rcon_log import GAME_TYPES
@@ -97,10 +98,10 @@ class RatingReportHandler(Handler):
         if not db.is_up:
             return
         await asyncio.sleep(10)
+        map, _ = await db.mgr.get_or_create(Map, server=server.server_db_obj, name=map_name)
         result = await db.mgr.execute(
             MapRating.select(fn.Sum(MapRating.vote).alias('rating'),
-                             fn.Count(MapRating.id).alias('total')).where(
-                MapRating.server_id == server.config['unique_id'], MapRating.map == map_name))
+                             fn.Count(MapRating.id).alias('total')).where(MapRating.map == map))
         total_votes = result[0].total
         rating = result[0].rating
         if total_votes == 0 or rating is None:
@@ -407,30 +408,37 @@ class VoteAcceptedHandler(Handler):
         if not db.is_up:
             return
         ts = current_time()
+        cur_map, _ = await db.mgr.get_or_create(Map, server=server.server_db_obj, name=server.status.get('map'))
+        if 'map_name' in vote:
+            next_map, _ = await db.mgr.get_or_create(Map, server=server.server_db_obj, name=vote['map_name'])
+        else:
+            next_map = None
+        if vote['player'].player_db_obj:
+            player = vote['player'].player_db_obj
+        else:
+            player = await vote['player'].get_db_obj_anon()
         vote_data = {
-            'nickname': Color.dp_to_none(vote['player'].nickname).decode('utf8'),
-            'raw_nickname': vote['player'].nickname.decode('utf8'),
-            'stats_id': vote['player'].elo_basic and vote['player'].elo_basic.get('player_id'),
+            'player': player,
             'timestamp': ts.strftime('%Y-%m-%dT%H:%M:%S'),
             'server_id': server.config['unique_id'],
         }
         if vote['type'] in ('endmatch', 'gotomap') and server.status.get('map'):
             vote_data.update({
-                'map': server.status.get('map'),
+                'map': cur_map,
                 'vote_type': 'endmatch',
                 'time_since_round_start': time_from_start
             })
             await db.mgr.create(CalledVote, **vote_data)
         if vote['type'] in ('gotomap', 'nextmap'):
             vote_data.update({
-                'map': vote['map_name'],
+                'map': next_map,
                 'vote_type': 'gotomap',
                 'time_since_round_start': 0
             })
             await db.mgr.create(CalledVote, **vote_data)
         if vote['type'] == 'restart' and server.status.get('map'):
             vote_data.update({
-                'map': server.status.get('map'),
+                'map': next_map,
                 'vote_type': 'restart',
                 'time_since_round_start': time_from_start
             })
