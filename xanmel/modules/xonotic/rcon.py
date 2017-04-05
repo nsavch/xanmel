@@ -13,7 +13,7 @@ from .rcon_log import RconLogParser
 from .rcon_utils import *
 from .players import PlayerManager
 from .chat_commands import XonCommands
-from .models import MapRating, Server, Map, Player
+from .models import MapRating, Server, Map
 
 logger = logging.getLogger(__name__)
 

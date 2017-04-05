@@ -2,7 +2,6 @@ import asyncio
 import logging
 import time
 
-import peewee
 from peewee import fn
 
 import xanmel.modules.irc.events as irc_events

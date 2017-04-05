@@ -83,7 +83,7 @@ class Player:
                         return
 
     async def update_db(self):
-        crypto_idfp = unquote(unquote(self.elo_url.split('/')[-2]))
+        crypto_idfp = unquote(unquote(unquote(self.elo_url.split('/')[-2])))  # Triple urlquote, how cool is that?
         stats_id = self.elo_basic['player_id']
         nickname = Color.dp_to_none(self.nickname).decode('utf8')
         raw_nickname = self.nickname.decode('utf8')
