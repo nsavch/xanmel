@@ -17,6 +17,30 @@ from .models import Player as DBPlayer
 logger = logging.getLogger(__name__)
 
 
+def parse_elo(elo_txt):
+    current_mode = None
+    elo_data = {}
+    for line in elo_txt.split('\n'):
+        if not line.strip():
+            continue
+        pref, data = line.split(' ', 1)
+        if current_mode is None and pref not in ('S', 'n', 'i', 'G', 'P'):
+            continue
+        elif current_mode and pref == 'e':
+            elo_data[current_mode] = float(data.strip('elo '))
+        if pref == 'S':
+            elo_data['url'] = data
+        elif pref == 'n':
+            elo_data['nickname'] = data
+        elif pref == 'i':
+            elo_data['player_id'] = int(data)
+        elif pref == 'G':
+            current_mode = data.lower()
+        elif pref == 'P':
+            elo_data['primary_id'] = data
+    return elo_data
+
+
 class Player:
     def __init__(self, server, nickname, number1, number2, ip_address):
         self.server = server
@@ -130,27 +154,7 @@ class Player:
         return highest_rank
 
     def parse_elo(self, elo_txt):
-        current_mode = None
-        elo_data = {}
-        for line in elo_txt.split('\n'):
-            if not line.strip():
-                continue
-            pref, data = line.split(' ', 1)
-            if current_mode is None and pref not in ('S', 'n', 'i', 'G', 'P'):
-                continue
-            elif current_mode and pref == 'e':
-                elo_data[current_mode] = float(data.strip('elo '))
-            if pref == 'S':
-                elo_data['url'] = data
-            elif pref == 'n':
-                elo_data['nickname'] = data
-            elif pref == 'i':
-                elo_data['player_id'] = int(data)
-            elif pref == 'G':
-                current_mode = data.lower()
-            elif pref == 'P':
-                elo_data['primary_id'] = data
-        self.elo_basic = elo_data
+        self.elo_basic = parse_elo(elo_txt)
 
     @property
     def country(self):

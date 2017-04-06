@@ -1,7 +1,11 @@
+import http.client
+from urllib.parse import quote
+
 from peewee import *
 
 from xanmel import current_time
 from xanmel.db import BaseModel
+from xanmel.modules.xonotic.colors import Color
 
 
 class Server(BaseModel):
@@ -14,6 +18,25 @@ class Player(BaseModel):
     stats_id = IntegerField(index=True, null=True)
     raw_nickname = CharField()
     nickname = CharField()
+
+    @classmethod
+    def from_cryptoidfp(cls, crypto_idfp, elo_request_signature):
+        from xanmel.modules.xonotic.players import parse_elo
+
+        try:
+            return cls.get(cls.crypto_idfp == crypto_idfp)
+        except DoesNotExist:
+            con = http.client.HTTPConnection('stats.xonotic.org')
+            url = '/player/%s/elo.txt' % quote(quote(quote(crypto_idfp)))
+            con.request('POST', url, body=b'\n',
+                        headers={'X-D0-Blind-ID-Detached-Signature': elo_request_signature})
+            resp = con.getresponse()
+            if resp.status == 200:
+                data = resp.read().decode('utf8')
+                elo_data = parse_elo(data)
+                return cls.create(crypto_idfp=crypto_idfp, stats_id=elo_data['player_id'],
+                                  raw_nickname=elo_data['nickname'],
+                                  nickname=Color.dp_to_none(elo_data['nickname'].encode('utf8')).decode('utf8'))
 
 
 class Map(BaseModel):
