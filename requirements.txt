@@ -4,7 +4,7 @@ aioresponses==0.1.4
 appnope==0.1.0
 async-timeout==1.2.0
 asynctest==0.10.0
-bottom==2.0.0
+bottom==2.0.1
 cchardet==2.0.0
 chardet==2.3.0
 clint==0.5.1
