@@ -38,7 +38,7 @@ six==1.10.0
 traitlets==4.3.2
 twine==1.8.1
 wcwidth==0.1.7
-yarl==0.10.0
+yarl==0.10.1
 aiopg==0.13.0
 peewee==2.9.2
 peewee-async==0.5.7
