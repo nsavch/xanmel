@@ -91,3 +91,15 @@ class VoteRejected(Event):
 class VoteStopped(Event):
     def __str__(self):
         return '%s Vote stopped' % (self.properties['server'].config['out_prefix'])
+
+
+class DuelPairFormed(Event):
+    def __str__(self):
+        return '%s Duel pair formed: %s vs %s' % (self.properties['server'].config['out_prefix'],
+                                                  Color.dp_to_none(self.properties['player1'].nickname),
+                                                  Color.dp_to_none(self.properties['player2'].nickname))
+
+
+class DuelEndedPrematurely(Event):
+    def __str__(self):
+        return '%s duel ended prematurely' % (self.properties['server'].config['out_prefix'], )

@@ -213,6 +213,71 @@ class JoinHandler(Handler):
                               prefix=event.properties['server'].config['out_prefix'])
 
 
+class NewDuelHandler(Handler):
+    events = [DuelPairFormed]
+
+    async def handle(self, event):
+        server = event.properties['server']
+        if not server.config.get('enable_betting'):
+            return
+        announcement = '%s ^2vs^7 %s ^2Who will win?^7' % (event.properties['player1'].nickname.decode('utf8'),
+                                                            event.properties['player2'].nickname.decode('utf8'))
+        if server.config['say_type'] == 'ircmsg':
+            server.send('sv_cmd ircmsg ^7%s' % announcement)
+        else:
+            with server.sv_adminnick('*'):
+                server.send('say %s' % announcement)
+
+
+class DuelFailureHandler(Handler):
+    events = [DuelEndedPrematurely]
+
+    async def handle(self, event):
+        server = event.properties['server']
+        if not server.config.get('enable_betting'):
+            return
+        announcement = '^3Duel ended with no result.^7'
+        if server.config['say_type'] == 'ircmsg':
+            server.send('sv_cmd ircmsg ^7%s' % announcement)
+        else:
+            with server.sv_adminnick('*'):
+                server.send('say %s' % announcement)
+
+
+class DuelSuccessHandler(Handler):
+    events = [GameEnded]
+
+    async def handle(self, event):
+        if not event.properties['players']:
+            return
+        server = event.properties['server']
+        if not server.config.get('enable_betting'):
+            return
+        if not server.active_duel_pair:
+            return
+        result = {}
+        scores = []
+        for player in event.properties['players']:
+            if player['number1'] not in [i.number1 for i in server.active_duel_pair]:
+                logger.info('%s was not an active dueller but is present in the final scores!', player['nickname'])
+            result[player['score']] = server.players.players_by_number1[player['number1']]
+            scores.append(player['score'])
+        if len(result) != 2:
+            logger.info('A duel with %s players?', len(result))
+            return
+        ordering = [result[i] for i in sorted(result.keys(), reverse=True)]
+        if max(scores) < server.config.get('betting_min_frag_number', 5) or scores[0] == scores[1]:
+            logger.info('Not enough score or same score for both players')
+            return
+        announcement = '%s ^2wins, %s ^2loses^7!' % (ordering[0].nickname.decode('utf8'),
+                                                     ordering[1].nickname.decode('utf8'))
+        if server.config['say_type'] == 'ircmsg':
+            server.send('sv_cmd ircmsg ^7%s' % announcement)
+        else:
+            with server.sv_adminnick('*'):
+                server.send('say %s' % announcement)
+
+
 class NewPlayerActiveHandler(Handler):
     events = [NewPlayerActive]
 
@@ -227,8 +292,8 @@ class NewPlayerActiveHandler(Handler):
                 await asyncio.sleep(1)
                 for trigger_player_num, new_fraglimit in reversed(server.config['dynamic_frag_limit']):
                     logger.debug('Dynamic frag limit %s, current players %s',
-                                 trigger_player_num, server.players.active)
-                    if server.players.active > trigger_player_num and new_fraglimit > int(
+                                 trigger_player_num, len(server.players.active))
+                    if len(server.players.active) > trigger_player_num and new_fraglimit > int(
                             server.cvars.get('fraglimit', 0)):
                         server.send('fraglimit %d' % new_fraglimit)
                         await self.run_action(

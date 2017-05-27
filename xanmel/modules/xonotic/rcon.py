@@ -94,6 +94,7 @@ class RconServer:
         self.map_voter = MapVoter(self)
         self.active_vote = None
         self.server_db_obj = None
+        self.active_duel_pair = None
 
     async def check_connection(self):
         while True:

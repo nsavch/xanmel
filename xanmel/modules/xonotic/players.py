@@ -11,8 +11,7 @@ import peewee
 from xanmel.modules.xonotic.colors import Color
 from xanmel.utils import current_time
 
-from .models import Player as DBPlayer
-
+from .models import Player as DBPlayer, PlayerAccount
 
 logger = logging.getLogger(__name__)
 
@@ -112,7 +111,8 @@ class Player:
         nickname = Color.dp_to_none(self.nickname).decode('utf8')
         raw_nickname = self.nickname.decode('utf8')
         try:
-            player_obj = await self.server.db.mgr.get(DBPlayer, DBPlayer.stats_id == stats_id)
+            player_obj = await self.server.db.mgr.get(
+                DBPlayer, DBPlayer.stats_id == stats_id or DBPlayer.crypto_idfp == crypto_idfp)
         except peewee.DoesNotExist:
             player_obj = await self.server.db.mgr.create(DBPlayer, crypto_idfp=crypto_idfp, stats_id=stats_id,
                                                          nickname=nickname, raw_nickname=raw_nickname)
@@ -121,6 +121,10 @@ class Player:
             player_obj.nickname = nickname
             player_obj.raw_nickname = raw_nickname
             await self.server.db.mgr.update(player_obj)
+        try:
+            await self.server.db.mgr.get(PlayerAccount, PlayerAccount.player == player_obj)
+        except peewee.DoesNotExist:
+            await self.server.db.mgr.create(PlayerAccount, player=player_obj)
         self.player_db_obj = player_obj
 
     async def get_elo_advanced(self):
@@ -195,11 +199,11 @@ class PlayerManager:
 
     @property
     def active(self):
-        num_active = 0
+        res = []
         for n2, v in self.status.items():
             if n2 in self.players_by_number2 and v['frags'] != -666:
-                num_active += 1
-        return num_active
+                res.append(self.players_by_number2[n2])
+        return res
 
     @property
     def current(self):

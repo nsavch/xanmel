@@ -135,3 +135,16 @@ class Maps(ChatCommand):
             if len(res) > 10:
                 reply += ' (%s more maps skipped)' % (len(res) - 10)
         await user.reply(rcon_server.config['out_prefix'] + reply, is_private)
+
+
+class Bet(ChatCommand):
+    prefix = 'bet'
+    parent = XonCommands
+    help_args = '<PLAYER_ID> <AMOUNT>'
+    help_text = 'Bet AMOUNT on PLAYER_ID'
+
+    async def run(self, user, message, is_private=True, root=None):
+        rcon_server = self.parent.properties['rcon_server']
+        if not rcon_server.config.get('enable_betting'):
+            await user.reply(rcon_server.config['out_prefix'] + 'Betting is disabled on this server', is_private=is_private)
+            return

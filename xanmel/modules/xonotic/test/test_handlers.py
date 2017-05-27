@@ -1,5 +1,6 @@
 from xanmel.modules.irc.actions import ChannelMessage
 from xanmel.modules.xonotic.events import *
+from xanmel.modules.xonotic.handlers import GameEndedHandler
 from xanmel.modules.xonotic.players import Player
 from xanmel.modules.irc.events import ChannelMessage as ChannelMessageEvent
 
@@ -155,7 +156,9 @@ def test_scores_handler_empty(xanmel, xon_module, xon_server, mocked_coro):
 
 def test_scores_handler(xanmel, xon_module, xon_server, mocked_coro, example_scores_event, example_team_scores_event):
     ev = GameEnded(xon_module, server=xon_server, **example_scores_event)
-    h = xanmel.handlers[GameEnded][0]
+    for h in xanmel.handlers[GameEnded]:
+        if isinstance(h, GameEndedHandler):
+            break
     h.run_action = mocked_coro()
     xanmel.loop.run_until_complete(h.handle(ev))
     assert h.run_action.called

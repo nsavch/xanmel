@@ -86,3 +86,15 @@ class XDFSpeedRecord(BaseModel):
     player = ForeignKeyField(Player)
     speed = FloatField()
     timestamp = DateTimeField(default=current_time)
+
+
+class PlayerAccount(BaseModel):
+    player = ForeignKeyField(Player)
+    balance = DecimalField(decimal_places=2, default=1000)
+
+
+class AccountTransaction(BaseModel):
+    account = ForeignKeyField(PlayerAccount)
+    timestamp = DateField(default=current_time)
+    change = DecimalField(decimal_places=2)
+    description = CharField()

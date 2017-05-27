@@ -1,7 +1,7 @@
 settings:
   asyncio_debug: false
   log_level: DEBUG
-  db_url: null # postgresql:///xanmel
+  db_url: postgresql:///xanmel
 modules:
   xanmel.modules.irc.IRCModule:
     host: irc.quakenet.org
@@ -46,4 +46,6 @@ modules:
         disable_geolocation_for: []
         raw_log: /tmp/xonotic.log
         dynamic_frag_limit: [[4, 40], [6, 50], [8, 60]]
+        enable_betting: true
+        betting_min_frag_number: 5
   xanmel.modules.fun.FunModule: {}
