@@ -219,17 +219,22 @@ class NewDuelHandler(Handler):
     async def handle(self, event):
         def __get_elo(player):
             if player.elo_basic and player.elo_basic.get('duel'):
-                return '%i' % player.elo_basic['duel']
-            else:
-                return '--'
+                return player.elo_basic['duel']
         server = event.properties['server']
         if not server.config.get('enable_betting'):
             return
-        announcement = '%s ^2(%s)^7 ^1vs^7 %s ^2(%s)^7 ^2Who will win?^7' % (
+        elo1 = __get_elo(event.properties['player1'])
+        elo2 = __get_elo(event.properties['player2'])
+        if elo1 and elo2:
+            odds1 = 1 + (elo2/elo1) ** 2
+            odds2 = 1 + (elo1/elo2) ** 2
+        else:
+            odds1 = odds2 = 1.05
+        announcement = '%s ^2(%.2f)^7 ^1vs^7 %s ^2(%.2f)^7 ^2Who will win?^7' % (
             event.properties['player1'].nickname.decode('utf8'),
-            __get_elo(event.properties['player1']),
+            odds1,
             event.properties['player2'].nickname.decode('utf8'),
-            __get_elo(event.properties['player2']))
+            odds2)
         if server.config['say_type'] == 'ircmsg':
             server.send('sv_cmd ircmsg ^7%s' % announcement)
         else:
