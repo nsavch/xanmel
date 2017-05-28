@@ -95,6 +95,10 @@ class RconServer:
         self.active_vote = None
         self.server_db_obj = None
         self.active_duel_pair = None
+        self.betting_odds = None
+        self.betting_session_id = None
+        self.betting_session = None
+        self.betting_session_active = False
 
     async def check_connection(self):
         while True:

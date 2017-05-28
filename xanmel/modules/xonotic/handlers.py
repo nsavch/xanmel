@@ -1,14 +1,16 @@
 import asyncio
 import logging
 import time
+import uuid
 
+from decimal import Decimal
 from peewee import fn
 
 import xanmel.modules.irc.events as irc_events
 from xanmel import Handler
 from xanmel import current_time
 from xanmel.modules.irc.actions import ChannelMessage, ChannelMessages
-from xanmel.modules.xonotic.models import CalledVote, MapRating, Map
+from xanmel.modules.xonotic.models import CalledVote, MapRating, Map, AccountTransaction, PlayerAccount
 from .chat_user import XonoticChatUser
 from .events import *
 from .rcon_log import GAME_TYPES
@@ -230,11 +232,25 @@ class NewDuelHandler(Handler):
             odds2 = 1 + (elo1/elo2) ** 2
         else:
             odds1 = odds2 = 1.05
-        announcement = '%s ^2(%.2f)^7 ^1vs^7 %s ^2(%.2f)^7 ^2Who will win?^7' % (
+        server.betting_odds = {event.properties['player1']: odds1, event.properties['player2']: odds2}
+        announcement = '%s ^2(%.2f)^7 ^1vs^7 %s ^2(%.2f)^7 Bet with "^2/bet #1 100^7" or "^2/bet #2 100^7"' % (
             event.properties['player1'].nickname.decode('utf8'),
             odds1,
             event.properties['player2'].nickname.decode('utf8'),
             odds2)
+        if server.config['say_type'] == 'ircmsg':
+            server.send('sv_cmd ircmsg ^7%s' % announcement)
+        else:
+            with server.sv_adminnick('*'):
+                server.send('say %s' % announcement)
+        session_id = uuid.uuid4()
+        server.betting_session = {}
+        server.betting_session_id = session_id
+        server.betting_session_active = True
+        await asyncio.sleep(30)
+        if server.betting_session_id == session_id and server.betting_session_active:
+            server.betting_session_active = False
+        announcement = '^2Betting session closed!^7'
         if server.config['say_type'] == 'ircmsg':
             server.send('sv_cmd ircmsg ^7%s' % announcement)
         else:
@@ -255,6 +271,10 @@ class DuelFailureHandler(Handler):
         else:
             with server.sv_adminnick('*'):
                 server.send('say %s' % announcement)
+        server.betting_odds = None
+        server.betting_session = None
+        server.betting_session_active = False
+        server.betting_session_id = None
 
 
 class DuelSuccessHandler(Handler):
@@ -267,6 +287,8 @@ class DuelSuccessHandler(Handler):
         if not server.config.get('enable_betting'):
             return
         if not server.active_duel_pair:
+            return
+        if not server.betting_session:
             return
         result = {}
         scores = []
@@ -283,13 +305,40 @@ class DuelSuccessHandler(Handler):
         if max(scores) < server.config.get('betting_min_frag_number', 5) or scores[0] == scores[1]:
             logger.info('Not enough score or same score for both players')
             return
-        announcement = '%s ^2wins, %s ^2loses^7!' % (ordering[0].nickname.decode('utf8'),
-                                                     ordering[1].nickname.decode('utf8'))
+        announcement = '%s ^2wins^7, %s ^2loses^7!' % (ordering[0].nickname.decode('utf8'),
+                                                       ordering[1].nickname.decode('utf8'))
         if server.config['say_type'] == 'ircmsg':
             server.send('sv_cmd ircmsg ^7%s' % announcement)
         else:
             with server.sv_adminnick('*'):
                 server.send('say %s' % announcement)
+        winning_odds = server.betting_odds[ordering[0]]
+        for player, bet in server.betting_session.items():
+            if bet[0] == ordering[0]:
+                change = winning_odds * bet[1]
+                message = '%s ^2won %s!^7' % (player.nickname.decode('utf8'), change)
+            else:
+                change = - bet[1]
+                message = '%s ^1lost %s!^7' % (player.nickname.decode('utf8'), -change)
+            change = Decimal("%.2f" % change)
+            if server.config['say_type'] == 'ircmsg':
+                server.send('sv_cmd ircmsg ^7%s' % message)
+            else:
+                with server.sv_adminnick('*'):
+                    server.send('say %s' % message)
+            account = await server.db.mgr.get(PlayerAccount, player=player.player_db_obj)
+            await server.db.mgr.create(AccountTransaction, account=account, change=change,
+                                       description='Betting: %s vs %s' % (
+                                           Color.dp_to_none(ordering[0].nickname).decode('utf8'),
+                                           Color.dp_to_none(ordering[1].nickname).decode('utf8')
+                                       ))
+            account.balance += change
+            await server.db.mgr.update(account)
+
+        server.betting_odds = None
+        server.betting_session = None
+        server.betting_session_active = False
+        server.betting_session_id = None
 
 
 class NewPlayerActiveHandler(Handler):

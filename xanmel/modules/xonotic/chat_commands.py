@@ -143,8 +143,38 @@ class Bet(ChatCommand):
     help_args = '<PLAYER_ID> <AMOUNT>'
     help_text = 'Bet AMOUNT on PLAYER_ID'
 
+    allowed_user_types = ['xonotic']
+
     async def run(self, user, message, is_private=True, root=None):
         rcon_server = self.parent.properties['rcon_server']
         if not rcon_server.config.get('enable_betting'):
-            await user.reply(rcon_server.config['out_prefix'] + 'Betting is disabled on this server', is_private=is_private)
+            await user.reply(rcon_server.config['out_prefix'] + 'Betting is disabled on this server',
+                             is_private=is_private)
             return
+        args = message.strip().split(' ')
+        if len(args) != 2:
+            await user.private_reply(rcon_server.config['out_prefix'] + 'Usage: /bet <PLAYER_ID> <AMOUNT>')
+            return
+        args[0] = args[0].lstrip('#')
+        if args[0] not in ('1', '2'):
+            await user.private_reply('Player number must be either 1 or 2')
+            return
+        args[0] = int(args[0])
+        try:
+            args[1] = int(args[1])
+        except ValueError:
+            await user.private_reply('Betting amount should be integer')
+            return
+        if not rcon_server.betting_session_active:
+            await user.private_reply(rcon_server.config['out_prefix'] + 'Betting session is not active (either too early or too late). Sorry.')
+            return
+        if not user.number2:
+            await user.private_reply('Sorry, your nickname cannot be identified. Try to  reconnect to the server.')
+            return
+        player = rcon_server.players.players_by_number2[user.number2]
+        betting_target = rcon_server.active_duel_pair[args[0]-1]
+        rcon_server.betting_session[player] = (betting_target, args[1])
+        await user.private_reply('^2Your bet on^7 %s ^2is accepted^7: ^1%s^7' % (
+            betting_target.nickname.decode('utf8'),
+            args[1]
+        ))

@@ -187,6 +187,7 @@ class GameStartedParser(BaseOneLineParser):
         self.rcon_server.current_map = map
         self.rcon_server.current_gt = gt
         self.rcon_server.active_duel_pair = None
+        self.rcon_server.betting_session = {}
         GameStarted(self.rcon_server.module, server=self.rcon_server, gt=gt, map=map).fire()
         self.rcon_server.players.clear_bots()
 
