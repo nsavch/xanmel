@@ -220,7 +220,7 @@ class NewDuelHandler(Handler):
         server = event.properties['server']
         if not server.config.get('enable_betting'):
             return
-        announcement = '%s ^2(%s)^7 ^1vs^7 %s ^2(%s)^7 ^2Who will win?^7' % (
+        announcement = '%s ^2(%i)^7 ^1vs^7 %s ^2(%i)^7 ^2Who will win?^7' % (
             event.properties['player1'].nickname.decode('utf8'),
             event.properties['player1'].elo_basic.get('duel', '--'),
             event.properties['player2'].nickname.decode('utf8'),
