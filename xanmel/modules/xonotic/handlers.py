@@ -315,11 +315,11 @@ class DuelSuccessHandler(Handler):
         winning_odds = server.betting_odds[ordering[0]]
         for player, bet in server.betting_session.items():
             if bet[0] == ordering[0]:
-                change = winning_odds * bet[1]
-                message = '%s ^2won %s!^7' % (player.nickname.decode('utf8'), change)
+                change = winning_odds * bet[1] - bet[1]
+                message = '%s ^2won %.2f!^7' % (player.nickname.decode('utf8'), change)
             else:
                 change = - bet[1]
-                message = '%s ^1lost %s!^7' % (player.nickname.decode('utf8'), -change)
+                message = '%s ^1lost %.2f!^7' % (player.nickname.decode('utf8'), -change)
             change = Decimal("%.2f" % change)
             if server.config['say_type'] == 'ircmsg':
                 server.send('sv_cmd ircmsg ^7%s' % message)
