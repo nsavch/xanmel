@@ -261,10 +261,11 @@ class DuelSuccessHandler(Handler):
         result = {}
         scores = []
         for player in event.properties['players']:
-            if player['number1'] not in [i.number1 for i in server.active_duel_pair]:
-                logger.info('%s was not an active dueller but is present in the final scores!', player['nickname'])
-            result[player['score']] = server.players.players_by_number1[player['number1']]
-            scores.append(player['score'])
+            if player['team_id']:
+                if player['number1'] not in [i.number1 for i in server.active_duel_pair]:
+                    logger.info('%s was not an active dueller but is present in the final scores!', player['nickname'])
+                result[player['score']] = server.players.players_by_number1[player['number1']]
+                scores.append(player['score'])
         if len(result) != 2:
             logger.info('A duel with %s players?', len(result))
             return
