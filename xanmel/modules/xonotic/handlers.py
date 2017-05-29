@@ -56,13 +56,17 @@ class ChatMessageHandler(Handler):
         user = None
         message = None
         for nickname in nicknames:
-            prefix1 = b'^7' + nickname + b'^7: '
-            prefix2 = b'^3' + nickname + b'^7: '
-            if msg.startswith(prefix1) or msg.startswith(prefix2):
-                user = XonoticChatUser(self.module, Color.dp_to_none(nickname).decode('utf8'),
-                                       raw_nickname=nickname,
-                                       rcon_server=server)
-                message = Color.dp_to_none(msg[len(prefix1):]).decode('utf8')
+            prefixes = [b'^7%s^7: ', b'^3%s^7: ', b'^0(^7%s^0) ^7', b'^0(^3%s^0) ^7']
+
+            for i in prefixes:
+                prefix = i % nickname
+                if msg.startswith(prefix):
+                    user = XonoticChatUser(self.module, Color.dp_to_none(nickname).decode('utf8'),
+                                           raw_nickname=nickname,
+                                           rcon_server=server)
+                    message = Color.dp_to_none(msg[len(prefix):]).decode('utf8')
+                    break
+            if message is not None:
                 break
         message_is_cmd = False
         if user:

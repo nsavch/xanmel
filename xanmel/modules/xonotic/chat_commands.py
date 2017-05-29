@@ -163,7 +163,7 @@ class Bet(ChatCommand):
         try:
             args[1] = int(args[1])
         except ValueError:
-            await user.private_reply('Betting amount should be integer')
+            await user.private_reply('Betting amount should be an integer')
             return
         if not rcon_server.betting_session_active:
             await user.private_reply(rcon_server.config['out_prefix'] + 'Betting session is not active (either too early or too late). Sorry.')
@@ -173,6 +173,9 @@ class Bet(ChatCommand):
             return
         player = rcon_server.players.players_by_number2[user.number2]
         betting_target = rcon_server.active_duel_pair[args[0]-1]
+        if player in rcon_server.active_duel_pair and player != betting_target:
+            await user.private_reply("You can't bet on your opponent. Bet on yourself and try as hard as you can.")
+            return
         rcon_server.betting_session[player] = (betting_target, args[1])
         await user.private_reply('^2Your bet on^7 %s ^2is accepted^7: ^1%s^7' % (
             betting_target.nickname.decode('utf8'),
