@@ -13,12 +13,21 @@ Xanmel is a modular IRC bot designed primarily for gaming.
 Includes GeoLite2-City.mmdb database made by Maxmind (http://maxmind.com).
 
 
-Installation
+Installation (for production)
 ------------
 
-  1. Install docker (https://www.docker.com/)
-  2. Check out this repository
-  3. Copy example_config.yaml to config.yaml (keeping it in the same directory)
-  4. Edit config.yaml as per your needs
-  5. Run `docker build -t xanmel .`
-  6. Launch the bot by running `docker run xanmel`
+  1. Install python (3.5 or later)
+  2. Clone the repo, cd to workdir and run `python3 setup.py install`
+  3. run `xanmel --config /path/to/xanmel.yaml`
+ 
+ 
+ Installation (for development)
+ ------------
+ 
+  1. Install python (3.5 or later)
+  2. Clone the repo
+  3. Create a virtual environment `virtualenv /path/to/venv`
+  4. `source /path/to/venv/bin/activate`
+  5. cd to the repo workdir
+  6. `pip install -r requirements.txt`
+  7. `python run.py`
