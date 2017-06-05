@@ -23,7 +23,7 @@ pickleshare==0.7.4
 pkginfo==1.4.1
 prompt-toolkit==1.0.14
 ptyprocess==0.5.1
-py==1.4.33
+py==1.4.34
 pycares==2.1.1
 pycparser==2.17
 Pygments==2.2.0
