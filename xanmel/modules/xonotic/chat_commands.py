@@ -165,6 +165,9 @@ class Bet(ChatCommand):
         except ValueError:
             await user.private_reply('Betting amount should be an integer')
             return
+        if args[1] <= 0:
+            await user.private_reply('Amount should be positive')
+            return
         if not rcon_server.betting_session_active:
             await user.private_reply(rcon_server.config['out_prefix'] + 'Betting session is not active (either too early or too late). Sorry.')
             return
