@@ -82,7 +82,6 @@ class PartParser(BaseOneLineParser):
 
 
 class ScoresParser(BaseMultilineParser):
-    # TODO: currently only dm scores are supported.
     key = b':scores:'
     terminator = b':end'
     team_colors = {

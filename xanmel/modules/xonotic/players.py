@@ -56,6 +56,7 @@ class Player:
         self.elo_basic = None
         self.elo_advanced = None
         self.player_db_obj = None
+        self.account = None
         if not self.is_bot:
             try:
                 self.geo_response = self.server.module.xanmel.geoip.city(self.ip_address)
@@ -122,9 +123,9 @@ class Player:
             player_obj.raw_nickname = raw_nickname
             await self.server.db.mgr.update(player_obj)
         try:
-            await self.server.db.mgr.get(PlayerAccount, PlayerAccount.player == player_obj)
+            self.account = await self.server.db.mgr.get(PlayerAccount, PlayerAccount.player == player_obj)
         except peewee.DoesNotExist:
-            await self.server.db.mgr.create(PlayerAccount, player=player_obj)
+            self.account = await self.server.db.mgr.create(PlayerAccount, player=player_obj)
         self.player_db_obj = player_obj
 
     async def get_elo_advanced(self):

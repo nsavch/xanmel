@@ -210,6 +210,12 @@ class JoinHandler(Handler):
                 'name': event.properties['player'].nickname.decode('utf8'),
                 'country': player.country
             }
+        if event.properties['player'].account:
+            b = event.properties['player'].account.balance
+            if b > 0:
+                in_game_message += ' [^3balance:^7 ^2%s^7]' % b
+            else:
+                in_game_message += ' [^3balance:^7 ^1%s^7]' % b
         if server.config['say_type'] == 'ircmsg':
             server.send('sv_cmd ircmsg ^7%s' % in_game_message)
         else:
