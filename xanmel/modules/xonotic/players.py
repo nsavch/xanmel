@@ -139,7 +139,7 @@ class Player:
     async def get_whois(self, ip_address):
         def __lookup(w):
             try:
-                return w.lookup_rdap()
+                return w.lookup_rdap(retry_count=10)
             except:
                 return {}
         whois = ipwhois.IPWhois(ip_address)
