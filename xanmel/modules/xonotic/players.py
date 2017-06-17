@@ -135,14 +135,15 @@ class Player:
         self.player_db_obj = player_obj
 
     async def update_identification(self):
-        await self.server.db.mgr.create(PlayerIdentification,
-                                        player=self.player_db_obj,
-                                        crypto_idfp=self.get_crypto_idfp(),
-                                        stats_id=self.elo_basic and self.elo_basic.get('player_id'),
-                                        ip_address=self.ip_address,
-                                        raw_nickname=self.nickname.decode('utf8'),
-                                        nickname=Color.dp_to_none(self.nickname).decode('utf8'),
-                                        **PlayerIdentification.geolocate(self.geo_response))
+        if self.server.db.is_up:
+            await self.server.db.mgr.create(PlayerIdentification,
+                                            player=self.player_db_obj,
+                                            crypto_idfp=self.get_crypto_idfp(),
+                                            stats_id=self.elo_basic and self.elo_basic.get('player_id'),
+                                            ip_address=self.ip_address,
+                                            raw_nickname=self.nickname.decode('utf8'),
+                                            nickname=Color.dp_to_none(self.nickname).decode('utf8'),
+                                            **PlayerIdentification.geolocate(self.geo_response))
 
     async def get_elo_advanced(self):
         url = self.elo_basic.get('url')
@@ -181,8 +182,9 @@ class Player:
     def country(self):
         mode = self.server.config.get('show_geolocation_for', 'none')
         if mode == 'all' or (mode == 'stats-enabled' and
-                             self.elo_basic and
-                             self.elo_basic.get('player_id') not in self.server.config.get('disable_geolocation_for')):
+                                 self.elo_basic and
+                                     self.elo_basic.get('player_id') not in self.server.config.get(
+                                     'disable_geolocation_for')):
             if self.geo_response:
                 geoloc = self.geo_response.country.name
             else:
