@@ -120,8 +120,8 @@ class PlayerIdentification(BaseModel):
         if geo_response is not None:
             return {
                 'country': geo_response.country.iso_code,
-                'city': geo_response.city.names['en'],
-                'continent': geo_response.continent.names['en'],
+                'city': geo_response.city.name,
+                'continent': geo_response.continent.name,
                 'latitude': geo_response.location.latitude,
                 'longitude': geo_response.location.longitude,
             }
