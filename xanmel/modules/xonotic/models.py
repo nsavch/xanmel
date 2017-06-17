@@ -141,11 +141,11 @@ class PlayerIdentification(BaseModel):
         if whois_response is not None:
             return {
                 'asn': whois_response.get('asn'),
-                'asn_cidr': whois_response('asn_cidr'),
-                'asn_country_code': whois_response('asn_country_code'),
-                'network_name': whois_response('network', {}).get('name'),
-                'network_cidr': whois_response('network', {}).get('cidr'),
-                'network_country_code': whois_response('network', {}).get('country'),
+                'asn_cidr': whois_response.get('asn_cidr'),
+                'asn_country_code': whois_response.get('asn_country_code'),
+                'network_name': whois_response.get('network', {}).get('name'),
+                'network_cidr': whois_response.get('network', {}).get('cidr'),
+                'network_country_code': whois_response.get('network', {}).get('country'),
             }
         else:
             return {}
