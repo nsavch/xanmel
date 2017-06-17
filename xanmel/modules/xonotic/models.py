@@ -111,6 +111,7 @@ class PlayerIdentification(BaseModel):
     timestamp = DateTimeField(default=current_time)
     country = CharField(max_length=3, index=True, null=True)
     city = CharField(index=True, null=True)
+    subdivisions = CharField(index=True, null=True)
     continent = CharField(index=True, null=True)
     latitude = FloatField(null=True)
     longitude = FloatField(null=True)
@@ -121,6 +122,7 @@ class PlayerIdentification(BaseModel):
             return {
                 'country': geo_response.country.iso_code,
                 'city': geo_response.city.name,
+                'subdivisions': geo_response.subdivisions and ', '.join([i.name for i in geo_response.subdivisions]),
                 'continent': geo_response.continent.name,
                 'latitude': geo_response.location.latitude,
                 'longitude': geo_response.location.longitude,
