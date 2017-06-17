@@ -164,6 +164,7 @@ class JoinHandler(Handler):
         enabled_ranks = server.config.get('player_rankings', ['dm', 'duel', 'ctf'])
         if player.elo_url:
             await player.get_elo()
+        await player.update_identification()
         if not player.really_joined:
             return
         # TODO: move that to the player class

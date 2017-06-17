@@ -11,7 +11,7 @@ import peewee
 from xanmel.modules.xonotic.colors import Color
 from xanmel.utils import current_time
 
-from .models import Player as DBPlayer, PlayerAccount
+from .models import Player as DBPlayer, PlayerAccount, PlayerIdentification
 
 logger = logging.getLogger(__name__)
 
@@ -50,7 +50,6 @@ class Player:
         self.really_joined = True
 
         self.join_timestamp = None
-        self.geo_response = None
         self.elo_url = None
 
         self.elo_basic = None
@@ -61,7 +60,7 @@ class Player:
             try:
                 self.geo_response = self.server.module.xanmel.geoip.city(self.ip_address)
             except (ValueError, geoip2.errors.AddressNotFoundError):
-                pass
+                self.geo_response = None
 
     async def get_db_obj_anon(self):
         raw_nickname = self.nickname.decode('utf8')
@@ -106,8 +105,14 @@ class Player:
                                 await self.get_elo_advanced()
                         return
 
+    def get_crypto_idfp(self):
+        if self.elo_url:
+            return unquote(unquote(unquote(self.elo_url.split('/')[-2])))  # Triple urlquote, how cool is that?
+        else:
+            return None
+
     async def update_db(self):
-        crypto_idfp = unquote(unquote(unquote(self.elo_url.split('/')[-2])))  # Triple urlquote, how cool is that?
+        crypto_idfp = self.get_crypto_idfp()
         stats_id = self.elo_basic['player_id']
         nickname = Color.dp_to_none(self.nickname).decode('utf8')
         raw_nickname = self.nickname.decode('utf8')
@@ -122,11 +127,22 @@ class Player:
             player_obj.nickname = nickname
             player_obj.raw_nickname = raw_nickname
             await self.server.db.mgr.update(player_obj)
+
         try:
             self.account = await self.server.db.mgr.get(PlayerAccount, PlayerAccount.player == player_obj)
         except peewee.DoesNotExist:
             self.account = await self.server.db.mgr.create(PlayerAccount, player=player_obj)
         self.player_db_obj = player_obj
+
+    async def update_identification(self):
+        await self.server.db.mgr.create(PlayerIdentification,
+                                        player=self.player_db_obj,
+                                        crypto_idfp=self.get_crypto_idfp(),
+                                        stats_id=self.elo_basic and self.elo_basic.get('player_id'),
+                                        ip_address=self.ip_address,
+                                        raw_nickname=self.nickname.decode('utf8'),
+                                        nickname=Color.dp_to_none(self.nickname).decode('utf8'),
+                                        **PlayerIdentification.geolocate(self.geo_response))
 
     async def get_elo_advanced(self):
         url = self.elo_basic.get('url')

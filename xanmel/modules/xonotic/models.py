@@ -98,3 +98,31 @@ class AccountTransaction(BaseModel):
     timestamp = DateField(default=current_time)
     change = DecimalField(decimal_places=2)
     description = CharField()
+
+
+class PlayerIdentification(BaseModel):
+    player = ForeignKeyField(Player, null=True)
+    crypto_idfp = CharField(index=True, null=True)
+    stats_id = IntegerField(index=True, null=True)
+    ip_address = CharField(index=True)
+    raw_nickname = CharField()
+    nickname = CharField()
+    timestamp = DateTimeField(default=current_time)
+    country = CharField(max_length=3, index=True, null=True)
+    city = CharField(index=True, null=True)
+    continent = CharField(index=True, null=True)
+    latitude = FloatField(null=True)
+    longitude = FloatField(null=True)
+
+    @classmethod
+    def geolocate(cls, geo_response):
+        if geo_response is not None:
+            return {
+                'country': geo_response.country.iso_code,
+                'city': geo_response.city.names['en'],
+                'continent': geo_response.continent.names['en'],
+                'latitude': geo_response.location.latitude,
+                'longitude': geo_response.location.longitude,
+            }
+        else:
+            return {}
