@@ -8,7 +8,7 @@ import geoip2.errors
 import math
 import aiohttp
 import peewee
-from ipwhois import IPWhois
+import ipwhois
 
 from xanmel.modules.xonotic.colors import Color
 from xanmel.utils import current_time
@@ -137,9 +137,17 @@ class Player:
         self.player_db_obj = player_obj
 
     async def get_whois(self, ip_address):
-        whois = IPWhois(ip_address)
-        result = await self.server.module.xanmel.loop.run_in_executor(ThreadPoolExecutor(), whois.lookup_rdap)
-        return result
+        def __lookup(w):
+            try:
+                return w.lookup_rdap()
+            except:
+                return {}
+        whois = ipwhois.IPWhois(ip_address)
+        try:
+            result = await self.server.module.xanmel.loop.run_in_executor(ThreadPoolExecutor(), __lookup, whois)
+            return result
+        except:
+            return {}
 
     async def update_identification(self):
         if self.server.db.is_up:
