@@ -137,6 +137,7 @@ class Player:
     async def update_identification(self):
         if self.server.db.is_up:
             await self.server.db.mgr.create(PlayerIdentification,
+                                            server=self.server.server_db_obj,
                                             player=self.player_db_obj,
                                             crypto_idfp=self.get_crypto_idfp(),
                                             stats_id=self.elo_basic and self.elo_basic.get('player_id'),

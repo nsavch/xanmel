@@ -101,6 +101,7 @@ class AccountTransaction(BaseModel):
 
 
 class PlayerIdentification(BaseModel):
+    server = ForeignKeyField(Server, null=True)
     player = ForeignKeyField(Player, null=True)
     crypto_idfp = CharField(index=True, null=True)
     stats_id = IntegerField(index=True, null=True)
