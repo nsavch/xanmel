@@ -107,14 +107,20 @@ class PlayerIdentification(BaseModel):
     stats_id = IntegerField(index=True, null=True)
     ip_address = CharField(index=True)
     raw_nickname = CharField()
-    nickname = CharField()
+    nickname = CharField(index=True)
     timestamp = DateTimeField(default=current_time)
     country = CharField(max_length=3, index=True, null=True)
     city = CharField(index=True, null=True)
-    subdivisions = CharField(index=True, null=True)
+    subdivisions = CharField(index=True, null=True, )
     continent = CharField(index=True, null=True)
-    latitude = FloatField(null=True)
-    longitude = FloatField(null=True)
+    latitude = FloatField(null=True, index=True)
+    longitude = FloatField(null=True, index=True)
+    asn = CharField(null=True, index=True)
+    asn_cidr = CharField(null=True, index=True)
+    asn_country_code = CharField(max_length=3, index=True, null=True)
+    network_name = CharField(index=True, null=True)
+    network_cidr = CharField(index=True, null=True)
+    network_country_code = CharField(max_length=3, index=True, null=True)
 
     @classmethod
     def geolocate(cls, geo_response):
@@ -126,6 +132,20 @@ class PlayerIdentification(BaseModel):
                 'continent': geo_response.continent.name,
                 'latitude': geo_response.location.latitude,
                 'longitude': geo_response.location.longitude,
+            }
+        else:
+            return {}
+
+    @classmethod
+    def whois(cls, whois_response):
+        if whois_response is not None:
+            return {
+                'asn': whois_response.get('asn'),
+                'asn_cidr': whois_response('asn_cidr'),
+                'asn_country_code': whois_response('asn_country_code'),
+                'network_name': whois_response('network', {}).get('name'),
+                'network_cidr': whois_response('network', {}).get('cidr'),
+                'network_country_code': whois_response('network', {}).get('country'),
             }
         else:
             return {}

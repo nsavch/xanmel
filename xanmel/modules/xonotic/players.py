@@ -1,4 +1,5 @@
 import logging
+from concurrent.futures import ThreadPoolExecutor
 from urllib.parse import unquote
 import asyncio
 import random
@@ -7,6 +8,7 @@ import geoip2.errors
 import math
 import aiohttp
 import peewee
+from ipwhois import IPWhois
 
 from xanmel.modules.xonotic.colors import Color
 from xanmel.utils import current_time
@@ -134,8 +136,16 @@ class Player:
             self.account = await self.server.db.mgr.create(PlayerAccount, player=player_obj)
         self.player_db_obj = player_obj
 
+    async def get_whois(self, ip_address):
+        whois = IPWhois(ip_address)
+        result = await self.server.module.xanmel.loop.run_in_executor(ThreadPoolExecutor(), whois.lookup_rdap)
+        return result
+
     async def update_identification(self):
         if self.server.db.is_up:
+            whois_response = await self.get_whois(self.ip_address)
+            data = PlayerIdentification.whois(whois_response)
+            data.update(PlayerIdentification.geolocate(self.geo_response))
             await self.server.db.mgr.create(PlayerIdentification,
                                             server=self.server.server_db_obj,
                                             player=self.player_db_obj,
@@ -144,7 +154,7 @@ class Player:
                                             ip_address=self.ip_address,
                                             raw_nickname=self.nickname.decode('utf8'),
                                             nickname=Color.dp_to_none(self.nickname).decode('utf8'),
-                                            **PlayerIdentification.geolocate(self.geo_response))
+                                            **data)
 
     async def get_elo_advanced(self):
         url = self.elo_basic.get('url')
