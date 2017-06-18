@@ -11,6 +11,7 @@ import sys
 import copy
 from pkg_resources import resource_filename, require, DistributionNotFound
 
+import click
 import geoip2.database
 import asyncio
 # import uvloop
@@ -460,14 +461,10 @@ class Version(ChatCommand):
         await user.reply(version, is_private=is_private)
 
 
-def main():
-    parser = argparse.ArgumentParser(description='Extensible chat bot designed for gaming purposes.')
-    parser.add_argument('-c', '--config', help='Use a custom config file path', metavar='CONFIG', type=str)
-    args = parser.parse_args()
-    config = None
-    if args.config:
-        config = args.config
-    else:
+@click.command()
+@click.option('-c', '--config', default=None, help='Path to config file', metavar='CONFIG')
+def main(config):
+    if config is None:
         tried = []
         for i in ['/etc/', os.getcwd()]:
             fn = os.path.join(i, 'xanmel.yaml')

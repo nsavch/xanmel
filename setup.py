@@ -29,7 +29,8 @@ setup(
         'peewee==2.9.1',
         'peewee-async==0.5.7',
         'psycopg2==2.7.1',
-        'ipwhois==0.15.1'
+        'ipwhois==0.15.1',
+        'click==6.7'
     ],
     classifiers=[
         'Development Status :: 3 - Alpha',
