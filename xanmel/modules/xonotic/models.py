@@ -100,6 +100,38 @@ class AccountTransaction(BaseModel):
     description = CharField()
 
 
+class IdentificationKey:
+    fields = ('crypto_idfp', 'ip_address', 'raw_nickname', 'country', 'city', 'subdivisions',
+              'continent', 'network_name', 'network_cidr', 'network_country_code')
+
+    def __init__(self, identification):
+        self.key = tuple([getattr(identification, i) for i in self.fields])
+
+    def __eq__(self, other):
+        if not isinstance(other, IdentificationKey):
+            return False
+        else:
+            return self.key == other.key
+
+    def __hash__(self):
+        return hash(self.key)
+
+    def full_geoloc(self):
+        res = ''
+        if self.get('country'):
+            res += self.get('country')
+        if self.get('subdivisions'):
+            res += ', ' + self.get('subdivisions')
+        if self.get('city'):
+            res += ', ' + self.get('city')
+        if not res:
+            res = 'unknown'
+        return res
+
+    def get(self, field):
+        return self.key[self.fields.index(field)]
+
+
 class PlayerIdentification(BaseModel):
     server = ForeignKeyField(Server, null=True)
     player = ForeignKeyField(Player, null=True)
@@ -121,6 +153,9 @@ class PlayerIdentification(BaseModel):
     network_name = CharField(index=True, null=True)
     network_cidr = CharField(index=True, null=True)
     network_country_code = CharField(max_length=3, index=True, null=True)
+
+    def to_key(self):
+        return IdentificationKey(self)
 
     @classmethod
     def geolocate(cls, geo_response):
