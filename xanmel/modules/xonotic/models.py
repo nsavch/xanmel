@@ -143,7 +143,7 @@ class PlayerIdentification(BaseModel):
     timestamp = DateTimeField(default=current_time)
     country = CharField(max_length=3, index=True, null=True)
     city = CharField(index=True, null=True)
-    subdivisions = CharField(index=True, null=True, )
+    subdivisions = CharField(index=True, null=True)
     continent = CharField(index=True, null=True)
     latitude = FloatField(null=True, index=True)
     longitude = FloatField(null=True, index=True)
