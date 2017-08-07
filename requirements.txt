@@ -44,5 +44,5 @@ peewee==2.10.1
 peewee-async==0.5.7
 psycopg2==2.7.3
 uvloop==0.8.0
-ipwhois==0.15.1
+ipwhois==1.0.0
 click==6.7
