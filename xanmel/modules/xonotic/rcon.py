@@ -57,7 +57,7 @@ class RconServer:
         self.config = config
         self.server_address = config['rcon_ip']
         self.server_port = int(config['rcon_port'])
-        self.log_listener_ip = config.get('log_listener_ip')
+        self.log_listener_ip = config['log_listener_ip']
         self.password = config['rcon_password']
         self.secure = int(config.get('rcon_secure', RCON_SECURE_TIME))
         self.admin_nick = ''
@@ -285,7 +285,7 @@ def rcon_protocol_factory(password, secure, received_callback=None, connection_m
 
         def connection_made(self, transport):
             self.transport = transport
-            self.local_host, self.local_port = self.transport.get_extra_info('sockname')
+            _, self.local_port = self.transport.get_extra_info('sockname')
             if local_ip:
                 self.local_host = local_ip
             if connection_made_callback:
