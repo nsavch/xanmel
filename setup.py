@@ -31,6 +31,7 @@ setup(
         'peewee-async==0.5.7',
         'psycopg2==2.7.3.1',
         'ipwhois==1.0.0',
+        'uvloop==0.8.0',
         'click==6.7'
     ],
     classifiers=[
