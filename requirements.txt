@@ -27,7 +27,7 @@ py==1.4.34
 pycares==2.3.0
 pycparser==2.18
 Pygments==2.2.0
-pytest==3.2.2
+pytest==3.2.3
 pytest-cov==2.5.1
 pytest-mock==1.6.3
 pytz==2017.2
