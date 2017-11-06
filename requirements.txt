@@ -3,7 +3,7 @@ aiohttp==2.3.2
 aioresponses==0.3.0
 appnope==0.1.0
 async-timeout==2.0.0
-asynctest==0.11.0
+asynctest==0.11.1
 bottom==2.1.2
 cchardet==2.1.1
 chardet==3.0.4
