@@ -38,11 +38,11 @@ six==1.11.0
 traitlets==4.3.2
 twine==1.9.1
 wcwidth==0.1.7
-yarl==0.14.2
+yarl==0.15.0
 aiopg==0.13.1
 peewee==2.10.2
 peewee-async==0.5.10
 psycopg2==2.7.3.2
-uvloop==0.8.1
+uvloop==0.9.0
 ipwhois==1.0.0
 click==6.7
