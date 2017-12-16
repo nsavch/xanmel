@@ -46,3 +46,4 @@ psycopg2==2.7.3.2
 uvloop==0.9.1
 ipwhois==1.0.0
 click==6.7
+aio_dprcon>=0.1.5
