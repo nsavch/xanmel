@@ -10,6 +10,7 @@ import xanmel.modules.irc.events as irc_events
 from xanmel import Handler
 from xanmel import current_time
 from xanmel.modules.irc.actions import ChannelMessage, ChannelMessages
+from xanmel.modules.xonotic.cointoss import CointosserState
 from xanmel.modules.xonotic.models import CalledVote, MapRating, Map, AccountTransaction, PlayerAccount
 from .chat_user import XonoticChatUser
 from .events import *
@@ -112,7 +113,10 @@ class RatingReportHandler(Handler):
         if total_votes == 0 or rating is None:
             message = '^3%(map_name)s ^7has not yet been rated - Use ^7/^2+++^7,^2++^7,^2+^7,^1-^7,^1--^7,^1--- ^7to rate the map.'
         else:
-            message = '^3%(map_name)s ^7has ^2%(rating)s ^7points. ^5[%(total_votes)s votes]^7 - Use ^7/^2+++^7,^2++^7,^2+^7,^1-^7,^1--^7,^1--- ^7to rate the map.'
+            if rating >= 0:
+                message = '^3%(map_name)s ^7has ^2%(rating)s ^7points. ^5[%(total_votes)s votes]^7 - Use ^7/^2+++^7,^2++^7,^2+^7,^1-^7,^1--^7,^1--- ^7to rate the map.'
+            else:
+                message = '^3%(map_name)s ^7has ^1%(rating)s ^7points. ^5[%(total_votes)s votes]^7 - Use ^7/^2+++^7,^2++^7,^2+^7,^1-^7,^1--^7,^1--- ^7to rate the map.'
         msg_args = {'map_name': map_name, 'rating': rating, 'total_votes': total_votes}
         in_game_message = message % msg_args
         if server.config['say_type'] == 'ircmsg':
@@ -224,6 +228,23 @@ class JoinHandler(Handler):
                 server.send('say %s' % in_game_message)
         await self.run_action(ChannelMessage, message=message,
                               prefix=event.properties['server'].config['out_prefix'])
+
+
+class CointossNotificationHandler(Handler):
+    events = [DuelPairFormed]
+
+    async def handle(self, event):
+        server = event.properties['server']
+        if server.cointosser and \
+                int(server.cvars.get('xanmel_wup_stage')) == 1 and \
+                server.cointosser.state == CointosserState.PENDING:
+            announcement = '^2{} vs {}. Ready for cointoss!'.format(event.properties['player1'].nickname.decode('utf8'),
+                                                                    event.properties['player2'].nickname.decode('utf8'))
+            if server.config['say_type'] == 'ircmsg':
+                server.send('sv_cmd ircmsg ^7%s' % announcement)
+            else:
+                with server.sv_adminnick('*'):
+                    server.send('say %s' % announcement)
 
 
 class NewDuelHandler(Handler):

@@ -1,4 +1,3 @@
-import argparse
 import importlib
 import inspect
 import logging
@@ -175,6 +174,27 @@ class Handler:
         pass  # pragma: no cover
 
 
+class ChatConfirmations:
+    def __init__(self):
+        self.confirmations = {}
+
+    def reset(self):
+        self.confirmations = {}
+
+    def __contains__(self, item):
+        return item in self.confirmations
+
+    def __getitem__(self, item):
+        return self.confirmations[item]
+
+    def __delitem__(self, key):
+        del self.confirmations[key]
+
+    async def ask(self, user, prompt, yes_cb, no_cb, is_private=False):
+        self.confirmations[user.unique_id()] = (yes_cb, no_cb)
+        await user.reply('{} /yes or /no'.format(prompt), is_private)
+
+
 class ChatUser:
     user_type = ''
 
@@ -234,6 +254,7 @@ class CommandRoot:
                 logger.info('Prefix %s already registered. Skipping command container %s', prefix, container)
 
     async def run(self, user, message, is_private=False):
+        print(self.children)
         ut = user.user_type
         uid = user.unique_id()
         logger.debug('Running a command for user %s, message %s', uid, message)
@@ -274,10 +295,20 @@ class CommandContainer:
     prefix = ''
     properties = None
     help_text = ''
+    include_confirmations = False
 
     def __init__(self, **kwargs):
         self.properties = kwargs
         self.children = {}
+        self.confirmations = ChatConfirmations()
+        if self.include_confirmations:
+            yes_command = Yes()
+            no_command = No()
+            yes_command.parent = self
+            no_command.parent = self
+            self.children[yes_command.prefix] = yes_command
+            self.children[no_command.prefix] = no_command
+
         if not self.children_classes:
             return
         for k, v in self.children_classes.items():
@@ -318,8 +349,8 @@ class CommandContainer:
 
 
 class ConnectChildrenMeta(type):
-    def __new__(typ, name, bases, namespace, **kwds):
-        instance = type.__new__(typ, name, bases, dict(namespace))
+    def __new__(mcs, name, bases, namespace, **kwds):
+        instance = type.__new__(mcs, name, bases, dict(namespace))
         if namespace.get('parent'):
             if namespace['parent'].children_classes is None:
                 namespace['parent'].children_classes = {}
@@ -359,6 +390,34 @@ class ChatCommand(metaclass=ConnectChildrenMeta):
 
     async def run(self, user, message, is_private=False):
         raise NotImplementedError  # pragma: no cover
+
+
+class Yes(ChatCommand):
+    parent = None
+    prefix = 'yes'
+    help_args = ''
+    help_text = 'Confirm an action (you should be prompted before you use this command)'
+
+    async def run(self, user, message, is_private=False, root=None):
+        if user.unique_id() not in self.parent.confirmations:
+            await user.reply('We didn\'t ask you anything.', is_private=True)
+        else:
+            await self.parent.confirmations[user.unique_id()][0]()
+            del self.parent.confirmations[user.unique_id()]
+
+
+class No(ChatCommand):
+    parent = None
+    prefix = 'no'
+    help_args = ''
+    help_text = 'Decline an action (you should be prompted before you use this command)'
+
+    async def run(self, user, message, is_private=False, root=None):
+        if user.unique_id() not in self.parent.confirmations:
+            await user.reply('We didn\'t ask you anything.', is_private=True)
+        else:
+            await self.parent.confirmations[user.unique_id()][1]()
+            del self.parent.confirmations[user.unique_id()]
 
 
 class HelpCommands(CommandContainer):

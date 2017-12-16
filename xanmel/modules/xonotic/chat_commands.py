@@ -1,7 +1,10 @@
 import logging
 import fnmatch
 
+import random
+
 from xanmel import CommandContainer, ChatCommand
+from xanmel.modules.xonotic.cointoss import CointosserState, CointosserException, CointosserAction
 
 from .colors import Color
 from .events import PlayerRatedMap
@@ -11,6 +14,7 @@ logger = logging.getLogger(__name__)
 
 class XonCommands(CommandContainer):
     help_text = 'Commands for interaction with Xonotic server'
+    include_confirmations = True
 
 
 class VoteBaseMixin:
@@ -142,7 +146,6 @@ class Bet(ChatCommand):
     parent = XonCommands
     help_args = '<PLAYER_ID> <AMOUNT>'
     help_text = 'Bet AMOUNT on PLAYER_ID'
-
     allowed_user_types = ['xonotic']
 
     async def run(self, user, message, is_private=True, root=None):
@@ -169,13 +172,14 @@ class Bet(ChatCommand):
             await user.private_reply('Amount should be positive')
             return
         if not rcon_server.betting_session_active:
-            await user.private_reply(rcon_server.config['out_prefix'] + 'Betting session is not active (either too early or too late). Sorry.')
+            await user.private_reply(rcon_server.config[
+                                         'out_prefix'] + 'Betting session is not active (either too early or too late). Sorry.')
             return
         if not user.number2:
             await user.private_reply('Sorry, your nickname cannot be identified. Try to  reconnect to the server.')
             return
         player = rcon_server.players.players_by_number2[user.number2]
-        betting_target = rcon_server.active_duel_pair[args[0]-1]
+        betting_target = rcon_server.active_duel_pair[args[0] - 1]
         if player in rcon_server.active_duel_pair and player != betting_target:
             await user.private_reply("You can't bet on your opponent. Bet on yourself and try as hard as you can.")
             return
@@ -184,3 +188,103 @@ class Bet(ChatCommand):
             betting_target.nickname.decode('utf8'),
             args[1]
         ))
+
+
+class Cointoss(ChatCommand):
+    prefix = 'cointoss'
+    parent = XonCommands
+    help_args = '[OPERATION]'
+    help_text = 'start a cointoss process.'
+    allowed_user_types = ['xonotic']
+
+    async def run(self, user, message, is_private=True, root=None):
+        rcon_server = self.parent.properties['rcon_server']
+        if not rcon_server.cointosser:
+            await user.reply('Cointoss not enabled on this server')
+            return
+        message = message.lower().strip()
+        if int(rcon_server.cvars['xanmel_wup_stage']) != 1:
+            await user.reply('Cointoss can only be performed during warmup stage. vcall restart or endmatch.',
+                             is_private=False)
+            return
+        if not rcon_server.active_duel_pair:
+            await user.reply('Exactly two players must join the game before cointoss can be performed.',
+                             is_private=False)
+            return
+        if rcon_server.cointosser.state != CointosserState.PENDING:
+            await user.reply(
+                'A cointoss is already activated. Finish the games or /cointoss stop before starting a new one',
+                is_private=False)
+            return
+        if message in ('heads', 'tails'):
+            result = random.choice(('heads', 'tails'))
+            await user.public_reply('{}!'.format(result.upper()))
+            rcon_server.cointosser.reset()
+            this_player = other_player = None
+            for i in rcon_server.active_duel_pair:
+                if i.nickname == user.unique_id():
+                    this_player = i
+                else:
+                    other_player = i
+            assert this_player and other_player, (this_player, other_player)
+            if message == result:
+                await user.public_reply('{} wins the cointoss!'.format(this_player.nickname.decode('utf8')))
+                rcon_server.cointosser.activate((this_player, other_player))
+            else:
+                await user.public_reply('{} wins the cointoss!'.format(other_player.nickname.decode('utf8')))
+                rcon_server.cointosser.activate((other_player, this_player))
+        await user.public_reply(rcon_server.cointosser.format_status())
+
+
+class PickDropBase(ChatCommand):
+    help_args = '<MAP_NAME>'
+    allowed_user_types = ['xonotic']
+    action = None
+
+    async def run(self, user, message, is_private=True, root=None):
+        rcon_server = self.parent.properties['rcon_server']
+        if not rcon_server.cointosser:
+            await user.reply('Cointoss not enabled on this server')
+            return
+        if rcon_server.cointosser.state != CointosserState.ACTIVE:
+            await user.reply(
+                'Cointoss is not activated. /cointoss heads|tails to start it.',
+                is_private=False)
+            return
+        map_name = message.lower().strip()
+        this_player = None
+        for i in rcon_server.active_duel_pair:
+            if i.nickname == user.unique_id():
+                this_player = i
+        assert this_player, rcon_server.active_duel_pair
+        try:
+            rcon_server.cointosser.validate_action(this_player, self.action, map_name)
+        except CointosserException as e:
+            await user.public_reply(str(e))
+            return
+
+        async def __yes_cb():
+            rcon_server.cointosser.do_action(this_player, self.action, map_name)
+            await user.public_reply(rcon_server.cointosser.format_status())
+
+        async def __no_cb():
+            await user.public_reply('Action canceled!')
+            await user.public_reply(rcon_server.cointosser.format_status())
+        await self.parent.confirmations.ask(user, 'Are you sure to {} a map {}?'.format(
+            self.action.value.lower(),
+            rcon_server.cointosser.clean_map_name(map_name),
+        ), __yes_cb, __no_cb)
+
+
+class Pick(PickDropBase):
+    parent = XonCommands
+    prefix = 'pick'
+    help_text = 'Pick a map to play on.'
+    action = CointosserAction.P
+
+
+class Drop(PickDropBase):
+    parent = XonCommands
+    prefix = 'drop'
+    help_text = 'Drop a map to exclude it from the map pool.'
+    action = CointosserAction.D

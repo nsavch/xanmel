@@ -33,6 +33,7 @@ setup(
         'ipwhois==1.0.0',
         'uvloop==0.8.0',
         'click==6.7'
+        'aio_dprcon>=0.1.5'
     ],
     classifiers=[
         'Development Status :: 3 - Alpha',

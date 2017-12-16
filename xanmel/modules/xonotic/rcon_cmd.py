@@ -1,10 +1,10 @@
 import re
 import logging
-
 import time
 
+from aio_dprcon.parser import CombinedParser, BaseOneLineRegexParser
+
 from .events import NewPlayerActive, MapChange, DuelPairFormed, DuelEndedPrematurely
-from .rcon_parser import CombinedParser, BaseOneLineRegexParser
 
 
 logger = logging.getLogger(__name__)
@@ -49,12 +49,12 @@ class StatusPlayerParser(BaseOneLineRegexParser):
         new_active = self.rcon_server.players.active
         if len(new_active) > len(old_active):
             NewPlayerActive(self.rcon_server.module, server=self.rcon_server).fire()
-            if self.rcon_server.config.get('enable_betting') and len(new_active) == 2:
+            if len(new_active) == 2:
                 player1, player2 = new_active
                 self.rcon_server.active_duel_pair = (player1, player2)
                 DuelPairFormed(self.rcon_server.module, server=self.rcon_server,
                                player1=player1, player2=player2).fire()
-        if self.rcon_server.config.get('enable_betting') and self.rcon_server.active_duel_pair:
+        if self.rcon_server.active_duel_pair:
             player1, player2 = self.rcon_server.active_duel_pair
             if len(new_active) != 2 or player1 not in new_active or player2 not in new_active:
                 DuelEndedPrematurely(self.rcon_server.module, server=self.rcon_server).fire()

@@ -1,12 +1,11 @@
 import logging
 import re
-
 import time
 
-from .colors import Color
+from aio_dprcon.parser import BaseMultilineParser, BaseOneLineParser, CombinedParser
+
 from .events import *
 from .players import Player
-from .rcon_parser import BaseMultilineParser, BaseOneLineParser, CombinedParser
 
 logger = logging.getLogger(__name__)
 

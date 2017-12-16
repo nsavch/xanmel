@@ -22,14 +22,14 @@ def test_module_loading(xanmel, mocker):
 def test_setup_event_generators(event_loop, mocker, mocked_coro):
     xanmel = Xanmel(event_loop, 'xanmel.yaml')
     RconServer.update_server_stats = mocked_coro()
-    RconServer.check_connection = mocked_coro()
+    RconServer.connect_forever = mocked_coro()
     xanmel.load_modules()
     for k, v in xanmel.modules.items():
         mocker.patch.object(v, 'setup_event_generators')
         xanmel.setup_event_generators(v)
     for k, v in xanmel.modules.items():
         assert v.setup_event_generators.call_count == 1
-    assert RconServer.check_connection.called
+    assert RconServer.connect_forever.called
 
 
 def test_teardown(xanmel, mocker):

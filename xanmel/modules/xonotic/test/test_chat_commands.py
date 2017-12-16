@@ -33,9 +33,9 @@ def test_maps(xanmel, xon_module, dummy_chat_user, irc_module):
     assert chat_user.public_reply.call_args[0][0] == 'exe > [16/25]: afterslime, atelier, catharsis, dance, darkzone, drain, finalrage, glowplant, leave_em_behind, nexballarena (6 more maps skipped)'
 
 
-def test_chat_user(xanmel, xon_module, mocked_coro):
+def test_chat_user(xanmel, xon_module, mocker):
     srv = xon_module.servers[0]
-    srv.send = mocked_coro()
+    mocker.patch.object(srv, 'send')
     cu = XonoticChatUser(xon_module, 'test', rcon_server=srv, raw_nickname=b'test^7')
     assert cu.unique_id() == b'test^7'
     xanmel.loop.run_until_complete(cu.private_reply('test'))
