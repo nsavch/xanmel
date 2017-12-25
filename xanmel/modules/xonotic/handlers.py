@@ -577,7 +577,7 @@ class CointossGameComplete(Handler):
 
     async def handle(self, event):
         server = event.properties['server']
-        if server.cointosser.state != CointosserState.PLAYING:
+        if server.cointosser is None or server.cointosser.state != CointosserState.PLAYING:
             return
         if not server.active_duel_pair:
             return
@@ -595,6 +595,8 @@ class CointossGameStarted(Handler):
 
     async def handle(self, event):
         server = event.properties['server']
+        if server.cointosser is None:
+            return
         if server.cointosser.state == CointosserState.CHOICE_COMPLETE:
             server.cointosser.state = CointosserState.PLAYING
         if server.cointosser.state != CointosserState.PLAYING:
