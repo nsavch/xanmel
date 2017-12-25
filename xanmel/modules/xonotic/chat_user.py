@@ -24,11 +24,14 @@ class XonoticChatUser(ChatUser):
     async def private_reply(self, message, **kwargs):
         if self.number2:
             with self.server.sv_adminnick(self.botnick):
-                self.server.send('tell #%s %s' % (self.number2, message))
+                if isinstance(message, list):
+                    for i in message:
+                        self.server.send('tell #%s %s' % (self.number2, i))
+                else:
+                    self.server.send('tell #%s %s' % (self.number2, message))
 
     async def public_reply(self, message, **kwargs):
-        if self.server.config['say_type'] == 'ircmsg':
-            self.server.send('sv_cmd ircmsg [BOT] %s^7: %s' % (self.botnick, message))
-        else:
-            with self.server.sv_adminnick(self.botnick):
-                self.server.send('say %s' % message)
+        if not isinstance(message, list):
+            message = [message]
+        for i in message:
+            self.server.say(i, nick=self.botnick)

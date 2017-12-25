@@ -103,3 +103,8 @@ class DuelPairFormed(Event):
 class DuelEndedPrematurely(Event):
     def __str__(self):
         return '%s duel ended prematurely' % (self.properties['server'].config['out_prefix'], )
+
+
+class CointossChoiceComplete(Event):
+    def __str__(self):
+        return '%s cointoss choice complete' % self.properties['server']

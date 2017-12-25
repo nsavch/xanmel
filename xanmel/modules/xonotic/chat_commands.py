@@ -246,7 +246,7 @@ class PickDropBase(ChatCommand):
         if not rcon_server.cointosser:
             await user.reply('Cointoss not enabled on this server')
             return
-        if rcon_server.cointosser.state != CointosserState.ACTIVE:
+        if rcon_server.cointosser.state != CointosserState.CHOOSING:
             await user.reply(
                 'Cointoss is not activated. /cointoss heads|tails to start it.',
                 is_private=False)
@@ -262,18 +262,19 @@ class PickDropBase(ChatCommand):
         except CointosserException as e:
             await user.public_reply(str(e))
             return
-
-        async def __yes_cb():
-            rcon_server.cointosser.do_action(this_player, self.action, map_name)
-            await user.public_reply(rcon_server.cointosser.format_status())
-
-        async def __no_cb():
-            await user.public_reply('Action canceled!')
-            await user.public_reply(rcon_server.cointosser.format_status())
-        await self.parent.confirmations.ask(user, 'Are you sure to {} a map {}?'.format(
-            self.action.value.lower(),
-            rcon_server.cointosser.clean_map_name(map_name),
-        ), __yes_cb, __no_cb)
+        rcon_server.cointosser.do_action(this_player, self.action, map_name)
+        await user.public_reply(rcon_server.cointosser.format_status())
+        # async def __yes_cb():
+        #     rcon_server.cointosser.do_action(this_player, self.action, map_name)
+        #     await user.public_reply(rcon_server.cointosser.format_status())
+        #
+        # async def __no_cb():
+        #     await user.public_reply('Action canceled!')
+        #     await user.public_reply(rcon_server.cointosser.format_status())
+        # await self.parent.confirmations.ask(user, 'Are you sure to {} a map {}?'.format(
+        #     self.action.value.lower(),
+        #     rcon_server.cointosser.clean_map_name(map_name),
+        # ), __yes_cb, __no_cb)
 
 
 class Pick(PickDropBase):

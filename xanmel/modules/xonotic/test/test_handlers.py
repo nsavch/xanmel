@@ -1,6 +1,6 @@
 from xanmel.modules.irc.actions import ChannelMessage
 from xanmel.modules.xonotic.events import *
-from xanmel.modules.xonotic.handlers import GameEndedHandler
+from xanmel.modules.xonotic.handlers import GameEndedHandler, GameStartedHandler
 from xanmel.modules.xonotic.players import Player
 from xanmel.modules.irc.events import ChannelMessage as ChannelMessageEvent
 
@@ -48,7 +48,9 @@ def test_game_started_handler_empty(xanmel, xon_server, xon_module, mocked_coro,
     mocker.patch.object(xon_server, 'send')
     srv = xon_module.servers[0]
     ev = GameStarted(xon_module, server=srv)
-    h = xanmel.handlers[GameStarted][0]
+    for i in xanmel.handlers[GameStarted]:
+        if isinstance(i, GameStartedHandler):
+            h = i
     h.run_action = mocked_coro()
     xanmel.loop.run_until_complete(h.handle(ev))
     assert not h.run_action.called
@@ -60,7 +62,9 @@ def test_game_started_handler(xanmel, xon_module, xon_server, mocked_coro, mocke
     xon_server.players.join(Player(xon_server, b'meme police ', 1, 2, '127.0.0.1'))
     xon_server.players.join(Player(xon_server, b'test ', 3, 4, '127.0.0.1'))
     ev = GameStarted(xon_module, server=xon_server, gt='dm', map='darkzone')
-    h = xanmel.handlers[GameStarted][0]
+    for i in xanmel.handlers[GameStarted]:
+        if isinstance(i, GameStartedHandler):
+            h = i
     h.run_action = mocked_coro()
     xanmel.loop.run_until_complete(h.handle(ev))
     assert h.run_action.called

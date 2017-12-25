@@ -119,11 +119,7 @@ class RatingReportHandler(Handler):
                 message = '^3%(map_name)s ^7has ^1%(rating)s ^7points. ^5[%(total_votes)s votes]^7 - Use ^7/^2+++^7,^2++^7,^2+^7,^1-^7,^1--^7,^1--- ^7to rate the map.'
         msg_args = {'map_name': map_name, 'rating': rating, 'total_votes': total_votes}
         in_game_message = message % msg_args
-        if server.config['say_type'] == 'ircmsg':
-            server.send('sv_cmd ircmsg ^7%s' % in_game_message)
-        else:
-            with server.sv_adminnick('*'):
-                server.send('say %s' % in_game_message)
+        server.say(in_game_message)
 
 
 class PlayerRatedMapHandler(Handler):
@@ -221,30 +217,9 @@ class JoinHandler(Handler):
                 in_game_message += ' [^3balance:^7 ^2%s^7]' % b
             else:
                 in_game_message += ' [^3balance:^7 ^1%s^7]' % b
-        if server.config['say_type'] == 'ircmsg':
-            server.send('sv_cmd ircmsg ^7%s' % in_game_message)
-        else:
-            with server.sv_adminnick('*'):
-                server.send('say %s' % in_game_message)
+        server.say(in_game_message)
         await self.run_action(ChannelMessage, message=message,
                               prefix=event.properties['server'].config['out_prefix'])
-
-
-class CointossNotificationHandler(Handler):
-    events = [DuelPairFormed]
-
-    async def handle(self, event):
-        server = event.properties['server']
-        if server.cointosser and \
-                int(server.cvars.get('xanmel_wup_stage')) == 1 and \
-                server.cointosser.state == CointosserState.PENDING:
-            announcement = '^2{} vs {}. Ready for cointoss!'.format(event.properties['player1'].nickname.decode('utf8'),
-                                                                    event.properties['player2'].nickname.decode('utf8'))
-            if server.config['say_type'] == 'ircmsg':
-                server.send('sv_cmd ircmsg ^7%s' % announcement)
-            else:
-                with server.sv_adminnick('*'):
-                    server.send('say %s' % announcement)
 
 
 class NewDuelHandler(Handler):
@@ -270,11 +245,7 @@ class NewDuelHandler(Handler):
             odds1,
             event.properties['player2'].nickname.decode('utf8'),
             odds2)
-        if server.config['say_type'] == 'ircmsg':
-            server.send('sv_cmd ircmsg ^7%s' % announcement)
-        else:
-            with server.sv_adminnick('*'):
-                server.send('say %s' % announcement)
+        server.say(announcement)
         session_id = uuid.uuid4()
         server.betting_session = {}
         server.betting_session_id = session_id
@@ -282,12 +253,7 @@ class NewDuelHandler(Handler):
         await asyncio.sleep(30)
         if server.betting_session_id == session_id and server.betting_session_active:
             server.betting_session_active = False
-        announcement = '^2Betting session closed!^7'
-        if server.config['say_type'] == 'ircmsg':
-            server.send('sv_cmd ircmsg ^7%s' % announcement)
-        else:
-            with server.sv_adminnick('*'):
-                server.send('say %s' % announcement)
+        server.say('^2Betting session closed!^7')
 
 
 class DuelFailureHandler(Handler):
@@ -297,12 +263,7 @@ class DuelFailureHandler(Handler):
         server = event.properties['server']
         if not server.config.get('enable_betting'):
             return
-        announcement = '^3Duel ended with no result.^7'
-        if server.config['say_type'] == 'ircmsg':
-            server.send('sv_cmd ircmsg ^7%s' % announcement)
-        else:
-            with server.sv_adminnick('*'):
-                server.send('say %s' % announcement)
+        server.say('^3Duel ended with no result.^7')
         server.betting_odds = None
         server.betting_session = None
         server.betting_session_active = False
@@ -339,11 +300,7 @@ class DuelSuccessHandler(Handler):
             return
         announcement = '%s ^2wins^7, %s ^2loses^7!' % (ordering[0].nickname.decode('utf8'),
                                                        ordering[1].nickname.decode('utf8'))
-        if server.config['say_type'] == 'ircmsg':
-            server.send('sv_cmd ircmsg ^7%s' % announcement)
-        else:
-            with server.sv_adminnick('*'):
-                server.send('say %s' % announcement)
+        server.say(announcement)
         winning_odds = server.betting_odds[ordering[0]]
         for player, bet in server.betting_session.items():
             if bet[0] == ordering[0]:
@@ -353,11 +310,7 @@ class DuelSuccessHandler(Handler):
                 change = - bet[1]
                 message = '%s ^1lost %.2f!^7' % (player.nickname.decode('utf8'), -change)
             change = Decimal("%.2f" % change)
-            if server.config['say_type'] == 'ircmsg':
-                server.send('sv_cmd ircmsg ^7%s' % message)
-            else:
-                with server.sv_adminnick('*'):
-                    server.send('say %s' % message)
+            server.say(message)
             account = await server.db.mgr.get(PlayerAccount, player=player.player_db_obj)
             await server.db.mgr.create(AccountTransaction, account=account, change=change,
                                        description='Betting: %s vs %s' % (
@@ -397,11 +350,7 @@ class NewPlayerActiveHandler(Handler):
                                 new_fraglimit, trigger_player_num))
                         in_game_message = '^2Frag limit increased to ^3%d^2 because there are more than ^3%d^2 players^7' % (
                             new_fraglimit, trigger_player_num)
-                        if server.config['say_type'] == 'ircmsg':
-                            server.send('sv_cmd ircmsg ^7%s' % in_game_message)
-                        else:
-                            with server.sv_adminnick('*'):
-                                server.send('say %s' % in_game_message)
+                        server.say(in_game_message)
                         await asyncio.sleep(1)
                         server.send('fraglimit')
                         break
@@ -544,11 +493,7 @@ class IRCMessageHandler(Handler):
         for server in sorted(self.module.servers, key=lambda x: len(x.config['in_prefix']), reverse=True):
             if message.startswith(server.config['in_prefix']):
                 unprefixed = message[len(server.config['in_prefix']):]
-                if server.config['say_type'] == 'ircmsg':
-                    server.send('sv_cmd ircmsg [IRC] %s^7: %s' % (irc_nick, unprefixed))
-                else:
-                    with server.sv_adminnick(irc_nick):
-                        server.send('say %s' % unprefixed)
+                server.say(unprefixed, nick='[IRC] {}'.format(irc_nick))
                 if server.config['in_prefix']:
                     break
 
@@ -602,3 +547,56 @@ class VoteAcceptedHandler(Handler):
                 'time_since_round_start': time_from_start
             })
             await db.mgr.create(CalledVote, **vote_data)
+
+
+class CointossNotificationHandler(Handler):
+    events = [DuelPairFormed]
+
+    async def handle(self, event):
+        server = event.properties['server']
+        if server.cointosser and \
+                int(server.cvars.get('xanmel_wup_stage')) == 1 and \
+                server.cointosser.state == CointosserState.PENDING:
+            announcement = '^2{} vs {}. Ready for cointoss!'.format(event.properties['player1'].nickname.decode('utf8'),
+                                                                    event.properties['player2'].nickname.decode('utf8'))
+            server.say(announcement)
+
+
+class CointossChoiceCompleteHandler(Handler):
+    events = [CointossChoiceComplete]
+
+    async def handle(self, event):
+        server = event.properties['server']
+        server.say('Starting matches in 5 seconds!')
+        await asyncio.sleep(5)
+        server.cointosser.start_playing()
+
+
+class CointossGameComplete(Handler):
+    events = [GameEnded]
+
+    async def handle(self, event):
+        server = event.properties['server']
+        if server.cointosser.state != CointosserState.PLAYING:
+            return
+        if not server.active_duel_pair:
+            return
+        result = {}
+        for player in event.properties['players']:
+            if player['team_id']:
+                if player['number1'] not in [i.number1 for i in server.active_duel_pair]:
+                    logger.info('%s was not an active dueller but is present in the final scores!', player['nickname'])
+                result[server.players.players_by_number1[player['number1']]] = player['score']
+        await server.cointosser.map_ended(event.properties['map'], result)
+
+
+class CointossGameStarted(Handler):
+    events = [GameStarted]
+
+    async def handle(self, event):
+        server = event.properties['server']
+        if server.cointosser.state == CointosserState.CHOICE_COMPLETE:
+            server.cointosser.state = CointosserState.PLAYING
+        if server.cointosser.state != CointosserState.PLAYING:
+            server.cointosser.reset()
+

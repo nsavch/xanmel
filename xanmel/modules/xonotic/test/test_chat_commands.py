@@ -47,4 +47,4 @@ def test_chat_user(xanmel, xon_module, mocker):
     srv.send.reset_mock()
     xanmel.loop.run_until_complete(cu.public_reply('test'))
     assert srv.send.call_count == 1
-    assert [i[0][0] for i in srv.send.call_args_list] == ['sv_cmd ircmsg [BOT] xanmel^7: test']
+    assert [i[0][0] for i in srv.send.call_args_list] == ['sv_cmd ircmsg xanmel^7: test']

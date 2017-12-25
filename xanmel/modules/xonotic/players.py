@@ -58,6 +58,7 @@ class Player:
         self.elo_advanced = None
         self.player_db_obj = None
         self.account = None
+        self.crypto_idfp = None
         if not self.is_bot:
             try:
                 self.geo_response = self.server.module.xanmel.geoip.city(self.ip_address)
@@ -76,6 +77,7 @@ class Player:
     async def get_elo(self):
         if self.elo_url is None:
             return
+        self.crypto_idfp = self.get_crypto_idfp()
         sig = self.server.config.get('elo_request_signature')
         if not sig:
             return

@@ -1,3 +1,5 @@
+from typing import Union
+
 import re
 import time
 import asyncio
@@ -173,3 +175,30 @@ class RconServer(RconClient):
             srv.name = self.status['host']
             await self.db.mgr.update(srv)
         self.server_db_obj = srv
+
+    def say_ircmsg(self, message: Union[str, list, tuple], nick: str=None) -> None:
+        if isinstance(message, str):
+            message = [message]
+        for i in message:
+            if nick:
+                self.send('sv_cmd ircmsg {}^7: {}'.format(nick, i))
+            else:
+                self.send('sv_cmd ircmsg ^7{}'.format(i))
+
+    def say_say(self, message: Union[str, list, tuple], nick: str=None) -> None:
+        if isinstance(message, str):
+            message = [message]
+        for i in message:
+            if nick:
+                with self.sv_adminnick(nick):
+                    self.send('say {}'.format(i))
+            else:
+                self.send('say {}'.format(i))
+
+    def say(self, message: Union[str, list, tuple], nick: str=None) -> None:
+        if self.config['say_type'] == 'ircmsg':
+            self.say_ircmsg(message, nick)
+        else:
+            self.say_say(message, nick)
+
+
