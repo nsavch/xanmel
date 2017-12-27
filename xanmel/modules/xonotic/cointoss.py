@@ -63,9 +63,9 @@ class Cointosser:
             if i.lower().startswith(map_name.lower()):
                 maps.append(i)
         if len(maps) == 0:
-            raise CointosserException('Map not found: {map}'.format(map=map_name))
+            raise CointosserException('^3Map not found^7: ^1{map}^7'.format(map=map_name))
         if len(maps) > 1:
-            raise CointosserException('Ambiguous map choices {prefix}. Maps matching: {maps}'.format(
+            raise CointosserException('^1Ambiguous map choice ^3{prefix}^7. ^2Maps matching: ^3{maps}^7'.format(
                 prefix=map_name,
                 maps=', '.join(maps)))
         return maps[0]
@@ -73,16 +73,16 @@ class Cointosser:
     def validate_action(self, player, action, map_name):
         current_step = self.steps[self.step_index]
         if self.state != CointosserState.CHOOSING:
-            raise CointosserException('Cointoss process is not activated')
+            raise CointosserException('^3Cointoss has not yet started^7')
         expected_player = self.players[current_step['player'] - 1]
         errors = []
         if player != expected_player:
-            errors.append('Expected action from player {expected_player}, not from {player}'.format(
+            errors.append('^3Expected action from player ^2{expected_player}^7, ^3not from ^2{player}^7'.format(
                 expected_player=expected_player.nickname.decode('utf8'),
                 player=player.nickname.decode('utf8')))
 
         if action != current_step['action']:
-            errors.append('Expected action {expected_action}, not {provided_action}'.format(
+            errors.append('^3Expected ^2{expected_action}^7, ^3not ^2{provided_action}^7'.format(
                 expected_action=current_step['action'].value,
                 provided_action=action.value))
         self.clean_map_name(map_name)
@@ -103,7 +103,7 @@ class Cointosser:
 
     def format_current_score(self):
         games, frags = self.get_total_score()
-        return 'Current score: {player1} - {games1} ({frags1} frags), {player2} - {games2} ({frags2} frags)'.format(
+        return '^2Score: ^7{player1} - ^2{games1} ^5({frags1} frags)^7, {player2} - ^2{games2} ^5({frags2} frags)^7'.format(
             player1=self.players[0].nickname.decode('utf8'),
             player2=self.players[1].nickname.decode('utf8'),
             games1=games[0],
@@ -114,38 +114,38 @@ class Cointosser:
     def format_status(self):
         # TODO: forward status to IRC too
         if self.state == CointosserState.PENDING:
-            raise CointosserException('Cointoss process is not activated')
+            raise CointosserException('^3Cointoss has not yet started^7')
 
         if self.state == CointosserState.CHOICE_COMPLETE:
-            res = ['Cointoss complete. Selected maps: {maps}.'.format(maps=', '.join(self.selected_maps))]
+            res = ['^2Cointoss complete. ^3Selected maps: ^5{maps}^7.'.format(maps=', '.join(self.selected_maps))]
         elif self.state == CointosserState.PLAYING:
 
             res = [self.format_current_score()]
             status = ''
             finished_maps = self.selected_maps[:self.current_map_index]
             if finished_maps:
-                status += 'Finished maps: {}.'.format(', '.join(finished_maps))
-            status += ' Current map: {}.'.format(self.selected_maps[self.current_map_index])
+                status += '^3Finished maps: ^5{}^7.'.format(', '.join(finished_maps))
+            status += ' ^3Current map: ^2{}^7.'.format(self.selected_maps[self.current_map_index])
             next_maps = self.selected_maps[self.current_map_index + 1:]
             if next_maps:
-                status += ' Next maps: {}.'.format(', '.join(next_maps))
+                status += ' ^3Remaining: ^5{}^7.'.format(', '.join(next_maps))
             res.append(status)
 
         elif self.state == CointosserState.COMPLETE:
-            res = ['Match finished!', self.format_current_score()]
+            res = ['^2Match finished!^7', self.format_current_score()]
         else:
             current_step = self.steps[self.step_index]
             res = []
             if self.selected_maps:
-                res.append('^2Selected maps: {}.'.format(', '.join(self.selected_maps)))
+                res.append('^3Selected maps: ^5{}^7.'.format(', '.join(self.selected_maps)))
             if self.available_maps:
-                res.append('^3Available maps: {}.'.format(', '.join(self.available_maps)))
+                res.append('^3Available maps: ^2{}^7.'.format(', '.join(self.available_maps)))
             expected_player = self.players[current_step['player'] - 1]
 
             if current_step['action'] == CointosserAction.P:
-                res.append('{}, please pick a map using /pick <mapname>'.format(expected_player.nickname.decode('utf8')))
+                res.append('^7{}, ^3please pick a map using ^2/pick ^5<mapname>'.format(expected_player.nickname.decode('utf8')))
             else:
-                res.append('{}, please drop a map using /drop <mapname>'.format(expected_player.nickname.decode('utf8')))
+                res.append('^7{}, ^3please drop a map using ^2/drop ^5<mapname>'.format(expected_player.nickname.decode('utf8')))
         return res
 
     def get_total_score(self):
@@ -204,6 +204,6 @@ class Cointosser:
         else:
             self.current_map_index += 1
             self.rcon_server.say(self.format_status())
-            self.rcon_server.say('Switching to map {} in 5 seconds'.format(self.selected_maps[self.current_map_index]))
+            self.rcon_server.say('^2Switching to map ^5{} ^2in ^35 ^2seconds^7'.format(self.selected_maps[self.current_map_index]))
             await asyncio.sleep(5)
             self.gotomap()

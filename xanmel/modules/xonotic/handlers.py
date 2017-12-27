@@ -229,14 +229,15 @@ class NewDuelHandler(Handler):
         def __get_elo(player):
             if player.elo_basic and player.elo_basic.get('duel'):
                 return player.elo_basic['duel']
+
         server = event.properties['server']
         if not server.config.get('enable_betting'):
             return
         elo1 = __get_elo(event.properties['player1'])
         elo2 = __get_elo(event.properties['player2'])
         if elo1 and elo2:
-            odds1 = 1 + (elo2/elo1) ** 2
-            odds2 = 1 + (elo1/elo2) ** 2
+            odds1 = 1 + (elo2 / elo1) ** 2
+            odds2 = 1 + (elo1 / elo2) ** 2
         else:
             odds1 = odds2 = 1.05
         server.betting_odds = {event.properties['player1']: odds1, event.properties['player2']: odds2}
@@ -557,8 +558,9 @@ class CointossNotificationHandler(Handler):
         if server.cointosser and \
                 int(server.cvars.get('xanmel_wup_stage')) == 1 and \
                 server.cointosser.state == CointosserState.PENDING:
-            announcement = '^2{} vs {}. Ready for cointoss!'.format(event.properties['player1'].nickname.decode('utf8'),
-                                                                    event.properties['player2'].nickname.decode('utf8'))
+            announcement = '^7{} ^1vs {}. ^2Ready for cointoss!^7'.format(
+                event.properties['player1'].nickname.decode('utf8'),
+                event.properties['player2'].nickname.decode('utf8'))
             server.say(announcement)
 
 
@@ -567,7 +569,7 @@ class CointossChoiceCompleteHandler(Handler):
 
     async def handle(self, event):
         server = event.properties['server']
-        server.say('Starting matches in 5 seconds!')
+        server.say('^3Starting rounds in ^25 ^3seconds!^7')
         await asyncio.sleep(5)
         server.cointosser.start_playing()
 
@@ -601,4 +603,3 @@ class CointossGameStarted(Handler):
             server.cointosser.state = CointosserState.PLAYING
         if server.cointosser.state != CointosserState.PLAYING:
             server.cointosser.reset()
-

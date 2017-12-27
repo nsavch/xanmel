@@ -200,20 +200,20 @@ class Cointoss(ChatCommand):
     async def run(self, user, message, is_private=True, root=None):
         rcon_server = self.parent.properties['rcon_server']
         if not rcon_server.cointosser:
-            await user.reply('Cointoss not enabled on this server')
+            await user.reply('^1Cointoss not enabled on this server^7')
             return
         message = message.lower().strip()
         if int(rcon_server.cvars['xanmel_wup_stage']) != 1:
-            await user.reply('Cointoss can only be performed during warmup stage. vcall restart or endmatch.',
+            await user.reply('^3Cointoss can only be performed during warmup stage. ^2vcall ^5restart ^3or ^5endmatch^7.',
                              is_private=False)
             return
         if not rcon_server.active_duel_pair:
-            await user.reply('Exactly two players must join the game before cointoss can be performed.',
+            await user.reply('^3Exactly ^2two ^3players must join the game before cointoss can be performed.^7',
                              is_private=False)
             return
         if rcon_server.cointosser.state != CointosserState.PENDING:
             await user.reply(
-                'A cointoss is already activated. Finish the games or /cointoss stop before starting a new one',
+                '^1A cointoss is already activated. ^3Finish the games or ^2/cointoss stop^3 before starting a new one^7',
                 is_private=False)
             return
         if message in ('heads', 'tails'):
@@ -228,10 +228,10 @@ class Cointoss(ChatCommand):
                     other_player = i
             assert this_player and other_player, (this_player, other_player)
             if message == result:
-                await user.public_reply('{} wins the cointoss!'.format(this_player.nickname.decode('utf8')))
+                await user.public_reply('{} ^2wins ^3the cointoss!'.format(this_player.nickname.decode('utf8')))
                 rcon_server.cointosser.activate((this_player, other_player))
             else:
-                await user.public_reply('{} wins the cointoss!'.format(other_player.nickname.decode('utf8')))
+                await user.public_reply('{} ^2wins ^3the cointoss!'.format(other_player.nickname.decode('utf8')))
                 rcon_server.cointosser.activate((other_player, this_player))
         await user.public_reply(rcon_server.cointosser.format_status())
 
@@ -244,11 +244,11 @@ class PickDropBase(ChatCommand):
     async def run(self, user, message, is_private=True, root=None):
         rcon_server = self.parent.properties['rcon_server']
         if not rcon_server.cointosser:
-            await user.reply('Cointoss not enabled on this server')
+            await user.reply('^1Cointoss not enabled on this server^7')
             return
         if rcon_server.cointosser.state != CointosserState.CHOOSING:
             await user.reply(
-                'Cointoss is not activated. /cointoss heads|tails to start it.',
+                '^3Cointoss is not activated^7. ^2/cointoss heads^5|^2tails ^3to start it.',
                 is_private=False)
             return
         map_name = message.lower().strip()
@@ -269,9 +269,9 @@ class PickDropBase(ChatCommand):
         #     await user.public_reply(rcon_server.cointosser.format_status())
         #
         # async def __no_cb():
-        #     await user.public_reply('Action canceled!')
+        #     await user.public_reply('^1Action canceled!^7')
         #     await user.public_reply(rcon_server.cointosser.format_status())
-        # await self.parent.confirmations.ask(user, 'Are you sure to {} a map {}?'.format(
+        # await self.parent.confirmations.ask(user, '^3Are you sure you want to ^2{} ^3a map {}^7?'.format(
         #     self.action.value.lower(),
         #     rcon_server.cointosser.clean_map_name(map_name),
         # ), __yes_cb, __no_cb)

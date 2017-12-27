@@ -71,7 +71,7 @@ class Xanmel:
         except ImportError:
             logger.debug('No handlers in module %s', module_pkg_name)
             return
-        for member_name, member in inspect.getmembers(handlers_mod, inspect.isclass):
+        for _, member in inspect.getmembers(handlers_mod, inspect.isclass):
             if issubclass(member, Handler):
                 handler = member(module=module)
                 for event in handler.events:
@@ -83,7 +83,7 @@ class Xanmel:
         except ImportError:
             logger.debug('No actions in module %s', module_pkg_name)
             return
-        for member_name, member in inspect.getmembers(actions_mod, inspect.isclass):
+        for _, member in inspect.getmembers(actions_mod, inspect.isclass):
             if issubclass(member, Action):
                 action = member(module=module)
                 self.actions[member] = action
