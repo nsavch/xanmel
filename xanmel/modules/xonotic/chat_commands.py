@@ -1,3 +1,4 @@
+import asyncio
 import logging
 import fnmatch
 
@@ -216,9 +217,12 @@ class Cointoss(ChatCommand):
                 '^1A cointoss is already activated. ^3Finish the games or ^2/cointoss stop^3 before starting a new one^7',
                 is_private=False)
             return
+        await user.public_reply('^3Tossing coin...^7')
+        await asyncio.sleep(0.3)
         if message in ('heads', 'tails'):
             result = random.choice(('heads', 'tails'))
             await user.public_reply('{}!'.format(result.upper()))
+            await asyncio.sleep(0.2)
             rcon_server.cointosser.reset()
             this_player = other_player = None
             for i in rcon_server.active_duel_pair:
@@ -233,6 +237,7 @@ class Cointoss(ChatCommand):
             else:
                 await user.public_reply('{} ^2wins ^3the cointoss!'.format(other_player.nickname.decode('utf8')))
                 rcon_server.cointosser.activate((other_player, this_player))
+        await asyncio.sleep(0.3)
         await user.public_reply(rcon_server.cointosser.format_status())
 
 
@@ -263,7 +268,8 @@ class PickDropBase(ChatCommand):
             await user.public_reply(str(e))
             return
         rcon_server.cointosser.do_action(this_player, self.action, map_name)
-        await user.public_reply(rcon_server.cointosser.format_status())
+        await asyncio.sleep(0.2)
+        await user.public_reply(rcon_server.cointosser.format_status(), delay=0.1)
         # async def __yes_cb():
         #     rcon_server.cointosser.do_action(this_player, self.action, map_name)
         #     await user.public_reply(rcon_server.cointosser.format_status())

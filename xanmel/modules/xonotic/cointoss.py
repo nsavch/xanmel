@@ -67,7 +67,7 @@ class Cointosser:
         if len(maps) > 1:
             raise CointosserException('^1Ambiguous map choice ^3{prefix}^7. ^2Maps matching: ^3{maps}^7'.format(
                 prefix=map_name,
-                maps=', '.join(maps)))
+                maps='^7, ^3'.join(maps)))
         return maps[0]
 
     def validate_action(self, player, action, map_name):
@@ -117,18 +117,18 @@ class Cointosser:
             raise CointosserException('^3Cointoss has not yet started^7')
 
         if self.state == CointosserState.CHOICE_COMPLETE:
-            res = ['^2Cointoss complete. ^3Selected maps: ^5{maps}^7.'.format(maps=', '.join(self.selected_maps))]
+            res = ['^2Cointoss complete. ^3Selected maps: ^5{maps}^7.'.format(maps='^7, ^5'.join(self.selected_maps))]
         elif self.state == CointosserState.PLAYING:
 
             res = [self.format_current_score()]
             status = ''
             finished_maps = self.selected_maps[:self.current_map_index]
             if finished_maps:
-                status += '^3Finished maps: ^5{}^7.'.format(', '.join(finished_maps))
+                status += '^3Finished maps: ^5{}^7.'.format('^7, ^5'.join(finished_maps))
             status += ' ^3Current map: ^2{}^7.'.format(self.selected_maps[self.current_map_index])
             next_maps = self.selected_maps[self.current_map_index + 1:]
             if next_maps:
-                status += ' ^3Remaining: ^5{}^7.'.format(', '.join(next_maps))
+                status += ' ^3Remaining: ^5{}^7.'.format('^7, ^5'.join(next_maps))
             res.append(status)
 
         elif self.state == CointosserState.COMPLETE:
@@ -137,9 +137,9 @@ class Cointosser:
             current_step = self.steps[self.step_index]
             res = []
             if self.selected_maps:
-                res.append('^3Selected maps: ^5{}^7.'.format(', '.join(self.selected_maps)))
+                res.append('^3Selected maps: ^5{}^7.'.format('^7, ^5'.join(self.selected_maps)))
             if self.available_maps:
-                res.append('^3Available maps: ^2{}^7.'.format(', '.join(self.available_maps)))
+                res.append('^3Available maps: ^2{}^7.'.format('^7, ^5'.join(self.available_maps)))
             expected_player = self.players[current_step['player'] - 1]
 
             if current_step['action'] == CointosserAction.P:

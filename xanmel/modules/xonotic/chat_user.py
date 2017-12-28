@@ -1,3 +1,5 @@
+import asyncio
+
 from xanmel import ChatUser
 
 
@@ -23,9 +25,12 @@ class XonoticChatUser(ChatUser):
 
     async def private_reply(self, message, **kwargs):
         if self.number2:
+            delay = kwargs.get('delay')
             with self.server.sv_adminnick(self.botnick):
                 if isinstance(message, list):
                     for i in message:
+                        if delay:
+                            await asyncio.sleep(delay)
                         self.server.send('tell #%s %s' % (self.number2, i))
                 else:
                     self.server.send('tell #%s %s' % (self.number2, message))
@@ -33,5 +38,8 @@ class XonoticChatUser(ChatUser):
     async def public_reply(self, message, **kwargs):
         if not isinstance(message, list):
             message = [message]
+        delay = kwargs.get('delay')
         for i in message:
+            if delay:
+                await asyncio.sleep(delay)
             self.server.say(i, nick=self.botnick)
