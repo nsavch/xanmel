@@ -139,7 +139,7 @@ class Cointosser:
             if self.selected_maps:
                 res.append('^3Selected maps: ^5{}^7.'.format('^7, ^5'.join(self.selected_maps)))
             if self.available_maps:
-                res.append('^3Available maps: ^2{}^7.'.format('^7, ^5'.join(self.available_maps)))
+                res.append('^3Available maps: ^2{}^7.'.format('^7, ^2'.join(self.available_maps)))
             expected_player = self.players[current_step['player'] - 1]
 
             if current_step['action'] == CointosserAction.P:
