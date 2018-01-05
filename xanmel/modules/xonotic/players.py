@@ -2,6 +2,8 @@ import logging
 from concurrent.futures import ThreadPoolExecutor
 from urllib.parse import unquote
 import asyncio
+
+import datetime
 import random
 
 import geoip2.errors
@@ -144,6 +146,7 @@ class Player:
                 return w.lookup_rdap(retry_count=10)
             except:
                 return {}
+
         whois = ipwhois.IPWhois(ip_address)
         try:
             result = await self.server.module.xanmel.loop.run_in_executor(ThreadPoolExecutor(), __lookup, whois)
@@ -175,7 +178,6 @@ class Player:
                     return
                 try:
                     self.elo_advanced = await response.json()
-                    # logger.debug('Got advanced elo %r', self.elo_advanced)
                 except:
                     logger.debug('Could not parse json %s', response.text, exc_info=True)
         if isinstance(self.elo_advanced, list) and len(self.elo_advanced) > 0:
@@ -186,15 +188,35 @@ class Player:
             logger.debug('Strange advanced elo %r', self.elo_advanced)
             self.elo_advanced = None
 
-    def get_highest_rank(self):
+    def get_mode_stats(self):
+        def __format_num(n):
+            return '{:.2%}'.format(n)
+
+        def __format_time(t):
+            td = datetime.timedelta(seconds=t)
+            return str(td)
+
         if not self.elo_advanced:
-            return
-        highest_rank = None
-        for rank in self.elo_advanced.get('ranks', {}).values():
-            if rank['game_type_cd'] in self.server.config.get('player_rankings', ['dm', 'duel', 'ctf']):
-                if highest_rank is None or rank['percentile'] > highest_rank['percentile']:
-                    highest_rank = rank
-        return highest_rank
+            return []
+
+        if self.server.stats_mode == 'dm':
+            return [
+                ('win/loss', __format_num(self.elo_advanced.get('games_played', {}).get('dm', {}).get('win_pct', 0))),
+                ('kill/death',
+                 __format_num(self.elo_advanced.get('overall_stats', {}).get('dm', {}).get('k_d_ratio', 0)))]
+        elif self.server.stats_mode == 'duel':
+            return [
+                ('win/loss', __format_num(self.elo_advanced.get('games_played', {}).get('duel', {}).get('win_pct', 0))),
+                ('kill/death',
+                 __format_num(self.elo_advanced.get('overall_stats', {}).get('duel', {}).get('k_d_ratio', 0)))]
+        elif self.server.stats_mode == 'cts':
+            return [('time played', __format_time(
+                self.elo_advanced.get('overall_stats', {}).get('cts', {}).get('total_playing_time_secs', 0)))]
+        else:
+            return [('win/loss',
+                     __format_num(self.elo_advanced.get('games_played', {}).get('overall', {}).get('win_pct', 0))),
+                    ('kill/death',
+                     __format_num(self.elo_advanced.get('overall_stats', {}).get('overall', {}).get('k_d_ratio', 0)))]
 
     def parse_elo(self, elo_txt):
         self.elo_basic = parse_elo(elo_txt)
@@ -203,9 +225,9 @@ class Player:
     def country(self):
         mode = self.server.config.get('show_geolocation_for', 'none')
         if mode == 'all' or (mode == 'stats-enabled' and
-                                 self.elo_basic and
-                                     self.elo_basic.get('player_id') not in self.server.config.get(
-                                     'disable_geolocation_for')):
+                             self.elo_basic and
+                             self.elo_basic.get('player_id') not in self.server.config.get(
+                    'disable_geolocation_for')):
             if self.geo_response:
                 geoloc = self.geo_response.country.name
             else:

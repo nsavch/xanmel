@@ -161,27 +161,23 @@ class JoinHandler(Handler):
         player = event.properties['player']
         server = event.properties['server']
 
-        enabled_ranks = server.config.get('player_rankings', ['dm', 'duel', 'ctf'])
         if player.elo_url:
             await player.get_elo()
         self.module.xanmel.loop.create_task(player.update_identification())
         if not player.really_joined:
             return
-        # TODO: move that to the player class
-        formatted_ranks = 'no ranks'
-        if player.elo_advanced:
-            existing_ranks = player.elo_advanced.get('ranks', {})
-            ranks = []
-            for i in enabled_ranks:
-                if i in existing_ranks:
-                    ranks.append((i, existing_ranks[i]))
-            if len(ranks) > 0:
-                formatted_ranks = ', '.join(['%s:%s/%s' % (k, v['rank'], v['max_rank']) for k, v in ranks])
+
+        mode_stats = player.get_mode_stats()
         server_rank = player.get_server_rank()
         if server_rank:
             server_rank_fmt = ' [server rank: %s/%s] ' % server_rank
         else:
             server_rank_fmt = ' '
+
+        formatted_mode_stats = '\00303{mode}\x0f: \00312{stats}'.format(
+            mode=server.stats_mode,
+            stats='\x0f, \00312'.join(['{}: {}'.format(*i) for i in mode_stats])
+        )
 
         message = '\00309+ join\x0f: %(name)s \00312[%(rank)s]\x0f\00306%(server_rank)s\x0f\00303%(country)s\x0f \00304%(map)s\x0f [\00304%(current)s\x0f/\00304%(max)s\x0f]' % {
             'name': Color.dp_to_irc(event.properties['player'].nickname).decode('utf8'),
@@ -189,20 +185,23 @@ class JoinHandler(Handler):
             'current': server.players.current,
             'max': server.players.max,
             'country': player.country,
-            'rank': formatted_ranks,
+            'rank': formatted_mode_stats,
             'server_rank': server_rank_fmt
         }
-        highest_rank = player.get_highest_rank()
+
         if server_rank:
             server_rank_game_fmt = ' ^3server:%s/%s^x4F0' % server_rank
         else:
             server_rank_game_fmt = ''
-        if highest_rank:
-            in_game_message = '^2 +join:^7 %(name)s ^2%(country)s ^x4F0[Rank %(hr_type)s:%(hr_rank)s/%(hr_maxrank)s%(server_rank)s]^7' % {
+
+        if mode_stats:
+            formatted_mode_stats = '^2{mode}^7: {stats}'.format(
+                mode=server.stats_mode,
+                stats=', '.join(['^2{}^7: ^3{}^7'.format(*i) for i in mode_stats])
+            )
+            in_game_message = '^2 +join:^7 %(name)s ^2%(country)s ^x4F0[%(mode_stats)s%(server_rank)s]^7' % {
                 'name': event.properties['player'].nickname.decode('utf8'),
-                'hr_type': highest_rank['game_type_cd'],
-                'hr_rank': highest_rank['rank'],
-                'hr_maxrank': highest_rank['max_rank'],
+                'mode_stats': formatted_mode_stats,
                 'country': player.country,
                 'server_rank': server_rank_game_fmt
             }
