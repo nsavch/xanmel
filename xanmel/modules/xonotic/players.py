@@ -201,22 +201,29 @@ class Player:
 
         if self.server.stats_mode == 'dm':
             return [
+                ('games', self.elo_advanced.get('games_played', {}).get('dm', {}).get('games', 0)),
                 ('wins', __format_num(self.elo_advanced.get('games_played', {}).get('dm', {}).get('win_pct', 0)) + '%'),
                 ('kill/death',
                  __format_num(self.elo_advanced.get('overall_stats', {}).get('dm', {}).get('k_d_ratio', 0)))]
         elif self.server.stats_mode == 'duel':
             return [
-                ('wins', __format_num(self.elo_advanced.get('games_played', {}).get('duel', {}).get('win_pct', 0)) + '%'),
+                ('games', self.elo_advanced.get('games_played', {}).get('duel', {}).get('games', 0)),
+                ('wins',
+                 __format_num(self.elo_advanced.get('games_played', {}).get('duel', {}).get('win_pct', 0)) + '%'),
                 ('kill/death',
                  __format_num(self.elo_advanced.get('overall_stats', {}).get('duel', {}).get('k_d_ratio', 0)))]
         elif self.server.stats_mode == 'cts':
-            return [('time played', __format_time(
+            return [
+                ('games', self.elo_advanced.get('games_played', {}).get('cts', {}).get('games', 0)),
+                ('time played', __format_time(
                 self.elo_advanced.get('overall_stats', {}).get('cts', {}).get('total_playing_time_secs', 0)))]
         else:
-            return [('wins',
-                     __format_num(self.elo_advanced.get('games_played', {}).get('overall', {}).get('win_pct', 0)) + '%'),
-                    ('kill/death',
-                     __format_num(self.elo_advanced.get('overall_stats', {}).get('overall', {}).get('k_d_ratio', 0)))]
+            return [
+                ('games', self.elo_advanced.get('games_played', {}).get('overall', {}).get('games', 0)),
+                ('wins',
+                 __format_num(self.elo_advanced.get('games_played', {}).get('overall', {}).get('win_pct', 0)) + '%'),
+                ('kill/death',
+                 __format_num(self.elo_advanced.get('overall_stats', {}).get('overall', {}).get('k_d_ratio', 0)))]
 
     def parse_elo(self, elo_txt):
         self.elo_basic = parse_elo(elo_txt)
