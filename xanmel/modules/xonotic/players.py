@@ -190,7 +190,7 @@ class Player:
 
     def get_mode_stats(self):
         def __format_num(n):
-            return '{:.2%}'.format(n)
+            return '{:.2f}'.format(n)
 
         def __format_time(t):
             td = datetime.timedelta(seconds=t)
@@ -201,20 +201,20 @@ class Player:
 
         if self.server.stats_mode == 'dm':
             return [
-                ('win/loss', __format_num(self.elo_advanced.get('games_played', {}).get('dm', {}).get('win_pct', 0))),
+                ('wins', __format_num(self.elo_advanced.get('games_played', {}).get('dm', {}).get('win_pct', 0)) + '%'),
                 ('kill/death',
                  __format_num(self.elo_advanced.get('overall_stats', {}).get('dm', {}).get('k_d_ratio', 0)))]
         elif self.server.stats_mode == 'duel':
             return [
-                ('win/loss', __format_num(self.elo_advanced.get('games_played', {}).get('duel', {}).get('win_pct', 0))),
+                ('wins', __format_num(self.elo_advanced.get('games_played', {}).get('duel', {}).get('win_pct', 0)) + '%'),
                 ('kill/death',
                  __format_num(self.elo_advanced.get('overall_stats', {}).get('duel', {}).get('k_d_ratio', 0)))]
         elif self.server.stats_mode == 'cts':
             return [('time played', __format_time(
                 self.elo_advanced.get('overall_stats', {}).get('cts', {}).get('total_playing_time_secs', 0)))]
         else:
-            return [('win/loss',
-                     __format_num(self.elo_advanced.get('games_played', {}).get('overall', {}).get('win_pct', 0))),
+            return [('wins',
+                     __format_num(self.elo_advanced.get('games_played', {}).get('overall', {}).get('win_pct', 0)) + '%'),
                     ('kill/death',
                      __format_num(self.elo_advanced.get('overall_stats', {}).get('overall', {}).get('k_d_ratio', 0)))]
 
