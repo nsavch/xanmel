@@ -202,7 +202,7 @@ class Player:
         if self.server.stats_mode == 'dm':
             return [
                 ('games', self.elo_advanced.get('games_played', {}).get('dm', {}).get('games', 0)),
-                # ('wins', __format_num(self.elo_advanced.get('games_played', {}).get('dm', {}).get('win_pct', 0)) + '%'),
+                ('wins', __format_num(self.elo_advanced.get('games_played', {}).get('dm', {}).get('win_pct', 0)) + '%'),
                 ('kill/death',
                  __format_num(self.elo_advanced.get('overall_stats', {}).get('dm', {}).get('k_d_ratio', 0)))]
         elif self.server.stats_mode == 'duel':
