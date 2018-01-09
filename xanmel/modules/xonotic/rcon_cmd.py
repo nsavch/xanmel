@@ -70,7 +70,6 @@ class CvarParser(BaseOneLineRegexParser):
     regex = re.compile(rb'^"(\w+)" is "([^"]*)"')
 
     def process(self, data):
-        self.rcon_server.cvars[data.group(1).decode('utf8')] = data.group(2).decode('utf8')
         logger.debug('Set cvar %s to %r', data.group(1).decode('utf8'), data.group(2).decode('utf8'))
 
 
