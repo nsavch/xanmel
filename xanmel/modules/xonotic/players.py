@@ -149,10 +149,12 @@ class Player:
                 return w.lookup_rdap(retry_count=10)
             except:
                 return {}
-
+        import time
+        t = time.time()
         whois = ipwhois.IPWhois(ip_address)
         try:
             result = await self.server.module.xanmel.loop.run_in_executor(ThreadPoolExecutor(), __lookup, whois)
+            logger.debug('Whois took %s', time.time() - t)
             return result
         except:
             return {}
