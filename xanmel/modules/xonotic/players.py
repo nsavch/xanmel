@@ -106,9 +106,11 @@ class Player:
                             except:
                                 logger.debug('Failed to parse elo %s', text, exc_info=True)
                             else:
-                                # logger.debug('Got basic elo %r', self.elo_basic)
+                                logger.debug('Got basic elo for %r', self.nickname)
                                 await self.update_db()
+                                logger.debug('DB updated for %r', self.nickname)
                                 await self.get_elo_advanced()
+                                logger.debug('Got advanced elo for %r', self.nickname)
                         return
 
     def get_crypto_idfp(self):
