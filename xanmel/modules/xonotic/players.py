@@ -84,6 +84,7 @@ class Player:
         if not sig:
             return
         retries_left = 3
+        logger.debug('Starting to get elo for %r', self.nickname)
         async with aiohttp.ClientSession() as session:
             while retries_left > 0:
                 async with session.post(self.elo_url,
