@@ -321,7 +321,7 @@ class RconLogParser(CombinedParser):
         GameStartedParser,
         NameChangeParser,
         ChatMessageParser,
-        EloParser,
+        # EloParser,
         VoteKeeptwoParser,
         VoteFinishedParser,
         VoteVcallParser,

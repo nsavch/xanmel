@@ -202,4 +202,17 @@ class RconServer(RconClient):
         else:
             self.say_say(message, nick)
 
+    async def prvm_edictget(self, entity_id, variable, program_name='server'):
+        internal_variable = 'xanmel_{}_{}_{}'.format(program_name, entity_id, variable)
+        self.send('prvm_edictget {} {} {} {}'.format(
+            program_name,
+            entity_id,
+            variable,
+            internal_variable
+        ))
+        self.cvars.pop(internal_variable, None)
+        await self.execute_with_retry(internal_variable,
+                                      lambda: internal_variable in self.cvars)
+        return self.cvars[internal_variable]
+
 

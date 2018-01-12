@@ -1,6 +1,6 @@
 import logging
 from concurrent.futures import ThreadPoolExecutor
-from urllib.parse import unquote
+from urllib.parse import unquote, quote
 import asyncio
 
 import datetime
@@ -77,9 +77,12 @@ class Player:
             return await self.server.db.mgr.create(DBPlayer, raw_nickname=raw_nickname, nickname=nickname)
 
     async def get_elo(self):
-        if self.elo_url is None:
+        self.crypto_idfp = await self.server.prvm_edictget(self.number2, 'crypto_idfp')
+        if not self.crypto_idfp:
             return
-        self.crypto_idfp = self.get_crypto_idfp()
+        print(self.crypto_idfp)
+        quoted_crypto_idfp = quote(quote(quote(self.crypto_idfp, safe='')))
+        self.elo_url = 'http://stats.xonotic.org/player/{}/elo.txt'.format(quoted_crypto_idfp)
         sig = self.server.config.get('elo_request_signature')
         if not sig:
             return
@@ -108,8 +111,9 @@ class Player:
                                 logger.debug('Failed to parse elo %s', text, exc_info=True)
                             else:
                                 logger.debug('Got basic elo for %r', self.nickname)
-                                await self.update_db()
-                                logger.debug('DB updated for %r', self.nickname)
+                                if self.server.db.is_up:
+                                    await self.update_db()
+                                    logger.debug('DB updated for %r', self.nickname)
                                 await self.get_elo_advanced()
                                 logger.debug('Got advanced elo for %r', self.nickname)
                         return

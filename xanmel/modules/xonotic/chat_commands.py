@@ -198,47 +198,63 @@ class Cointoss(ChatCommand):
     help_text = 'start a cointoss process.'
     allowed_user_types = ['xonotic']
 
-    async def run(self, user, message, is_private=True, root=None):
-        rcon_server = self.parent.properties['rcon_server']
-        if not rcon_server.cointosser:
-            await user.reply('^1Cointoss not enabled on this server^7')
-            return
-        message = message.lower().strip()
-        if int(rcon_server.cvars['xanmel_wup_stage']) != 1:
+    async def run_status(self, server, user):
+        await user.public_reply(server.cointosser.format_status())
+
+    async def run_toss(self, server, user, side):
+        if int(server.cvars['xanmel_wup_stage']) != 1:
             await user.reply('^3Cointoss can only be performed during warmup stage. ^2vcall ^5restart ^3or ^5endmatch^7.',
                              is_private=False)
             return
-        if not rcon_server.active_duel_pair:
+        if not server.active_duel_pair:
             await user.reply('^3Exactly ^2two ^3players must join the game before cointoss can be performed.^7',
                              is_private=False)
             return
-        if rcon_server.cointosser.state != CointosserState.PENDING:
+        if server.cointosser.state != CointosserState.PENDING:
             await user.reply(
                 '^1A cointoss is already activated. ^3Finish the games or ^2/cointoss stop^3 before starting a new one^7',
                 is_private=False)
             return
         await user.public_reply('^3Tossing coin...^7')
         await asyncio.sleep(0.3)
-        if message in ('heads', 'tails'):
-            result = random.choice(('heads', 'tails'))
-            await user.public_reply('{}!'.format(result.upper()))
-            await asyncio.sleep(0.2)
-            rcon_server.cointosser.reset()
-            this_player = other_player = None
-            for i in rcon_server.active_duel_pair:
-                if i.nickname == user.unique_id():
-                    this_player = i
-                else:
-                    other_player = i
-            assert this_player and other_player, (this_player, other_player)
-            if message == result:
-                await user.public_reply('{} ^2wins ^3the cointoss!'.format(this_player.nickname.decode('utf8')))
-                rcon_server.cointosser.activate((this_player, other_player))
+
+        result = random.choice(('heads', 'tails'))
+        await user.public_reply('{}!'.format(result.upper()))
+        await asyncio.sleep(0.2)
+        server.cointosser.reset()
+        this_player = other_player = None
+        for i in server.active_duel_pair:
+            if i.nickname == user.unique_id():
+                this_player = i
             else:
-                await user.public_reply('{} ^2wins ^3the cointoss!'.format(other_player.nickname.decode('utf8')))
-                rcon_server.cointosser.activate((other_player, this_player))
+                other_player = i
+        assert this_player and other_player, (this_player, other_player)
+        if side == result:
+            await user.public_reply('{} ^2wins ^3the cointoss!'.format(this_player.nickname.decode('utf8')))
+            server.cointosser.activate((this_player, other_player))
+        else:
+            await user.public_reply('{} ^2wins ^3the cointoss!'.format(other_player.nickname.decode('utf8')))
+            server.cointosser.activate((other_player, this_player))
         await asyncio.sleep(0.3)
-        await user.public_reply(rcon_server.cointosser.format_status())
+        await user.public_reply(server.cointosser.format_status())
+
+    async def run_cancel(self, server, user):
+        await user.public_reply('Not yet implemented. Vcall endmatch.')
+
+    async def run(self, user, message, is_private=True, root=None):
+        rcon_server = self.parent.properties['rcon_server']
+        if not rcon_server.cointosser:
+            await user.reply('^1Cointoss not enabled on this server^7')
+            return
+        message = message.lower().strip()
+        if message in ('', 'status'):
+            await self.run_status(rcon_server, user)
+        elif message in ('heads', 'tails'):
+            await self.run_toss(rcon_server, user, message)
+        elif message == 'cancel':
+            await self.run_cancel(rcon_server, user)
+        else:
+            await user.reply('Unknown command {}. Available commands: status, heads, tails, cancel.'.format(message))
 
 
 class PickDropBase(ChatCommand):

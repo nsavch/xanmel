@@ -13,6 +13,7 @@ def xon_server(xon_module, mocked_coro):
     srv = xon_module.servers[0]
     srv.update_server_stats_orig = srv.update_server_stats
     srv.update_server_stats = mocked_coro()
+    srv.prvm_edictget = mocked_coro(return_value=None)
     return srv
 
 

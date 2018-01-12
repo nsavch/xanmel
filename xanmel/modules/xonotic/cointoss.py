@@ -143,9 +143,9 @@ class Cointosser:
             expected_player = self.players[current_step['player'] - 1]
 
             if current_step['action'] == CointosserAction.P:
-                res.append('^7{}, ^3please pick a map using ^2/pick ^5<mapname>'.format(expected_player.nickname.decode('utf8')))
+                res.append('^7{}, ^3please ^2pick^3 a map using ^2/pick ^5<mapname>'.format(expected_player.nickname.decode('utf8')))
             else:
-                res.append('^7{}, ^3please drop a map using ^2/drop ^5<mapname>'.format(expected_player.nickname.decode('utf8')))
+                res.append('^7{}, ^3please ^1drop^3 a map using ^1/drop ^5<mapname>'.format(expected_player.nickname.decode('utf8')))
         return res
 
     def get_total_score(self):
@@ -168,33 +168,56 @@ class Cointosser:
 
     async def map_ended(self, map_name: str, scores: Dict[Player, int]) -> None:
         if self.selected_maps[self.current_map_index] != map_name:
-            # FIXME: HOW TO HANDLE THIS?
+            self.rcon_server.say('Expected map {}, got map {}'.format(self.selected_maps[self.current_map_index],
+                                                                      map_name))
+            await asyncio.sleep(1)
+            self.rcon_server.say(self.format_status())
+            await asyncio.sleep(3)
             self.gotomap()
             return
         if len(scores) != 2:
-            # FIXME: HOW TO HANDLE THIS?
+            self.rcon_server.say('Got scores with {} players, expected a duel!'.format(len(scores)))
+            await asyncio.sleep(1)
+            self.rcon_server.say(self.format_status())
+            await asyncio.sleep(3)
             self.gotomap()
             return
-        frags = [0, 0]
+        if int(self.rcon_server.cvars['xanmel_wup_stage']) != 1:
+            self.rcon_server.say('Match ended during warmup stage, restarting!')
+            await asyncio.sleep(1)
+            self.rcon_server.say(self.format_status())
+            await asyncio.sleep(3)
+            self.gotomap()
+            return
+
         players = list(scores.keys())
-        if not (players[0].crypto_idfp and players[1].crypto_idfp):
-            # TODO: TEST THIS CASE!!!
-            if players[0].nickname == self.players[0].nickname:
-                frags = (scores[players[0]], scores[players[1]])
-            else:
-                frags = (scores[players[1]], scores[players[0]])
-        elif players[0].crypto_idfp:
-            if players[0].crypto_idfp == self.players[0].crypto_idfp:
-                frags = (scores[players[0]], scores[players[1]])
-            else:
-                frags = (scores[players[1]], scores[players[0]])
+
+        expected_crypto_idfps = [i.crypto_idfp for i in self.players]
+        for i in players:
+            if i.crypto_idfp not in expected_crypto_idfps:
+                self.rcon_server.say('Unexpected player {}, expected {} and {}! Restarting.'.format(
+                    i.nickname.decode('utf8'),
+                    self.players[0].nickname.decode('utf8'),
+                    self.players[1].nickname.decode('utf8')
+                ))
+                await asyncio.sleep(1)
+                self.rcon_server.say(self.format_status())
+                await asyncio.sleep(3)
+                self.gotomap()
+                return
+
+        if players[0].crypto_idfp == self.players[0].crypto_idfp:
+            frags = (scores[players[0]], scores[players[1]])
         else:
-            if players[1].crypto_idfp == self.players[1].crypto_idfp:
-                frags = (scores[players[0]], scores[players[1]])
-            else:
-                frags = (scores[players[1]], scores[players[0]])
-        print(scores)
-        print(frags)
+            frags = (scores[players[1]], scores[players[0]])
+
+        if frags[0] == frags[1]:
+            self.rcon_server.say('Scores are equal, expected a winner! Restarting.')
+            await asyncio.sleep(1)
+            self.rcon_server.say(self.format_status())
+            await asyncio.sleep(3)
+            self.gotomap()
+            return
         self.scores.append(tuple(frags))
         games, _ = self.get_total_score()
         if (max(games) > len(self.selected_maps) / 2) or (self.current_map_index == len(self.selected_maps) - 1):

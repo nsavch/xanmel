@@ -161,8 +161,7 @@ class JoinHandler(Handler):
         player = event.properties['player']
         server = event.properties['server']
 
-        if player.elo_url:
-            await player.get_elo()
+        await player.get_elo()
         self.module.xanmel.loop.create_task(player.update_identification())
         if not player.really_joined:
             return
@@ -568,6 +567,7 @@ class CointossChoiceCompleteHandler(Handler):
 
     async def handle(self, event):
         server = event.properties['server']
+        await asyncio.sleep(2)
         server.say('^3Starting rounds in ^25 ^3seconds!^7')
         await asyncio.sleep(5)
         server.cointosser.start_playing()
