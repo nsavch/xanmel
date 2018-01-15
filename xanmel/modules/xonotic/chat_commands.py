@@ -236,6 +236,10 @@ class Cointoss(ChatCommand):
             await user.public_reply('{} ^2wins ^3the cointoss!'.format(other_player.nickname.decode('utf8')))
             server.cointosser.activate((other_player, this_player))
         await asyncio.sleep(0.3)
+        for i in (this_player, other_player):
+            if i.crypto_idfp is None:
+                await user.public_reply('^1WARNING!. ^7{} ^2is a nasty anon and has no crypto_idfp.^7')
+                await asyncio.sleep(0.3)
         await user.public_reply(server.cointosser.format_status())
 
     async def run_cancel(self, server, user):
@@ -254,7 +258,7 @@ class Cointoss(ChatCommand):
         elif message == 'cancel':
             await self.run_cancel(rcon_server, user)
         else:
-            await user.reply('Unknown command {}. Available commands: status, heads, tails, cancel.'.format(message))
+            await user.public_reply('Unknown command {}. Available commands: status, heads, tails, cancel.'.format(message))
 
 
 class PickDropBase(ChatCommand):

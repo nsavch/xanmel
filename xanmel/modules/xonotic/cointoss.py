@@ -114,9 +114,8 @@ class Cointosser:
     def format_status(self):
         # TODO: forward status to IRC too
         if self.state == CointosserState.PENDING:
-            raise CointosserException('^3Cointoss has not yet started^7')
-
-        if self.state == CointosserState.CHOICE_COMPLETE:
+            res = ['^3Cointoss is not activated^7. ^2/cointoss heads^5|^2tails ^3to start it.']
+        elif self.state == CointosserState.CHOICE_COMPLETE:
             res = ['^2Cointoss complete. ^3Selected maps: ^5{maps}^7.'.format(maps='^7, ^5'.join(self.selected_maps))]
         elif self.state == CointosserState.PLAYING:
 
@@ -192,9 +191,12 @@ class Cointosser:
 
         players = list(scores.keys())
 
-        expected_crypto_idfps = [i.crypto_idfp for i in self.players]
+        def __player_is(pl1, pl2):
+            return (pl1.crypto_idfp and pl1.crypto_idfp == pl2.crypto_idfp) or \
+                   (pl1.crypto_idfp is None and pl1.nickname == pl2.nickname)
+
         for i in players:
-            if i.crypto_idfp not in expected_crypto_idfps:
+            if not (__player_is(i, self.players[0]) or __player_is(i, self.players[1])):
                 self.rcon_server.say('Unexpected player {}, expected {} and {}! Restarting.'.format(
                     i.nickname.decode('utf8'),
                     self.players[0].nickname.decode('utf8'),
@@ -206,7 +208,7 @@ class Cointosser:
                 self.gotomap()
                 return
 
-        if players[0].crypto_idfp == self.players[0].crypto_idfp:
+        if __player_is(players[0], self.players[0]):
             frags = (scores[players[0]], scores[players[1]])
         else:
             frags = (scores[players[1]], scores[players[0]])
