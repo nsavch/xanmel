@@ -119,7 +119,9 @@ class Player:
                         return
 
     def get_crypto_idfp(self):
-        if self.elo_url:
+        if self.crypto_idfp:
+            return self.crypto_idfp
+        elif self.elo_url:
             return unquote(unquote(unquote(self.elo_url.split('/')[-2])))  # Triple urlquote, how cool is that?
         else:
             return None
