@@ -265,8 +265,8 @@ class Cointosser:
             self.rcon_server.say(self.format_status())
             await asyncio.sleep(5)
         else:
-            self.write_log('Switching to map {}'.format(self.selected_maps[self.current_map_index]))
             self.current_map_index += 1
+            self.write_log('Switching to map {}'.format(self.selected_maps[self.current_map_index]))
             self.rcon_server.say(self.format_status())
             self.rcon_server.say('^2Switching to map ^5{} ^2in ^35 ^2seconds^7'.format(self.selected_maps[self.current_map_index]))
             await asyncio.sleep(5)
