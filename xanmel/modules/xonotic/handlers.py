@@ -556,7 +556,7 @@ class CointossNotificationHandler(Handler):
         if server.cointosser and \
                 int(server.cvars.get('xanmel_wup_stage')) == 1 and \
                 server.cointosser.state == CointosserState.PENDING:
-            announcement = '^7{} ^1vs ^7{} ^2Ready for cointoss!^7'.format(
+            announcement = '^7{} ^1vs ^7{} ^3Type ^2"/cointoss heads"^3 or ^2"/cointoss tails"^3 to start the map selection process.^7'.format(
                 event.properties['player1'].nickname.decode('utf8'),
                 event.properties['player2'].nickname.decode('utf8'))
             server.say(announcement)

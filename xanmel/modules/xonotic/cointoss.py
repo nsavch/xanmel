@@ -28,6 +28,7 @@ class CointosserException(Exception):
 
 class Cointosser:
     def __init__(self, rcon_server, map_pool, steps):
+        self.lock = asyncio.Lock()
         self.rcon_server = rcon_server
         self.pool = sorted(map_pool)
         self.steps = []

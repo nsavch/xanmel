@@ -212,7 +212,7 @@ class Cointoss(ChatCommand):
             return
         if server.cointosser.state != CointosserState.PENDING:
             await user.reply(
-                '^1A cointoss is already activated. ^3Finish the games or ^2/cointoss stop^3 before starting a new one^7',
+                '^1A cointoss is already activated. ^3Finish the games or ^2/cointoss cancel^3 before starting a new one^7',
                 is_private=False)
             return
         await user.public_reply('^3Tossing coin...^7')
@@ -251,14 +251,15 @@ class Cointoss(ChatCommand):
             await user.reply('^1Cointoss not enabled on this server^7')
             return
         message = message.lower().strip()
-        if message in ('', 'status'):
-            await self.run_status(rcon_server, user)
-        elif message in ('heads', 'tails'):
-            await self.run_toss(rcon_server, user, message)
-        elif message == 'cancel':
-            await self.run_cancel(rcon_server, user)
-        else:
-            await user.public_reply('Unknown command {}. Available commands: status, heads, tails, cancel.'.format(message))
+        with await rcon_server.cointosser.lock:
+            if message in ('', 'status'):
+                await self.run_status(rcon_server, user)
+            elif message in ('heads', 'tails'):
+                await self.run_toss(rcon_server, user, message)
+            elif message == 'cancel':
+                await self.run_cancel(rcon_server, user)
+            else:
+                await user.public_reply('Unknown command {}. Available commands: status, heads, tails, cancel.'.format(message))
 
 
 class PickDropBase(ChatCommand):
@@ -271,36 +272,37 @@ class PickDropBase(ChatCommand):
         if not rcon_server.cointosser:
             await user.reply('^1Cointoss not enabled on this server^7')
             return
-        if rcon_server.cointosser.state != CointosserState.CHOOSING:
-            await user.reply(
-                '^3Cointoss is not activated^7. ^2/cointoss heads^5|^2tails ^3to start it.',
-                is_private=False)
-            return
-        map_name = message.lower().strip()
-        this_player = None
-        for i in rcon_server.active_duel_pair:
-            if i.nickname == user.unique_id():
-                this_player = i
-        assert this_player, rcon_server.active_duel_pair
-        try:
-            rcon_server.cointosser.validate_action(this_player, self.action, map_name)
-        except CointosserException as e:
-            await user.public_reply(str(e))
-            return
-        rcon_server.cointosser.do_action(this_player, self.action, map_name)
-        await asyncio.sleep(0.2)
-        await user.public_reply(rcon_server.cointosser.format_status(), delay=0.1)
-        # async def __yes_cb():
-        #     rcon_server.cointosser.do_action(this_player, self.action, map_name)
-        #     await user.public_reply(rcon_server.cointosser.format_status())
-        #
-        # async def __no_cb():
-        #     await user.public_reply('^1Action canceled!^7')
-        #     await user.public_reply(rcon_server.cointosser.format_status())
-        # await self.parent.confirmations.ask(user, '^3Are you sure you want to ^2{} ^3a map {}^7?'.format(
-        #     self.action.value.lower(),
-        #     rcon_server.cointosser.clean_map_name(map_name),
-        # ), __yes_cb, __no_cb)
+        with await rcon_server.cointosser.lock:
+            if rcon_server.cointosser.state != CointosserState.CHOOSING:
+                await user.reply(
+                    '^3Cointoss is not activated^7. ^2/cointoss heads^5|^2tails ^3to start it.',
+                    is_private=False)
+                return
+            map_name = message.lower().strip()
+            this_player = None
+            for i in rcon_server.active_duel_pair:
+                if i.nickname == user.unique_id():
+                    this_player = i
+            assert this_player, rcon_server.active_duel_pair
+            try:
+                rcon_server.cointosser.validate_action(this_player, self.action, map_name)
+            except CointosserException as e:
+                await user.public_reply(str(e))
+                return
+            rcon_server.cointosser.do_action(this_player, self.action, map_name)
+            await asyncio.sleep(0.2)
+            await user.public_reply(rcon_server.cointosser.format_status(), delay=0.1)
+            # async def __yes_cb():
+            #     rcon_server.cointosser.do_action(this_player, self.action, map_name)
+            #     await user.public_reply(rcon_server.cointosser.format_status())
+            #
+            # async def __no_cb():
+            #     await user.public_reply('^1Action canceled!^7')
+            #     await user.public_reply(rcon_server.cointosser.format_status())
+            # await self.parent.confirmations.ask(user, '^3Are you sure you want to ^2{} ^3a map {}^7?'.format(
+            #     self.action.value.lower(),
+            #     rcon_server.cointosser.clean_map_name(map_name),
+            # ), __yes_cb, __no_cb)
 
 
 class Pick(PickDropBase):
