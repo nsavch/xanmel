@@ -44,9 +44,10 @@ class Cointosser:
     def write_log(self, message):
         t = current_time()
         if self.log:
-            self.log.write('{} {}'.format(
+            self.log.write('{} {}\n'.format(
                 t.strftime('%Y-%m-%d %H:%M:%S'),
                 message))
+            self.log.flush()
 
     def parse_steps(self, steps):
         step_re = re.compile('([Dd]|[Pp])([12])')
