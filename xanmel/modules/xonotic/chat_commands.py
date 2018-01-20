@@ -222,6 +222,7 @@ class Cointoss(ChatCommand):
         await user.public_reply('{}!'.format(result.upper()))
         await asyncio.sleep(0.2)
         server.cointosser.reset()
+
         this_player = other_player = None
         for i in server.active_duel_pair:
             if i.nickname == user.unique_id():

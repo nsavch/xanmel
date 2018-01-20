@@ -5,6 +5,8 @@ from typing import Dict
 import re
 from enum import Enum
 
+from xanmel import current_time
+from xanmel.modules.xonotic.colors import Color
 from xanmel.modules.xonotic.events import CointossChoiceComplete
 from xanmel.modules.xonotic.players import Player
 
@@ -30,10 +32,21 @@ class Cointosser:
     def __init__(self, rcon_server, map_pool, steps):
         self.lock = asyncio.Lock()
         self.rcon_server = rcon_server
+        if self.rcon_server.config.get('cointoss_log_file'):
+            self.log = open(self.rcon_server.config['cointoss_log_file'], 'a')
+        else:
+            self.log = None
         self.pool = sorted(map_pool)
         self.steps = []
         self.parse_steps(steps)
         self.reset()
+
+    def write_log(self, message):
+        t = current_time()
+        if self.log:
+            self.log.write('{} {}'.format(
+                t.strftime('%Y-%m-%d %H:%M:%S'),
+                message))
 
     def parse_steps(self, steps):
         step_re = re.compile('([Dd]|[Pp])([12])')
@@ -57,6 +70,11 @@ class Cointosser:
     def activate(self, players):
         self.state = CointosserState.CHOOSING
         self.players = players
+        self.write_log('{} vs {}, cointoss won by {}'.format(
+            Color.dp_to_none(self.players[0].nickname).decode('utf8'),
+            Color.dp_to_none(self.players[1].nickname).decode('utf8'),
+            Color.dp_to_none(self.players[0].nickname).decode('utf8'),
+        ))
 
     def clean_map_name(self, map_name):
         maps = []
@@ -95,6 +113,15 @@ class Cointosser:
         clean_map_name = self.clean_map_name(map_name)
         if action == CointosserAction.P:
             self.selected_maps.append(clean_map_name)
+            self.write_log('{} picked {}'.format(
+                Color.dp_to_none(player.nickname).decode('utf8'),
+                map_name
+            ))
+        else:
+            self.write_log('{} dropped {}'.format(
+                Color.dp_to_none(player.nickname).decode('utf8'),
+                map_name
+            ))
         self.available_maps.remove(clean_map_name)
         if self.step_index == len(self.steps) - 1:
             self.state = CointosserState.CHOICE_COMPLETE
@@ -222,12 +249,20 @@ class Cointosser:
             self.gotomap()
             return
         self.scores.append(tuple(frags))
+        self.write_log('{}: {} - {}, {} - {}'.format(
+            map_name,
+            Color.dp_to_none(self.players[0].nickname).decode('utf8'),
+            frags[0],
+            Color.dp_to_none(self.players[1].nickname).decode('utf8'),
+            frags[1]))
         games, _ = self.get_total_score()
         if (max(games) > len(self.selected_maps) / 2) or (self.current_map_index == len(self.selected_maps) - 1):
+            self.write_log('Match completed')
             self.state = CointosserState.COMPLETE
             self.rcon_server.say(self.format_status())
             await asyncio.sleep(5)
         else:
+            self.write_log('Switching to map {}'.format(self.selected_maps[self.current_map_index]))
             self.current_map_index += 1
             self.rcon_server.say(self.format_status())
             self.rcon_server.say('^2Switching to map ^5{} ^2in ^35 ^2seconds^7'.format(self.selected_maps[self.current_map_index]))
