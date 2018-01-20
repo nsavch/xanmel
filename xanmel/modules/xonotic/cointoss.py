@@ -116,12 +116,12 @@ class Cointosser:
             self.selected_maps.append(clean_map_name)
             self.write_log('{} picked {}'.format(
                 Color.dp_to_none(player.nickname).decode('utf8'),
-                map_name
+                clean_map_name
             ))
         else:
             self.write_log('{} dropped {}'.format(
                 Color.dp_to_none(player.nickname).decode('utf8'),
-                map_name
+                clean_map_name
             ))
         self.available_maps.remove(clean_map_name)
         if self.step_index == len(self.steps) - 1:
