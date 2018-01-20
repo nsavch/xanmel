@@ -71,6 +71,7 @@ class Cointosser:
     def activate(self, players):
         self.state = CointosserState.CHOOSING
         self.players = players
+        self.write_log('*****************************************************************')
         self.write_log('{} vs {}, cointoss won by {}'.format(
             Color.dp_to_none(self.players[0].nickname).decode('utf8'),
             Color.dp_to_none(self.players[1].nickname).decode('utf8'),
@@ -259,6 +260,7 @@ class Cointosser:
         games, _ = self.get_total_score()
         if (max(games) > len(self.selected_maps) / 2) or (self.current_map_index == len(self.selected_maps) - 1):
             self.write_log('Match completed')
+            self.write_log('*****************************************************************')
             self.state = CointosserState.COMPLETE
             self.rcon_server.say(self.format_status())
             await asyncio.sleep(5)
