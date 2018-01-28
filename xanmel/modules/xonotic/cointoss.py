@@ -128,6 +128,10 @@ class Cointosser:
         if self.step_index == len(self.steps) - 1:
             self.state = CointosserState.CHOICE_COMPLETE
             CointossChoiceComplete(self.rcon_server.module, server=self.rcon_server).fire()
+        elif len(self.available_maps) == len([i for i in self.steps[self.step_index:] if i['action'] == CointosserAction.P]):
+            self.state = CointosserState.CHOICE_COMPLETE
+            self.selected_maps += self.available_maps
+            CointossChoiceComplete(self.rcon_server.module, server=self.rcon_server).fire()
         else:
             self.step_index += 1
 
