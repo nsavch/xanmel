@@ -96,6 +96,7 @@ class RconServer(RconClient):
         self.betting_session_id = None
         self.betting_session = None
         self.betting_session_active = False
+        self.display_in_game_info = config.get('display_in_game_info', True)
         self.stats_mode = config.get('stats_mode', 'overall')
 
     @property

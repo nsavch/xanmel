@@ -7,7 +7,7 @@ modules:
     host: irc.quakenet.org
     port: 6667
     ssl: false
-    nick: xanmel
+    nick: xanmel123123123
     realname: BOT
     quakenet_auth: ['xanmel', 'xX6T2WYi6z']
     channel: '#xanmel'
@@ -50,4 +50,5 @@ modules:
         disable_geolocation_for: []
         enable_betting: false
         betting_min_frag_number: 5
+        display_in_game_info: false
   xanmel.modules.fun.FunModule: {}

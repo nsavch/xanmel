@@ -215,7 +215,8 @@ class JoinHandler(Handler):
                 in_game_message += ' [^3balance:^7 ^2%s^7]' % b
             else:
                 in_game_message += ' [^3balance:^7 ^1%s^7]' % b
-        server.say(in_game_message)
+        if server.display_in_game_info:
+            server.say(in_game_message)
         await self.run_action(ChannelMessage, message=message,
                               prefix=event.properties['server'].config['out_prefix'])
 
