@@ -1,0 +1,53 @@
+settings:
+  asyncio_debug: false
+  log_level: DEBUG
+  db_url: null # postgresql:///xanmel
+modules:
+  xanmel.modules.irc.IRCModule:
+    host: irc.quakenet.org
+    port: 6667
+    ssl: false
+    nick: xanmel
+    realname: BOT
+    quakenet_auth: ['xanmel', 'xX6T2WYi6z']
+    channel: '#xanmel'
+    greeting: HELLO WORLD!
+    mention_delimeters: [' ', ':', ',']
+    admin_users: []
+    flood_burst: 5 # The maximum amount of lines bot sends at once.
+    flood_rate: 5 # The number of lines per flood_rate_delay seconds bot sends after reaching flood_burst limit
+    flood_rate_delay: 20 # The bot will send flood_rate messages per flood_rate_delay seconds
+    flood_max_queue_size: 1024 # Max number of lines to store in the queue. If the queue is full new messages will be dropped
+    flood_test_mode: false # if set to true bot will flood the channel so you can test if it gets kicked. Useful to find out optimal flood burst/rate values
+  xanmel.modules.xonotic.XonoticModule:
+    servers:
+      - name: Local Xonotic Server
+        unique_id: 1
+        rcon_ip: 127.0.0.1
+        rcon_port: 26000
+        log_listener_ip: 127.0.0.1
+        public_ip: 94.23.207.83
+        public_port: 26000
+        rcon_password: password
+        rcon_secure: 1
+        out_prefix: 's1 > '
+        in_prefix: 's1 '
+        cmd_prefix: s1
+        say_type: say
+        cointoss_map_pool: ['warfare', 'farewell_laserfun', 'quark_v2', 'xoylent', 'hub3aeroq3a_nex_r4', 'bloodrun_a3', 'stormkeep', 'finalrage', 'fuse', 'asylum_full', 'azalea']
+        cointoss_steps: ['d1', 'd2', 'p1', 'p2', 'd1', 'd2', 'd2', 'p1']
+        contoss_log_file: './cointoss-logs/server1.log'
+        botnick: server
+        stats_mode: 'duel'
+        stats_ordering: ['score', 'goals', 'faults', 'kills', 'revivals', 'deaths']
+        stats_blacklist: ['dmg', 'dmgtaken', 'elo']
+        elo_request_signature: 'gQEBTrBWi2M7i5cInTMatx0iHAxmN4Xta2NZdXD2OsFls/x/k6XrxoevCGARC4jhC2DzgYHFM5vA40aih59tlXSzrFQ6EiiSgoWG+h1oERFHYWdg3KNwgEkUfnskEy2FS6BhdTs6JdpBAsEq348+NysGVhe7ZYMHlJUTFYE/nJVKC4qBAQGPqnGoD6GhuHLYN+Sf73ROColneBdJ7ttuVwm32FvI8LuD5aLDll7bpqfHTWhgbTW02CYvkTAYtoz2RZmIGK5ZHHaM/V6vcSXnq2ab/7mFRiag7D5OUsmIFY9E3IqcqtP7+wXSVgiNFY3DBPy27bXjk8ZJ9nUD5dQBL9sG8TzWd4EBAdZmc6gLKdO16z5PJQGsWrf1yOViENd/VANx+7aGPQsouAuhwzOlB06SkZ6dxx2zLyfagVthXTXY4JfUoAaa9vSkwqH/7TNIyHxBI220ZyFtekGzJFro2b7zRYiOqs3bKr0pec7qakn9blY0YfgO9W9GI8vG+JsQIk7MJNmSBupTgQEBQUDrksY28iujDepIsG4mXaZdvKM2RhWKKxI4VgrXQ33FVmAQqPwrA3U0EMEE6DR+O8tf6kHsN5efub9aU30E5nRcKEKBln5ro3RHtnLMtBikG5Tqy4o3grx4/SHfFPhs4CMvOYT304A6y1f35TsUj83ahbORkFjaKetTq97vZkk='
+        player_rankings: ['dm', 'duel', 'ctf']
+        server_stats_url: http://stats.xonotic.org/server/7975
+        # none, stats-enabled, all
+        show_geolocation_for: stats-enabled
+        # list of stats ids of nasty players demanding to hide their geo info...
+        disable_geolocation_for: []
+        enable_betting: false
+        betting_min_frag_number: 5
+  xanmel.modules.fun.FunModule: {}
