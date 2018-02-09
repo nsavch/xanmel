@@ -13,7 +13,7 @@ from pkg_resources import resource_filename, require, DistributionNotFound
 import click
 import geoip2.database
 import asyncio
-import uvloop
+# import uvloop
 
 import time
 import yaml
@@ -25,7 +25,7 @@ from .logcfg import logging_config
 logger = logging.getLogger(__name__)
 
 
-asyncio.set_event_loop_policy(uvloop.EventLoopPolicy())
+# asyncio.set_event_loop_policy(uvloop.EventLoopPolicy())
 
 
 class Xanmel:
