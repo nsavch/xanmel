@@ -67,6 +67,10 @@ class Player:
             except (ValueError, geoip2.errors.AddressNotFoundError):
                 self.geo_response = None
 
+    @property
+    def active(self):
+        return self in self.server.players.active
+
     async def get_db_obj_anon(self):
         raw_nickname = self.nickname.decode('utf8')
         nickname = Color.dp_to_none(self.nickname).decode('utf8')
@@ -300,6 +304,11 @@ class PlayerManager:
             if i.is_bot:
                 res.append(i)
         return res
+
+    def find_by_nickname(self, nickname):
+        for i in self.players_by_number2.values():
+            if i.nickname == nickname:
+                return i
 
     def clear_bots(self):
         to_clear = []

@@ -22,6 +22,7 @@ class CointosserState(Enum):
 class CointosserAction(Enum):
     D = 'Drop'
     P = 'Pick'
+    S = 'Skip'
 
 
 class CointosserException(Exception):
@@ -29,7 +30,7 @@ class CointosserException(Exception):
 
 
 class Cointosser:
-    def __init__(self, rcon_server, map_pool, steps):
+    def __init__(self, rcon_server, map_pool, types):
         self.lock = asyncio.Lock()
         self.rcon_server = rcon_server
         if self.rcon_server.config.get('cointoss_log_file'):
@@ -37,8 +38,8 @@ class Cointosser:
         else:
             self.log = None
         self.pool = sorted(map_pool)
-        self.steps = []
-        self.parse_steps(steps)
+        self.types = types
+        self.switch_type(next(iter(types.keys())))
         self.reset()
 
     def write_log(self, message):
@@ -49,21 +50,31 @@ class Cointosser:
                 message))
             self.log.flush()
 
+    def switch_type(self, new_type):
+        self.current_type = new_type
+        self.steps = self.parse_steps(self.types[new_type]['steps'])
+
     def parse_steps(self, steps):
-        step_re = re.compile('([Dd]|[Pp])([12])')
-        for i in steps:
+        step_re = re.compile('([Ss]|[Dd]|[Pp])([12])')
+        res = []
+        for n, i in enumerate(steps):
             m = step_re.match(i)
             if not m:
                 raise RuntimeError('Improperly configured: invalid cointoss action {}'.format(i))
             action = CointosserAction[m.group(1).upper()]
+            if action == CointosserAction.S and (not n == 0):
+                raise RuntimeError('Improperly configured: skip can only be the first action')
             player_num = int(m.group(2))
-            self.steps.append({'action': action, 'player': player_num})
+            res.append({'action': action, 'player': player_num})
+
+        return res
 
     def reset(self):
         self.step_index = 0
         self.state = CointosserState.PENDING
         self.available_maps = copy(self.pool)
         self.selected_maps = []
+        self.skipped_maps = []
         self.players = None
         self.current_map_index = None
         self.scores = []
@@ -119,16 +130,25 @@ class Cointosser:
                 Color.dp_to_none(player.nickname).decode('utf8'),
                 clean_map_name
             ))
-        else:
+        elif action == CointosserAction.D:
             self.write_log('{} dropped {}'.format(
                 Color.dp_to_none(player.nickname).decode('utf8'),
                 clean_map_name
             ))
+        elif action == CointosserAction.S:
+            self.write_log('{} skipped {}'.format(
+                Color.dp_to_none(player.nickname).decode('utf8'),
+                clean_map_name
+            ))
+            self.skipped_maps.append(clean_map_name)
+            self.selected_maps.append(clean_map_name)
         self.available_maps.remove(clean_map_name)
         if self.step_index == len(self.steps) - 1:
             self.state = CointosserState.CHOICE_COMPLETE
             CointossChoiceComplete(self.rcon_server.module, server=self.rcon_server).fire()
-        elif len(self.available_maps) == len([i for i in self.steps[self.step_index:] if i['action'] == CointosserAction.P]):
+        elif len(self.available_maps) == 1 and \
+                self.step_index == len(self.steps) - 2 and \
+                self.steps[-1]['action'] == CointosserAction.P:
             self.state = CointosserState.CHOICE_COMPLETE
             self.selected_maps += self.available_maps
             CointossChoiceComplete(self.rcon_server.module, server=self.rcon_server).fire()
@@ -137,18 +157,24 @@ class Cointosser:
 
     def format_current_score(self):
         games, frags = self.get_total_score()
-        return '^2Score: ^7{player1} - ^2{games1} ^5({frags1} frags)^7, {player2} - ^2{games2} ^5({frags2} frags)^7'.format(
+        game_scores = []
+        for s1, s2 in self.scores:
+            game_scores.append('^2{}^5:^2{}^7'.format(s1, s2))
+        return '^2Score ^7(^1{type}^7): ^7{player1} - {player2}: ^2{games1}^5:^2{games2} ^7(^2{game_scores})^7'.format(
+            type=self.current_type,
             player1=self.players[0].nickname.decode('utf8'),
             player2=self.players[1].nickname.decode('utf8'),
             games1=games[0],
             games2=games[1],
-            frags1=frags[0],
-            frags2=frags[1])
+            game_scores='^7, ^2'.join(game_scores)
+        )
 
     def format_status(self):
         # TODO: forward status to IRC too
         if self.state == CointosserState.PENDING:
-            res = ['^3Cointoss is not activated^7. ^2/cointoss heads^5|^2tails ^3to start it.']
+            res = ['^3Cointoss is not activated^7. ^3Current cointoss type: ^1{}^7. ^2/cointoss heads^5|^2tails ^3to start it.'.format(
+                self.current_type
+            )]
         elif self.state == CointosserState.CHOICE_COMPLETE:
             res = ['^2Cointoss complete. ^3Selected maps: ^5{maps}^7.'.format(maps='^7, ^5'.join(self.selected_maps))]
         elif self.state == CointosserState.PLAYING:
@@ -177,8 +203,11 @@ class Cointosser:
 
             if current_step['action'] == CointosserAction.P:
                 res.append('^7{}, ^3please ^2pick^3 a map using ^2/pick ^5<mapname>'.format(expected_player.nickname.decode('utf8')))
-            else:
+            elif current_step['action'] == CointosserAction.D:
                 res.append('^7{}, ^3please ^1drop^3 a map using ^1/drop ^5<mapname>'.format(expected_player.nickname.decode('utf8')))
+            elif current_step['action'] == CointosserAction.S:
+                res.append('^7{}, ^3please ^5skip^3 a map using ^5/skip ^5<mapname>'.format(
+                    expected_player.nickname.decode('utf8')))
         return res
 
     def get_total_score(self):
@@ -197,6 +226,13 @@ class Cointosser:
 
     def start_playing(self):
         self.current_map_index = 0
+        for i in self.skipped_maps:
+            self.rcon_server.say('^3{} gets a free win on {}^7'.format(
+                self.players[0].nickname.decode('utf8'),
+                i
+            ))
+            self.scores.append((0, -10))
+            self.current_map_index += 1
         self.gotomap()
 
     async def map_ended(self, map_name: str, scores: Dict[Player, int]) -> None:

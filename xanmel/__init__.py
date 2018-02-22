@@ -3,7 +3,7 @@ import inspect
 import logging
 import logging.config
 import os
-from collections import defaultdict
+from collections import defaultdict, OrderedDict
 
 import sys
 
@@ -17,6 +17,7 @@ import asyncio
 
 import time
 import yaml
+import yaml.resolver
 
 from .db import XanmelDB
 from .utils import current_time
@@ -26,6 +27,21 @@ logger = logging.getLogger(__name__)
 
 
 # asyncio.set_event_loop_policy(uvloop.EventLoopPolicy())
+
+
+def ordered_load(stream, loader_cls=yaml.SafeLoader, object_pairs_hook=OrderedDict):
+    # thanks https://stackoverflow.com/questions/5121931/in-python-how-can-you-load-yaml-mappings-as-ordereddicts
+    class OrderedLoader(loader_cls):
+        pass
+
+    def construct_mapping(loader, node):
+        loader.flatten_mapping(node)
+        return object_pairs_hook(loader.construct_pairs(node))
+
+    OrderedLoader.add_constructor(
+        yaml.resolver.BaseResolver.DEFAULT_MAPPING_TAG,
+        construct_mapping)
+    return yaml.load(stream, OrderedLoader)
 
 
 class Xanmel:
@@ -44,7 +60,7 @@ class Xanmel:
         self.cmd_root.register_container(HelpCommands(), prefix='')
         try:
             with open(os.path.expanduser(config_path), 'r') as config_file:
-                self.config = yaml.safe_load(config_file)
+                self.config = ordered_load(config_file)
         except (OSError, IOError) as e:
             print('Config file %s unreadable: %s' % (config_path, e))
             sys.exit(1)

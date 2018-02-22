@@ -9,7 +9,7 @@ modules:
     ssl: false
     nick: xanmel123123123
     realname: BOT
-    quakenet_auth: ['xanmel', 'xX6T2WYi6z']
+    quakenet_auth: null
     channel: '#xanmel'
     greeting: HELLO WORLD!
     mention_delimeters: [' ', ':', ',']
@@ -34,8 +34,14 @@ modules:
         in_prefix: 's1 '
         cmd_prefix: s1
         say_type: say
-        cointoss_map_pool: ['warfare', 'farewell_laserfun', 'quark_v2', 'xoylent', 'hub3aeroq3a_nex_r4', 'bloodrun_a3', 'stormkeep', 'finalrage', 'fuse', 'asylum_full', 'azalea']
-        cointoss_steps: ['d1', 'd2', 'p1', 'p2', 'd1', 'd2', 'd2', 'p1']
+        cointoss_map_pool: ['cube-arena', 'evilspace_repack', 'farewell_laserfun', 'handsofgod', 'q3dm17ish', 'ruiner', 'skyway']
+        cointoss_types:
+          bo3:
+            steps: ['d1', 'd2', 'p1', 'p2', 'd1', 'd2', 'p1']
+          bo5:
+            steps: ['p1', 'p2', 'd1', 'd2', 'p1', 'p2', 'p1']
+          bo7:
+            steps: ['s1', 'p2', 'p1', 'p2', 'p1', 'p2', 'p1']
         contoss_log_file: './cointoss-logs/server1.log'
         botnick: server
         stats_mode: 'duel'

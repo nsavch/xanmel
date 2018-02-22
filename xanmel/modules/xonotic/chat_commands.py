@@ -215,14 +215,17 @@ class Cointoss(ChatCommand):
                 '^1A cointoss is already activated. ^3Finish the games or ^2/cointoss cancel^3 before starting a new one^7',
                 is_private=False)
             return
-        await user.public_reply('^3Tossing coin...^7')
-        await asyncio.sleep(0.3)
 
-        result = random.choice(('heads', 'tails'))
-        await user.public_reply('{}!'.format(result.upper()))
-        await asyncio.sleep(0.2)
-        server.cointosser.reset()
-
+        if server.cointosser.steps[0]['action'] == CointosserAction.S:
+            if side != 'notoss':
+                await user.public_reply('^3This cointoss is not random. The player who has one map advantage should start it ^2/cointoss notoss^7')
+                return
+        else:
+            if side == 'notoss':
+                await user.public_reply('^3This cointoss type should be called with ^1heads^7 ^5or^7 ^1tails^7')
+                return
+        await user.public_reply('^3Performing cointoss of type: ^1{}^7'.format(server.cointosser.current_type))
+        await asyncio.sleep(0.7)
         this_player = other_player = None
         for i in server.active_duel_pair:
             if i.nickname == user.unique_id():
@@ -230,12 +233,22 @@ class Cointoss(ChatCommand):
             else:
                 other_player = i
         assert this_player and other_player, (this_player, other_player)
-        if side == result:
-            await user.public_reply('{} ^2wins ^3the cointoss!'.format(this_player.nickname.decode('utf8')))
+
+        if side == 'notoss':
             server.cointosser.activate((this_player, other_player))
         else:
-            await user.public_reply('{} ^2wins ^3the cointoss!'.format(other_player.nickname.decode('utf8')))
-            server.cointosser.activate((other_player, this_player))
+            await user.public_reply('^3Tossing coin...^7')
+            await asyncio.sleep(0.7)
+            result = random.choice(('heads', 'tails'))
+            await user.public_reply('^1{}^7!'.format(result.upper()))
+            await asyncio.sleep(0.2)
+            server.cointosser.reset()
+            if side == result:
+                await user.public_reply('{} ^2wins ^3the cointoss!'.format(this_player.nickname.decode('utf8')))
+                server.cointosser.activate((this_player, other_player))
+            else:
+                await user.public_reply('{} ^2wins ^3the cointoss!'.format(other_player.nickname.decode('utf8')))
+                server.cointosser.activate((other_player, this_player))
         await asyncio.sleep(0.3)
         for i in (this_player, other_player):
             if i.crypto_idfp is None:
@@ -243,8 +256,41 @@ class Cointoss(ChatCommand):
                 await asyncio.sleep(0.3)
         await user.public_reply(server.cointosser.format_status())
 
+    async def run_switch(self, server, user, new_type):
+        if server.cointosser.state != CointosserState.PENDING:
+            await user.public_reply('^3Cointoss has been activated. Cancel before switching cointoss mode.^7')
+            return
+        if new_type not in server.cointosser.types.keys():
+            await user.public_reply('^1Unknown type {}.^7 ^3Known types: ^2{}'.format(
+                new_type,
+                '^3, ^2'.join(server.cointosser.types.keys())
+            ))
+            return
+        server.cointosser.switch_type(new_type)
+        await user.public_reply('^3Switched to ^1{}^7'.format(server.cointosser.current_type))
+
     async def run_cancel(self, server, user):
-        await user.public_reply('Not yet implemented. Vcall endmatch.')
+        async def __yes_cb():
+            server.cointosser.reset()
+            await user.public_reply('^1Cointoss canceled. ^3Run ^2/cointoss heads|tails ^3to start a new one^7')
+
+        async def __no_cb():
+            await user.public_reply('^3Cancel canceled.^7')
+
+        if server.cointosser.state == CointosserState.PENDING:
+            await user.public_reply('^3Cointoss is not activated, cannot cancel.^7')
+            return
+
+        player = server.players.find_by_nickname(user.unique_id())
+        if not (player and player.active):
+            await user.public_reply('^3Only active player can cancel cointoss.^7')
+            return
+
+        await self.parent.confirmations.ask(
+            user,
+            '^3Are you sure you want cancel current cointoss? ^1NOTE: Abusing cointoss cancel is a severe crime and '
+            'is punished by ban.^7',
+            __yes_cb, __no_cb)
 
     async def run(self, user, message, is_private=True, root=None):
         rcon_server = self.parent.properties['rcon_server']
@@ -255,10 +301,12 @@ class Cointoss(ChatCommand):
         with await rcon_server.cointosser.lock:
             if message in ('', 'status'):
                 await self.run_status(rcon_server, user)
-            elif message in ('heads', 'tails'):
+            elif message in ('heads', 'tails', 'notoss'):
                 await self.run_toss(rcon_server, user, message)
             elif message == 'cancel':
                 await self.run_cancel(rcon_server, user)
+            elif message.startswith('switch '):
+                await self.run_switch(rcon_server, user, message.split(' ', 1)[1].strip())
             else:
                 await user.public_reply('Unknown command {}. Available commands: status, heads, tails, cancel.'.format(message))
 
@@ -318,3 +366,10 @@ class Drop(PickDropBase):
     prefix = 'drop'
     help_text = 'Drop a map to exclude it from the map pool.'
     action = CointosserAction.D
+
+
+class Skip(PickDropBase):
+    parent = XonCommands
+    prefix = 'skip'
+    help_text = 'Skip a map (you are assumed as a winner with score 0:-10)'
+    action = CointosserAction.S

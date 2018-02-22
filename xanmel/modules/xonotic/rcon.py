@@ -86,7 +86,7 @@ class RconServer(RconClient):
         self.game_start_timestamp = 0
         self.map_voter = MapVoter(self)
         if config.get('cointoss_map_pool'):
-            self.cointosser = Cointosser(self, config['cointoss_map_pool'], config['cointoss_steps'])
+            self.cointosser = Cointosser(self, config['cointoss_map_pool'], config['cointoss_types'])
         else:
             self.cointosser = None
         self.active_vote = None
@@ -195,7 +195,8 @@ class RconServer(RconClient):
                 with self.sv_adminnick(nick):
                     self.send('say {}'.format(i))
             else:
-                self.send('say {}'.format(i))
+                with self.sv_adminnick(self.config.get('botnick', 'server')):
+                    self.send('say {}'.format(i))
 
     def say(self, message: Union[str, list, tuple], nick: str=None) -> None:
         if self.config['say_type'] == 'ircmsg':
