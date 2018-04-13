@@ -42,7 +42,7 @@ modules:
             steps: ['p1', 'p2', 'd1', 'd2', 'p1', 'p2', 'p1']
           bo7:
             steps: ['s1', 'p2', 'p1', 'p2', 'p1', 'p2', 'p1']
-        contoss_log_file: './cointoss-logs/server1.log'
+        cointoss_log_file: './cointoss-logs/server1.log'
         botnick: server
         stats_mode: 'duel'
         stats_ordering: ['score', 'goals', 'faults', 'kills', 'revivals', 'deaths']
