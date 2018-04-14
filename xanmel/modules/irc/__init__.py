@@ -111,6 +111,12 @@ class IRCModule(Module):
         fb = int(self.config.get('flood_burst', 5))
         fr = int(self.config.get('flood_rate', 4))
         frd = int(self.config.get('flood_rate_delay', 20))
+
+        def __get_delay():
+            mean = frd / fr
+            upper = mean + mean / 4
+            lower = mean - mean / 4
+            return random.random() * (upper - lower) + lower
         current_burst = 0
         while True:
             if not self.client.protocol or not self.joined:
@@ -127,11 +133,11 @@ class IRCModule(Module):
                     current_burst = 0
             else:
                 logger.debug('FLOOD BURST! Slowing down.')
-                await asyncio.sleep(frd / fr)
+                await asyncio.sleep(__get_delay())
                 self.client.send(cmd, **kwargs)
                 while time.time() - t < frd:
                     cmd, kwargs = await self.message_queue.get()
-                    await asyncio.sleep(frd / fr)
+                    await asyncio.sleep(__get_delay())
                     self.client.send(cmd, **kwargs)
                 logger.debug('End of flood delay')
                 current_burst = 0
