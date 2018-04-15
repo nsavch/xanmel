@@ -82,9 +82,10 @@ class Player:
 
     async def get_elo(self):
         self.crypto_idfp = await self.server.prvm_edictget(self.number2, 'crypto_idfp')
+        if self.crypto_idfp is not None:
+            self.crypto_idfp = self.crypto_idfp.strip()
         if not self.crypto_idfp:
             return
-        print(self.crypto_idfp)
         quoted_crypto_idfp = quote(quote(quote(self.crypto_idfp, safe='')))
         self.elo_url = 'http://stats.xonotic.org/player/{}/elo.txt'.format(quoted_crypto_idfp)
         sig = self.server.config.get('elo_request_signature')
