@@ -121,7 +121,7 @@ def test_chat_user(xanmel, mocker, irc_module):
     assert chat_user.is_admin
     chat_user = IRCChatUser(irc_module, 'marryshelly', irc_user='~marryshelly@127.0.0.1')
     assert not chat_user.is_admin
-    send = mocker.patch.object(irc_module.client, 'send')
+    send = mocker.patch.object(irc_module, 'send')
     xanmel.loop.run_until_complete(chat_user.public_reply('HELLO'))
     xanmel.loop.run_until_complete(chat_user.private_reply('HELLO'))
     log = send.call_args_list
