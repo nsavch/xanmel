@@ -265,7 +265,7 @@ class Cointosser:
         players = list(scores.keys())
 
         def __player_is(pl1, pl2):
-            logger.debug(repr(pl1.crypto_idfp), repr(pl1.nickname), repr(pl2.crypto_idfp), repr(pl2.nickname))
+            logger.debug('%r %r -- %r %r' % pl1.crypto_idfp, pl1.nickname, pl2.crypto_idfp, pl2.nickname)
             return (pl1.crypto_idfp and pl1.crypto_idfp == pl2.crypto_idfp) or \
                    (pl1.crypto_idfp is None and pl1.nickname == pl2.nickname)
 

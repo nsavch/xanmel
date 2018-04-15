@@ -28,10 +28,10 @@ class IRCChatUser(ChatUser):
         return self.properties['irc_user'] in self.module.config['admin_users']
 
     async def private_reply(self, message, **kwargs):
-        self.module.client.send('PRIVMSG', target=self.name, message=message)
+        self.module.send('PRIVMSG', target=self.name, message=message)
 
     async def public_reply(self, message, **kwargs):
-        self.module.client.send('PRIVMSG', target=self.module.config['channel'], message=message)
+        self.module.send('PRIVMSG', target=self.module.config['channel'], message=message)
 
 
 class IRCModule(Module):
