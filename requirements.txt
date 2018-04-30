@@ -42,7 +42,7 @@ yarl==1.2.0
 aiopg==0.13.2
 peewee==3.3.1
 peewee-async==0.5.12
-psycopg2==2.7.3.2
+psycopg2==2.7.4
 uvloop==0.9.1
 ipwhois==1.0.0
 click==6.7
