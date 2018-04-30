@@ -40,7 +40,7 @@ twine==1.11.0
 wcwidth==0.1.7
 yarl==1.2.0
 aiopg==0.13.2
-peewee==2.10.2
+peewee==3.3.1
 peewee-async==0.5.10
 psycopg2==2.7.3.2
 uvloop==0.9.1
