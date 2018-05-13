@@ -82,6 +82,10 @@ class XDFServer(BaseModel):
     logo_hires = TextField()
     physics = CharField(default='xdf')
 
+    @classmethod
+    def get_physics_list(cls):
+        return cls.select(cls.physics).distinct()
+
 
 class XDFPlayer(BaseModel):
     stats_id = IntegerField(index=True, null=True)
@@ -117,8 +121,35 @@ class XDFTimeRecord(BaseModel):
     server = ForeignKeyField(XDFServer)
     player = ForeignKeyField(XDFPlayer)
     server_pos = IntegerField()
+    global_physics_pos = IntegerField(null=True)
+    global_pos = IntegerField(null=True)
     time = DecimalField(max_digits=20, decimal_places=6)
     timestamp = DateTimeField(default=current_time)
+
+    @classmethod
+    def get_map_list(cls):
+        return cls.select(cls.map).distinct()
+
+    @classmethod
+    def update_global_physics_pos(cls):
+        for m in cls.get_map_list():
+            map_name = m.map
+            for physics in XDFServer.get_physics_list():
+                servers = XDFServer.select().where(XDFServer.physics == physics.physics)
+                records = cls.select().where(cls.server.in_(servers), cls.map == map_name).order_by(cls.time.asc(),
+                                                                                                    cls.server_pos.asc())
+                for pos, i in enumerate(records, start=1):
+                    i.global_physics_pos = pos
+                    i.save()
+
+    @classmethod
+    def update_global_pos(cls):
+        for m in cls.get_map_list():
+            map_name = m.map
+            records = cls.select().where(cls.map == map_name).order_by(cls.time.asc(), cls.server_pos.asc())
+            for pos, i in enumerate(records, start=1):
+                i.global_pos = pos
+                i.save()
 
     @classmethod
     def get_record_for(cls, map, player, server):
@@ -139,7 +170,6 @@ class XDFSpeedRecord(BaseModel):
 
 class XDFVideo(BaseModel):
     timestamp = DateTimeField(default=current_time)
-    server = ForeignKeyField(XDFServer)
     record = ForeignKeyField(XDFTimeRecord, related_name='videos')
     url = CharField()
 
@@ -153,13 +183,8 @@ class EventType(EChoice):
 class XDFNewsFeed(BaseModel):
     timestamp = DateTimeField(default=current_time)
     event_type = SmallIntegerField(choices=EventType.choices())
-    server = ForeignKeyField(XDFServer)
-    map = CharField(index=True)
-    player = ForeignKeyField(XDFPlayer)
-    server_pos = SmallIntegerField(null=True)
-    global_physics_pos = SmallIntegerField(null=True)
-    global_pos = SmallIntegerField(null=True)
-    value = DecimalField(max_digits=20, decimal_places=6, null=True)
+    time_record = ForeignKeyField(XDFTimeRecord, null=True)
+    speed_record = ForeignKeyField(XDFSpeedRecord, null=True)
     video = ForeignKeyField(XDFVideo, null=True)
 
 
