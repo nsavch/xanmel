@@ -47,3 +47,5 @@ uvloop==0.9.1
 ipwhois==1.0.0
 click==6.7
 aio_dprcon>=0.1.5
+django-echoices==2.5.1
+python-xonotic-db==0.3.0
