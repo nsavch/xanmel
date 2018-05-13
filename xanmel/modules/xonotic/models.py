@@ -1,6 +1,7 @@
 import http.client
 from urllib.parse import quote
 
+from echoices import EChoice
 from peewee import *
 
 from xanmel import current_time
@@ -73,19 +74,93 @@ class CalledVote(BaseModel):
         return 'CalledVote(nickname=%r, map=%r, vote_type=%r)' % (self.player, self.map, self.vote_type)
 
 
+class XDFServer(BaseModel):
+    name = CharField()
+    admins = CharField()
+    color = CharField()
+    logo = TextField()
+    logo_hires = TextField()
+    physics = CharField(default='xdf')
+
+
+class XDFPlayer(BaseModel):
+    stats_id = IntegerField(index=True, null=True)
+    raw_nickname = CharField()
+    nickname = CharField()
+    xanmel_player = ForeignKeyField(Player, null=True)
+
+    @classmethod
+    def get_player(cls, crypto_idfp, raw_nickname, elo_request_signature):
+        nickname = Color.dp_to_none(raw_nickname.encode('utf8')).decode('utf8')
+        try:
+            key = XDFPlayerKey.get(XDFPlayerKey.crypto_idfp == crypto_idfp)
+            player = key.player
+        except DoesNotExist:
+            player = cls.create(raw_nickname=raw_nickname, nickname=nickname)
+            key = XDFPlayerKey.create(player=player, crypto_idfp=crypto_idfp)
+            xanmel_player = Player.from_cryptoidfp(crypto_idfp, elo_request_signature)
+            if xanmel_player:
+                player.xanmel_player = xanmel_player
+                if player.stats_id is None:
+                    player.stats_id = xanmel_player.stats_id
+            player.save()
+        return player
+
+
+class XDFPlayerKey(BaseModel):
+    player = ForeignKeyField(XDFPlayer)
+    crypto_idfp = CharField(index=True)
+
+
 class XDFTimeRecord(BaseModel):
-    map = ForeignKeyField(Map)
-    player = ForeignKeyField(Player)
-    position = IntegerField()
-    time = IntegerField()
+    map = CharField(index=True)
+    server = ForeignKeyField(XDFServer)
+    player = ForeignKeyField(XDFPlayer)
+    server_pos = IntegerField()
+    time = DecimalField(max_digits=20, decimal_places=6)
     timestamp = DateTimeField(default=current_time)
+
+    @classmethod
+    def get_record_for(cls, map, player, server):
+        q = cls.select().where(cls.map == map, cls.server == server, cls.player == player).order_by(cls.server_pos)
+        if q.count() > 0:
+            return q[0]
+        else:
+            return
 
 
 class XDFSpeedRecord(BaseModel):
-    map = ForeignKeyField(Map)
-    player = ForeignKeyField(Player)
-    speed = FloatField()
+    map = CharField(index=True)
+    server = ForeignKeyField(XDFServer)
+    player = ForeignKeyField(XDFPlayer)
+    speed = DecimalField(max_digits=20, decimal_places=6)
     timestamp = DateTimeField(default=current_time)
+
+
+class XDFVideo(BaseModel):
+    timestamp = DateTimeField(default=current_time)
+    server = ForeignKeyField(XDFServer)
+    record = ForeignKeyField(XDFTimeRecord, related_name='videos')
+    url = CharField()
+
+
+class EventType(EChoice):
+    TIME_RECORD = (0, 'Time Record')
+    SPEED_RECORD = (1, 'Speed Record')
+    YOUTUBE_VID = (2, 'Youtube Video')
+
+
+class XDFNewsFeed(BaseModel):
+    timestamp = DateTimeField(default=current_time)
+    event_type = SmallIntegerField(choices=EventType.choices())
+    server = ForeignKeyField(XDFServer)
+    map = CharField(index=True)
+    player = ForeignKeyField(XDFPlayer)
+    server_pos = SmallIntegerField(null=True)
+    global_physics_pos = SmallIntegerField(null=True)
+    global_pos = SmallIntegerField(null=True)
+    value = DecimalField(max_digits=20, decimal_places=6, null=True)
+    video = ForeignKeyField(XDFVideo, null=True)
 
 
 class PlayerAccount(BaseModel):
