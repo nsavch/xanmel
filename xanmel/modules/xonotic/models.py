@@ -132,6 +132,12 @@ class XDFTimeRecord(BaseModel):
     video_url = CharField(null=True)
     timestamp = DateTimeField(default=current_time)
 
+    @property
+    def youtube_embed_code(self):
+        id = self.video_url.split('/')[-1]
+        return '''<iframe width="480" height="300" src="https://www.youtube.com/embed/{}" frameborder="0"
+        allow="autoplay; encrypted-media" allowfullscreen> </iframe>'''.format(id)
+
     @classmethod
     def get_map_list(cls):
         return cls.select(cls.map).distinct()
@@ -205,7 +211,10 @@ class XDFNewsFeed(BaseModel):
 
     @classmethod
     def filter_feed(cls):
-        q = cls.select().order_by(cls.timestamp.desc())
+        q = (cls.select()
+             .join(XDFTimeRecord, JOIN_LEFT_OUTER, on=(cls.time_record == XDFTimeRecord.id))
+             .join(XDFSpeedRecord, JOIN_LEFT_OUTER, on=(cls.speed_record == XDFSpeedRecord.id))
+             .order_by(cls.timestamp.desc()))
         return q
 
 
