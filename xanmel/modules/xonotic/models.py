@@ -81,6 +81,8 @@ class XDFServer(BaseModel):
     logo = TextField()
     logo_hires = TextField()
     physics = CharField(default='xdf')
+    server_list_name = CharField(null=True)
+    public_addr = CharField(null=True)
 
     @classmethod
     def get_physics_list(cls):
@@ -118,12 +120,16 @@ class XDFPlayerKey(BaseModel):
 
 class XDFTimeRecord(BaseModel):
     map = CharField(index=True)
-    server = ForeignKeyField(XDFServer)
+    server = ForeignKeyField(XDFServer, related_name='time_records')
     player = ForeignKeyField(XDFPlayer)
     server_pos = IntegerField()
+    server_max_pos = IntegerField(null=True)
     global_physics_pos = IntegerField(null=True)
+    global_physics_max_pos = IntegerField(null=True)
     global_pos = IntegerField(null=True)
+    global_max_pos = IntegerField(null=True)
     time = DecimalField(max_digits=20, decimal_places=6)
+    video_url = CharField(null=True)
     timestamp = DateTimeField(default=current_time)
 
     @classmethod
@@ -138,8 +144,10 @@ class XDFTimeRecord(BaseModel):
                 servers = XDFServer.select().where(XDFServer.physics == physics.physics)
                 records = cls.select().where(cls.server.in_(servers), cls.map == map_name).order_by(cls.time.asc(),
                                                                                                     cls.server_pos.asc())
+                max_pos = records.count()
                 for pos, i in enumerate(records, start=1):
                     i.global_physics_pos = pos
+                    i.global_physics_max_pos = max_pos
                     i.save()
 
     @classmethod
@@ -147,8 +155,10 @@ class XDFTimeRecord(BaseModel):
         for m in cls.get_map_list():
             map_name = m.map
             records = cls.select().where(cls.map == map_name).order_by(cls.time.asc(), cls.server_pos.asc())
+            max_pos = records.count()
             for pos, i in enumerate(records, start=1):
                 i.global_pos = pos
+                i.global_max_pos = max_pos
                 i.save()
 
     @classmethod
@@ -168,16 +178,9 @@ class XDFSpeedRecord(BaseModel):
     timestamp = DateTimeField(default=current_time)
 
 
-class XDFVideo(BaseModel):
-    timestamp = DateTimeField(default=current_time)
-    record = ForeignKeyField(XDFTimeRecord, related_name='videos')
-    url = CharField()
-
-
 class EventType(EChoice):
     TIME_RECORD = (0, 'Time Record')
     SPEED_RECORD = (1, 'Speed Record')
-    YOUTUBE_VID = (2, 'Youtube Video')
 
 
 class XDFNewsFeed(BaseModel):
@@ -185,7 +188,25 @@ class XDFNewsFeed(BaseModel):
     event_type = SmallIntegerField(choices=EventType.choices())
     time_record = ForeignKeyField(XDFTimeRecord, null=True)
     speed_record = ForeignKeyField(XDFSpeedRecord, null=True)
-    video = ForeignKeyField(XDFVideo, null=True)
+
+    @property
+    def server(self):
+        if self.event_type == EventType.TIME_RECORD.value:
+            return self.time_record.server
+        elif self.event_type == EventType.SPEED_RECORD.value:
+            return self.speed_record.server
+
+    @property
+    def map(self):
+        if self.event_type == EventType.TIME_RECORD.value:
+            return self.time_record.map
+        elif self.event_type == EventType.SPEED_RECORD.value:
+            return self.speed_record.map
+
+    @classmethod
+    def filter_feed(cls):
+        q = cls.select().order_by(cls.timestamp.desc())
+        return q
 
 
 class PlayerAccount(BaseModel):
