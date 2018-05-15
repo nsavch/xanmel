@@ -4,6 +4,7 @@ from urllib.parse import quote
 
 from echoices import EChoice
 from peewee import *
+from playhouse.postgres_ext import BinaryJSONField
 
 from xanmel import current_time
 from xanmel.db import BaseModel
@@ -242,6 +243,31 @@ class XDFNewsFeed(BaseModel):
              .join(XDFSpeedRecord, JOIN_LEFT_OUTER, on=(cls.speed_record == XDFSpeedRecord.id))
              .order_by(cls.timestamp.desc()))
         return q
+
+
+class LadderAlgo(EChoice):
+    CLASSIC = (0, 'Classic')
+
+
+class LadderType(EChoice):
+    GLOBAL = (0, 'Global')
+    # PHYSICS = (1, 'Physics')
+    SERVER = (2, 'Server')
+
+
+class XDFLadder(BaseModel):
+    algo = SmallIntegerField(choices=LadderAlgo.choices())
+    type = SmallIntegerField(choices=LadderAlgo.choices())
+    server = ForeignKeyField(XDFServer, null=True)
+    physics = CharField(index=True, null=True)
+
+
+class XDFLadderPosition(BaseModel):
+    ladder = ForeignKeyField(XDFLadder)
+    player = ForeignKeyField(XDFPlayer)
+    points = DecimalField(max_digits=50, decimal_places=5)
+    position = IntegerField(null=True)
+    data = BinaryJSONField()
 
 
 class PlayerAccount(BaseModel):
