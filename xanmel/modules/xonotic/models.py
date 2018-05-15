@@ -1,4 +1,5 @@
 import http.client
+from collections import defaultdict
 from urllib.parse import quote
 
 from echoices import EChoice
@@ -143,11 +144,12 @@ class XDFTimeRecord(BaseModel):
         return cls.select(cls.map).distinct()
 
     @classmethod
-    def update_global_physics_pos(cls):
-        for m in cls.get_map_list():
-            map_name = m.map
-            for physics in XDFServer.get_physics_list():
-                servers = XDFServer.select().where(XDFServer.physics == physics.physics)
+    def update_global_physics_pos(cls, maps=None):
+        for physics in XDFServer.get_physics_list():
+            servers = XDFServer.select().where(XDFServer.physics == physics.physics)
+            if maps is None:
+                maps = [i.map for i in cls.get_map_list()]
+            for map_name in maps:
                 records = cls.select().where(cls.server.in_(servers), cls.map == map_name).order_by(cls.time.asc(),
                                                                                                     cls.server_pos.asc())
                 max_pos = records.count()
@@ -157,9 +159,10 @@ class XDFTimeRecord(BaseModel):
                     i.save()
 
     @classmethod
-    def update_global_pos(cls):
-        for m in cls.get_map_list():
-            map_name = m.map
+    def update_global_pos(cls, maps=None):
+        if maps is None:
+            maps = [i.map for i in cls.get_map_list()]
+        for map_name in maps:
             records = cls.select().where(cls.map == map_name).order_by(cls.time.asc(), cls.server_pos.asc())
             max_pos = records.count()
             for pos, i in enumerate(records, start=1):
@@ -174,6 +177,14 @@ class XDFTimeRecord(BaseModel):
             return q[0]
         else:
             return
+
+    @classmethod
+    def get_records_for(cls, server):
+        maps = defaultdict(dict)
+        q = cls.select().where(cls.server == server).order_by(cls.server_pos.desc())
+        for i in q:
+            maps[i.map][i.player_id] = i
+        return maps
 
 
 class XDFSpeedRecord(BaseModel):
