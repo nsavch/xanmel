@@ -144,6 +144,19 @@ class XDFTimeRecord(BaseModel):
         return cls.select(cls.map).distinct()
 
     @classmethod
+    def update_server_pos(cls, server, maps=None):
+        if maps is None:
+            maps = [i.map for i in cls.get_map_list()]
+        for map_name in maps:
+            records = cls.select().where(cls.map == map_name, cls.server == server).order_by(cls.time.asc(), cls.server_pos.asc())
+            max_pos = records.count()
+            for pos, i in enumerate(records, start=1):
+                if i.server_pos != pos or i.server_max_pos != max_pos:
+                    i.server_pos = pos
+                    i.server_max_pos = max_pos
+                    i.save()
+
+    @classmethod
     def update_global_physics_pos(cls, maps=None):
         for physics in XDFServer.get_physics_list():
             servers = XDFServer.select().where(XDFServer.physics == physics.physics)
@@ -154,9 +167,10 @@ class XDFTimeRecord(BaseModel):
                                                                                                     cls.server_pos.asc())
                 max_pos = records.count()
                 for pos, i in enumerate(records, start=1):
-                    i.global_physics_pos = pos
-                    i.global_physics_max_pos = max_pos
-                    i.save()
+                    if i.global_max_pos != pos or i.global_physics_max_pos != max_pos:
+                        i.global_physics_pos = pos
+                        i.global_physics_max_pos = max_pos
+                        i.save()
 
     @classmethod
     def update_global_pos(cls, maps=None):
@@ -166,9 +180,10 @@ class XDFTimeRecord(BaseModel):
             records = cls.select().where(cls.map == map_name).order_by(cls.time.asc(), cls.server_pos.asc())
             max_pos = records.count()
             for pos, i in enumerate(records, start=1):
-                i.global_pos = pos
-                i.global_max_pos = max_pos
-                i.save()
+                if i.global_pos != pos or i.global_max_pos != max_pos:
+                    i.global_pos = pos
+                    i.global_max_pos = max_pos
+                    i.save()
 
     @classmethod
     def get_record_for(cls, map, player, server):
