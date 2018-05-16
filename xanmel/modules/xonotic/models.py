@@ -260,6 +260,7 @@ class XDFLadder(BaseModel):
     type = SmallIntegerField(choices=LadderAlgo.choices())
     server = ForeignKeyField(XDFServer, null=True)
     physics = CharField(index=True, null=True)
+    max_position = IntegerField(null=True)
 
 
 class XDFLadderPosition(BaseModel):
