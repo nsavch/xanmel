@@ -120,6 +120,12 @@ class XDFPlayerKey(BaseModel):
     crypto_idfp = CharField(index=True)
 
 
+class XDFPlayerNickname(BaseModel):
+    key = ForeignKeyField(XDFPlayerKey, related_name='nicknames')
+    nickname = CharField()
+    raw_nickname = CharField()
+
+
 class XDFTimeRecord(BaseModel):
     map = CharField(index=True)
     server = ForeignKeyField(XDFServer, related_name='time_records')
