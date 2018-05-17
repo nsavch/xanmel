@@ -256,6 +256,7 @@ class LadderType(EChoice):
 
 
 class XDFLadder(BaseModel):
+    timestamp = DateTimeField(null=True)
     algo = SmallIntegerField(choices=LadderAlgo.choices())
     type = SmallIntegerField(choices=LadderAlgo.choices())
     server = ForeignKeyField(XDFServer, null=True)
