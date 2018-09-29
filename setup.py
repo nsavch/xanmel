@@ -18,8 +18,8 @@ setup(
     install_requires=[
         'setuptools',
         'aiodns==1.1.1',
-        'aiohttp==2.2.5',
-        'bottom==2.1.1',
+        'aiohttp==3.4.4',
+        'bottom==2.1.3',
         'cchardet==2.1.1',
         'geoip2==2.5.0',
         'inflection==0.3.1',
@@ -33,7 +33,8 @@ setup(
         'ipwhois==1.0.0',
         'uvloop==0.8.0',
         'click==6.7',
-        'aio_dprcon>=0.1.5'
+        'aio_dprcon>=0.1.6',
+        'django-echoices'
     ],
     classifiers=[
         'Development Status :: 3 - Alpha',

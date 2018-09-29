@@ -2,7 +2,7 @@ import http.client
 from collections import defaultdict
 from urllib.parse import quote
 
-from echoices import EChoice
+from echoices.enums import EChoice
 from peewee import *
 from playhouse.postgres_ext import BinaryJSONField
 
@@ -85,8 +85,6 @@ class XDFServer(BaseModel):
     physics = CharField(default='xdf')
     server_list_name = CharField(null=True)
     public_addr = CharField(null=True)
-    server_db_path = CharField(null=True)
-    youtube_db_path = CharField(null=True)
 
     @classmethod
     def get_physics_list(cls):
