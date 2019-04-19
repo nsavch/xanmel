@@ -19,6 +19,8 @@ from .models import Player as DBPlayer, PlayerAccount, PlayerIdentification
 
 logger = logging.getLogger(__name__)
 
+ELO_REQUEST_SIGNATURE = 'gQEBTrBWi2M7i5cInTMatx0iHAxmN4Xta2NZdXD2OsFls/x/k6XrxoevCGARC4jhC2DzgYHFM5vA40aih59tlXSzrFQ6EiiSgoWG+h1oERFHYWdg3KNwgEkUfnskEy2FS6BhdTs6JdpBAsEq348+NysGVhe7ZYMHlJUTFYE/nJVKC4qBAQGPqnGoD6GhuHLYN+Sf73ROColneBdJ7ttuVwm32FvI8LuD5aLDll7bpqfHTWhgbTW02CYvkTAYtoz2RZmIGK5ZHHaM/V6vcSXnq2ab/7mFRiag7D5OUsmIFY9E3IqcqtP7+wXSVgiNFY3DBPy27bXjk8ZJ9nUD5dQBL9sG8TzWd4EBAdZmc6gLKdO16z5PJQGsWrf1yOViENd/VANx+7aGPQsouAuhwzOlB06SkZ6dxx2zLyfagVthXTXY4JfUoAaa9vSkwqH/7TNIyHxBI220ZyFtekGzJFro2b7zRYiOqs3bKr0pec7qakn9blY0YfgO9W9GI8vG+JsQIk7MJNmSBupTgQEBQUDrksY28iujDepIsG4mXaZdvKM2RhWKKxI4VgrXQ33FVmAQqPwrA3U0EMEE6DR+O8tf6kHsN5efub9aU30E5nRcKEKBln5ro3RHtnLMtBikG5Tqy4o3grx4/SHfFPhs4CMvOYT304A6y1f35TsUj83ahbORkFjaKetTq97vZkk='
+
 
 def parse_elo(elo_txt):
     current_mode = None
@@ -88,7 +90,7 @@ class Player:
             return
         quoted_crypto_idfp = quote(quote(quote(self.crypto_idfp, safe='')))
         self.elo_url = 'http://stats.xonotic.org/player/{}/elo.txt'.format(quoted_crypto_idfp)
-        sig = self.server.config.get('elo_request_signature')
+        sig = ELO_REQUEST_SIGNATURE
         if not sig:
             return
         retries_left = 3
