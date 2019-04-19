@@ -79,9 +79,10 @@ class ChatMessageHandler(Handler):
                 message = message[1:]
         if not user or not message_is_cmd:
             if server.forward_chat_to_other_servers:
-                for server in self.module.servers:
-                    if not server.disabled:
-                        server.say(msg, nick=server.config.get('forward_prefix', server.config.get('out_prefix')))
+                for other_server in self.module.servers:
+                    if (other_server.config['unique_id'] != server.config['unique_id']) and (not other_server.disabled):
+                        server.say([msg.decode('utf8')],
+                                   nick=server.config.get('forward_prefix', server.config.get('out_prefix')))
             await self.run_action(ChannelMessage,
                                   message=Color.dp_to_irc(event.properties['message']).decode('utf8'),
                                   prefix=event.properties['server'].config['out_prefix'])
