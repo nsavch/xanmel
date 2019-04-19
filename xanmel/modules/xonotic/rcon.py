@@ -69,6 +69,7 @@ class RconServer(RconClient):
                          log_listener_ip=self.log_listener_ip)
         self.log_parser = RconLogParser(self)
         self.cmd_parser = RconCmdParser(self)
+        self.disabled = config.get('disabled', False)
         self.players = PlayerManager()
         self.current_map = ''
         self.current_gt = ''

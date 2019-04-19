@@ -19,4 +19,5 @@ class XonoticModule(Module):
 
     def setup_event_generators(self):
         for i in self.servers:
-            self.loop.create_task(i.connect_forever(connect_log=True))
+            if not i.disabled:
+                self.loop.create_task(i.connect_forever(connect_log=True))
