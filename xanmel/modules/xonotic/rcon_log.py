@@ -10,6 +10,7 @@ from .players import Player
 logger = logging.getLogger(__name__)
 
 GAME_TYPES = {
+    'duel': 'duel',
     'as': 'assault',
     'ca': 'clan arena',
     'cq': 'conquest',
