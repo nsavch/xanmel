@@ -80,7 +80,7 @@ class ChatMessageHandler(Handler):
         if not user or not message_is_cmd:
             if server.forward_chat_to_other_servers:
                 for other_server in self.module.servers:
-                    if (other_server.config['unique_id'] != server.config['unique_id']) and (not other_server.disabled):
+                    if (other_server.config['unique_id'] in server.forward_chat_to_other_servers) and (not other_server.disabled):
                         other_server.say([msg.decode('utf8')],
                                          nick=server.config.get('forward_prefix', server.config.get('out_prefix')))
             await self.run_action(ChannelMessage,
@@ -560,7 +560,7 @@ class CointossNotificationHandler(Handler):
     async def handle(self, event):
         server = event.properties['server']
         if server.cointosser and \
-                int(server.cvars.get('xanmel_wup_stage')) == 1 and \
+                int(server.cvars.get('_xanmel_wup_stage')) == 1 and \
                 server.cointosser.state == CointosserState.PENDING:
             announcement = '^7{} ^1vs ^7{} ^3Current cointoss type: ^1{}^7. Type ^2"/cointoss heads"^3 or ^2"/cointoss tails"^3 to start the map selection process.^7'.format(
                 event.properties['player1'].nickname.decode('utf8'),

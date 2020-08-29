@@ -31,7 +31,7 @@ modules:
         rcon_password: password
         rcon_secure: 1
         out_prefix: 's1 > '
-        in_prefix: 's1 '
+        in_prefixes: ['s1 ']
         cmd_prefix: s1
         say_type: say
         cointoss_map_pool: ['cube-arena', 'evilspace_repack', 'farewell_laserfun', 'handsofgod', 'q3dm17ish', 'ruiner', 'skyway']

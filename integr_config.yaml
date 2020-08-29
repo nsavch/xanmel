@@ -21,7 +21,7 @@ modules:
         rcon_password: password
         rcon_secure: 0
         out_prefix: 'exe > '
-        in_prefix: ''
+        in_prefixes: ['']
         cmd_prefix: xon
         say_type: say
         botnick: xanmel

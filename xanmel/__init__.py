@@ -270,7 +270,6 @@ class CommandRoot:
                 logger.info('Prefix %s already registered. Skipping command container %s', prefix, container)
 
     async def run(self, user, message, is_private=False):
-        print(self.children)
         ut = user.user_type
         uid = user.unique_id()
         logger.debug('Running a command for user %s, message %s', uid, message)

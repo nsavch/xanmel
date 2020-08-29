@@ -202,7 +202,7 @@ class Cointoss(ChatCommand):
         await user.public_reply(server.cointosser.format_status())
 
     async def run_toss(self, server, user, side):
-        if int(server.cvars['xanmel_wup_stage']) != 1:
+        if int(server.cvars['_xanmel_wup_stage']) != 1:
             await user.reply('^3Cointoss can only be performed during warmup stage. ^2vcall ^5restart ^3or ^5endmatch^7.',
                              is_private=False)
             return

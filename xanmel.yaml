@@ -1,7 +1,7 @@
 settings:
   asyncio_debug: false
   log_level: DEBUG
-  db_url: null # postgresql:///xanmel
+  db_url:  null  #postgresql:///xanmel
 modules:
   xanmel.modules.irc.IRCModule:
     host: irc.quakenet.org
@@ -10,7 +10,7 @@ modules:
     nick: xanmel
     realname: Xanmel BOT
     quakenet_auth: ['xanmel', 'xX6T2WYi6z']
-    channel: '#xanmel'
+    channel: '#morosophos1'
     greeting: HELLO WORLD!
     mention_delimeters: [' ', ':', ',']
     admin_users: ['~johndoe@127.0.0.1']
@@ -28,10 +28,10 @@ modules:
         log_listener_ip: 127.0.0.1
         public_ip: 94.23.207.83
         public_port: 26000
-        rcon_password: password
+        rcon_password: 12345
         rcon_secure: 1
         out_prefix: 'exe > '
-        in_prefix: ''
+        in_prefixes: ['']
         cmd_prefix: xon
         say_type: say
         botnick: xanmel

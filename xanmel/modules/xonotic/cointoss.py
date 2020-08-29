@@ -254,7 +254,7 @@ class Cointosser:
             await asyncio.sleep(3)
             self.gotomap()
             return
-        if int(self.rcon_server.cvars['xanmel_wup_stage']) == 1:
+        if int(self.rcon_server.cvars['_xanmel_wup_stage']) == 1:
             self.rcon_server.say('Match ended during warmup stage, restarting!')
             await asyncio.sleep(1)
             self.rcon_server.say(self.format_status())

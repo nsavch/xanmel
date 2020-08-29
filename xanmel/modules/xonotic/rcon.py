@@ -97,7 +97,7 @@ class RconServer(RconClient):
         self.betting_session_id = None
         self.betting_session = None
         self.betting_session_active = False
-        self.forward_chat_to_other_servers = config.get('forward_chat_to_other_servers', False)
+        self.forward_chat_to_other_servers = config.get('forward_chat_to_other_servers', [])
         self.display_in_game_info = config.get('display_in_game_info', True)
         self.stats_mode = config.get('stats_mode', 'overall')
 
@@ -140,9 +140,9 @@ class RconServer(RconClient):
                     to_remove.append(n2)
             for n2 in to_remove:
                 del self.players.status[n2]
-            self.send('prvm_globalget server warmup_stage xanmel_wup_stage')
+            self.send('prvm_globalget server warmup_stage _xanmel_wup_stage')
             await asyncio.sleep(0.1)
-            self.send('xanmel_wup_stage')
+            self.send('_xanmel_wup_stage')
             # for n2, v in self.players.status.items():
             #     logger.debug('%s: %s', n2, v)
         return res
@@ -207,7 +207,7 @@ class RconServer(RconClient):
             self.say_say(message, nick)
 
     async def prvm_edictget(self, entity_id, variable, program_name='server'):
-        internal_variable = 'xanmel_{}_{}_{}'.format(program_name, entity_id, variable)
+        internal_variable = '_xanmel_{}_{}_{}'.format(program_name, entity_id, variable)
         self.send('prvm_edictget {} {} {} {}'.format(
             program_name,
             entity_id,
