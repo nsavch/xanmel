@@ -495,12 +495,18 @@ class IRCMessageHandler(Handler):
     async def handle(self, event):
         irc_nick = Color.irc_to_none(event.properties['nick'].encode('utf8')).decode('utf8')
         message = Color.irc_to_none(event.properties['message'].encode('utf8')).decode('utf8')
-        for server in sorted(self.module.servers, key=lambda x: len(x.config['in_prefix']), reverse=True):
-            if message.startswith(server.config['in_prefix']):
-                unprefixed = message[len(server.config['in_prefix']):]
-                server.say(unprefixed, nick='[IRC] {}'.format(irc_nick))
-                if server.config['in_prefix']:
-                    break
+        prefixes = set()
+        for i in self.module.servers:
+            prefixes += i.config['in_prefixes']
+        prefixes = sorted(list(prefixes), key=lambda x: len(x), reverse=True)
+
+        for prefix in prefixes:
+            if message.startswith(prefix):
+                for i in self.module.servers:
+                    unprefixed = message[len(prefix):]
+                    for server in self.module.servers:
+                        if prefix in server.config['in_prefixes']:
+                            server.say(unprefixed, nick='[IRC] {}'.format(irc_nick))
 
 
 class VoteAcceptedHandler(Handler):
