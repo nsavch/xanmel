@@ -657,7 +657,7 @@ class RecordSetHandlerSaveToDB(Handler):
             map=map,
             time=event.properties['result'],
             nickname=player.nickname.decode('utf8'),
-            nickname_nocolors=Color.irc_to_none(player.nickname).decode('utf8'),
+            nickname_nocolors=Color.dp_to_none(player.nickname).decode('utf8'),
             crypto_idfp=player.crypto_idfp,
             stats_id=player.elo_basic and player.elo_basic.get('player_id'),
             ip_address=player.ip_address
