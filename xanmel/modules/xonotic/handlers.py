@@ -696,7 +696,7 @@ class RecordSetHandlerInform(Handler):
             'name': player.nickname.decode('utf8'),
             'time': __format_time(result)
         }
-        in_game_message = '^x{color}{map_name} {pos}:^7 {name} - ^x{color}{time}s^7'.format(
+        in_game_message = '^1\\o/ ^x{color}{map_name} {pos}:^7 {name} - ^x{color}{time}s^7'.format(
             color=colors[position],
             pos=positions[position],
             **format_args
