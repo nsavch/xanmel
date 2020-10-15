@@ -383,7 +383,7 @@ class PartHandler(Handler):
                               prefix=event.properties['server'].config['out_prefix'])
         server = event.properties['server']
         if server.forward_chat_to_other_servers:
-            in_game_message = '^1+part:^7 %(name)s' % {
+            in_game_message = '^1-part:^7 %(name)s' % {
                 'name': event.properties['player'].nickname.decode('utf8'),
             }
             for other_server in self.module.servers:
