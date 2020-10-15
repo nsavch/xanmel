@@ -690,7 +690,7 @@ class RecordSetHandlerInform(Handler):
         )
         server.say(in_game_message)
         await self.run_action(ChannelMessage,
-                              message=Color.dp_to_irc(in_game_message).decode('utf8'),
+                              message=Color.dp_to_irc(in_game_message.encode('utf8')).decode('utf8'),
                               prefix=event.properties['server'].config['out_prefix'])
         if server.forward_chat_to_other_servers:
             for other_server in self.module.servers:
