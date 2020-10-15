@@ -108,3 +108,13 @@ class DuelEndedPrematurely(Event):
 class CointossChoiceComplete(Event):
     def __str__(self):
         return '%s cointoss choice complete' % self.properties['server']
+
+
+class RecordSet(Event):
+    def __str(self):
+        return 'new record set on map %s by %s: %d - %.2f' % (
+            self.properties['map'],
+            self.properties['player'],
+            self.properties['position'],
+            self.properties['result']
+        )

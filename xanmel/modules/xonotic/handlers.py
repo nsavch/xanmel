@@ -11,7 +11,7 @@ from xanmel import Handler
 from xanmel import current_time
 from xanmel.modules.irc.actions import ChannelMessage, ChannelMessages
 from xanmel.modules.xonotic.cointoss import CointosserState
-from xanmel.modules.xonotic.models import CalledVote, MapRating, Map, AccountTransaction, PlayerAccount
+from xanmel.modules.xonotic.models import CalledVote, MapRating, Map, AccountTransaction, PlayerAccount, CTSRecord
 from .chat_user import XonoticChatUser
 from .events import *
 from .rcon_log import GAME_TYPES
@@ -224,6 +224,11 @@ class JoinHandler(Handler):
             server.say(in_game_message)
         await self.run_action(ChannelMessage, message=message,
                               prefix=event.properties['server'].config['out_prefix'])
+        if server.forward_chat_to_other_servers:
+            for other_server in self.module.servers:
+                if (other_server.config['unique_id'] in server.forward_chat_to_other_servers) and (not other_server.disabled):
+                    other_server.say([in_game_message],
+                                     nick=server.config.get('forward_prefix', server.config.get('out_prefix')))
 
 
 class NewDuelHandler(Handler):
@@ -376,6 +381,15 @@ class PartHandler(Handler):
         }
         await self.run_action(ChannelMessage, message=message,
                               prefix=event.properties['server'].config['out_prefix'])
+        server = event.properties['server']
+        if server.forward_chat_to_other_servers:
+            in_game_message = '^1+part:^7 %(name)s' % {
+                'name': event.properties['player'].nickname.decode('utf8'),
+            }
+            for other_server in self.module.servers:
+                if (other_server.config['unique_id'] in server.forward_chat_to_other_servers) and (not other_server.disabled):
+                    other_server.say([in_game_message],
+                                     nick=server.config.get('forward_prefix', server.config.get('out_prefix')))
 
 
 class NameChangeHandler(Handler):
@@ -388,6 +402,16 @@ class NameChangeHandler(Handler):
         }
         await self.run_action(ChannelMessage, message=message,
                               prefix=event.properties['server'].config['out_prefix'])
+        server = event['server']
+        if server.forward_chat_to_other_servers:
+            in_game_message = '^1*^7 %(name)s is known as %(new_name)s' % {
+                'name': event.properties['old_nickname'].decode('utf8'),
+                'new_name': event.properties['player'].nickname.decode('utf8')
+            }
+            for other_server in self.module.servers:
+                if (other_server.config['unique_id'] in server.forward_chat_to_other_servers) and (not other_server.disabled):
+                    other_server.say([in_game_message],
+                                     nick=server.config.get('forward_prefix', server.config.get('out_prefix')))
 
 
 class GameEndedHandler(Handler):
@@ -614,3 +638,62 @@ class CointossGameStarted(Handler):
             server.cointosser.state = CointosserState.PLAYING
         if server.cointosser.state != CointosserState.PLAYING:
             server.cointosser.reset()
+
+
+class RecordSetHandlerSaveToDB(Handler):
+    events = [RecordSet]
+
+    async def handle(self, event):
+        server = event.properties['server']
+        map_name = event.properties['map']
+        player = event.properties['player']
+        db = server.module.xanmel.db
+        if not db.is_up:
+            return
+        map, _ = await db.mgr.get_or_create(Map, server=server.server_db_obj, name=map_name)
+        await db.mgr.create(
+            CTSRecord,
+            server=server.server_db_obj,
+            map=map,
+            time=event.properties['result'],
+            nickname=player.nickname.decode('utf8'),
+            nickname_nocolors=Color.irc_to_none(player.nickname).decode('utf8'),
+            crypto_idfp=player.crypto_idfp,
+            stats_id=player.elo_basic and player.elo_basic.get('player_id'),
+            ip_address=player.ip_address
+        )
+
+
+class RecordSetHandlerInform(Handler):
+    events = [RecordSet]
+
+    async def handle(self, event):
+        server = event.properties['server']
+        map_name = event.properties['map']
+        player = event.properties['player']
+        position = event.properties['position']
+        result = event.properties['result']
+        if position > 3:
+            # TODO: maybe add this to config?
+            return
+        format_args = {
+            'map_name': map_name,
+            'name': player.nickname.decode('utf8'),
+            'time': result
+        }
+        colors = ['FD0', 'CCC', 'A76']
+        positions = ['1st', '2nd', '3rd']
+        in_game_message = '^x{color}CTS {pos} ({map_name}):^7 {name} - ^x{color}{time:.2f}^7'.format(
+            color=colors[position],
+            pos=positions[position],
+            **format_args
+        )
+        server.say(in_game_message)
+        await self.run_action(ChannelMessage,
+                              message=Color.dp_to_irc(in_game_message).decode('utf8'),
+                              prefix=event.properties['server'].config['out_prefix'])
+        if server.forward_chat_to_other_servers:
+            for other_server in self.module.servers:
+                if (other_server.config['unique_id'] in server.forward_chat_to_other_servers) and (not other_server.disabled):
+                    other_server.say([in_game_message],
+                                     nick=server.config.get('forward_prefix', server.config.get('out_prefix')))

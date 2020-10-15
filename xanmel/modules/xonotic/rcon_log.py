@@ -1,6 +1,7 @@
 import logging
 import re
 import time
+from decimal import Decimal
 
 from aio_dprcon.parser import BaseMultilineParser, BaseOneLineParser, CombinedParser
 
@@ -314,6 +315,21 @@ class VoteStopParser(BaseOneLineParser):
             return
         VoteStopped(self.rcon_server.module, server=self.rcon_server, vote=self.rcon_server.active_vote).fire()
         self.rcon_server.active_vote = None
+
+
+class RecordParser(BaseOneLineParser):
+    key = b':recordset:'
+
+    def process(self, data):
+        newpos, player_id, result = data.split(b':', 1)
+        RecordSet(
+            self.rcon_server.module,
+            server=self.rcon_server,
+            map=self.rcon_server.current_map,
+            player=self.rcon_server.players.players_by_number1[int(player_id)],
+            position=int(newpos),
+            result=Decimal(result)
+        ).fire()
 
 
 class RconLogParser(CombinedParser):

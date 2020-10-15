@@ -76,6 +76,18 @@ class CalledVote(BaseModel):
         return 'CalledVote(nickname=%r, map=%r, vote_type=%r)' % (self.player, self.map, self.vote_type)
 
 
+class CTSRecord(BaseModel):
+    server = ForeignKeyField(Server)
+    map = ForeignKeyField(Map)
+    time = DecimalField(max_digits=20, decimal_places=5)
+    timestamp = DateTimeField(default=current_time)
+    nickname = CharField()
+    nickname_nocolors = CharField()
+    crypto_idfp = CharField(null=True)
+    ip_address = CharField(null=True)
+
+
+
 class XDFServer(BaseModel):
     name = CharField()
     admins = CharField()
