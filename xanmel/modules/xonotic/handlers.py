@@ -676,14 +676,27 @@ class RecordSetHandlerInform(Handler):
         if position > 3:
             # TODO: maybe add this to config?
             return
+
+        colors = ['FD0', 'CCC', 'A76']
+        positions = ['1st', '2nd', '3rd']
+        def __format_time(d: Decimal) -> str:
+            mins = d // Decimal(60)
+            secs = d - mins * Decimal(60)
+            if mins > Decimal(0):
+                return '{}:{:.2f}'.format(
+                    mins,
+                    secs
+                )
+            else:
+                return '{:.2f}'.format(
+                    secs
+                )
         format_args = {
             'map_name': map_name,
             'name': player.nickname.decode('utf8'),
-            'time': result
+            'time': __format_time(result)
         }
-        colors = ['FD0', 'CCC', 'A76']
-        positions = ['1st', '2nd', '3rd']
-        in_game_message = '^x{color}CTS {pos} ({map_name}):^7 {name} - ^x{color}{time:.2f}^7'.format(
+        in_game_message = '^x{color}{map_name} pos:^7 {name} - ^x{color}{time}s^7'.format(
             color=colors[position],
             pos=positions[position],
             **format_args
