@@ -321,7 +321,7 @@ class RecordParser(BaseOneLineParser):
     key = b':recordset:'
 
     def process(self, data):
-        newpos, player_id, result = data.split(b':', 2)
+        newpos, player_id, entity_id, result = data.split(b':', 3)
         RecordSet(
             self.rcon_server.module,
             server=self.rcon_server,
