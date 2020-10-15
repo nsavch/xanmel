@@ -402,7 +402,7 @@ class NameChangeHandler(Handler):
         }
         await self.run_action(ChannelMessage, message=message,
                               prefix=event.properties['server'].config['out_prefix'])
-        server = event['server']
+        server = event.properties['server']
         if server.forward_chat_to_other_servers:
             in_game_message = '^1*^7 %(name)s is known as %(new_name)s' % {
                 'name': event.properties['old_nickname'].decode('utf8'),
