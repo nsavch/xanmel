@@ -328,7 +328,7 @@ class RecordParser(BaseOneLineParser):
             map=self.rcon_server.current_map,
             player=self.rcon_server.players.players_by_number1[int(player_id)],
             position=int(newpos),
-            result=Decimal(str(result))
+            result=Decimal(result.decode('utf8'))
         ).fire()
 
 
