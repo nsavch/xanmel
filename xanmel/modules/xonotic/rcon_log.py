@@ -346,5 +346,7 @@ class RconLogParser(CombinedParser):
         VoteVcallParser,
         VoteVyesParser,
         VoteVnoParser,
-        VoteStopParser
+        VoteStopParser,
+        # CTS,
+        RecordParser,
     ]
