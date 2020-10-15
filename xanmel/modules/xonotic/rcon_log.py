@@ -318,10 +318,10 @@ class VoteStopParser(BaseOneLineParser):
 
 
 class RecordParser(BaseOneLineParser):
-    key = b':recordset:'
+    key = b':recordset::'
 
     def process(self, data):
-        newpos, player_id, result = data.split(b':', 1)
+        newpos, player_id, result = data.split(b':', 2)
         RecordSet(
             self.rcon_server.module,
             server=self.rcon_server,
