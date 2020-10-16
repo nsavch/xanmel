@@ -26,8 +26,6 @@ class StatusPlayerParser(BaseOneLineRegexParser):
     regex = re.compile(rb'^\^(?:3|7)(?P<ip>[^ ]+)\s+(?P<pl>[^ ]+)\s+(?P<ping>[^ ]+)\s+(?P<time>[^ ]+)\s+(?P<frags>-?\d+)\s+#(?P<number2>\d+)\s+(?P<nickname>.*)$')
 
     def process(self, data):
-        if not (self.rcon_server.game_start_timestamp and time.time() - self.rcon_server.game_start_timestamp > 8):
-            return
         g = data.group
         if g('ip') == b'botclient':
             return
@@ -46,6 +44,8 @@ class StatusPlayerParser(BaseOneLineRegexParser):
                                                     'frags': frags,
                                                     'nickname': g('nickname'),
                                                     'timestamp': time.time()}
+        if not (self.rcon_server.game_start_timestamp and time.time() - self.rcon_server.game_start_timestamp > 8):
+            return
         new_active = self.rcon_server.players.active
         if len(new_active) > len(old_active):
             NewPlayerActive(self.rcon_server.module, server=self.rcon_server).fire()
