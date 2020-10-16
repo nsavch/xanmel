@@ -675,7 +675,7 @@ class BackupAnonRecordSetHandler(Handler):
         if not db.is_up:
             return
         await db.mgr.create(
-            AnonRecordSet,
+            AnonCTSRecord,
             server=server.server_db_obj,
             nickname=nickname.decode('utf8'),
             nickname_nocolors=Color.dp_to_none(nickname).decode('utf8'),
