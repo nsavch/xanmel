@@ -111,10 +111,18 @@ class CointossChoiceComplete(Event):
 
 
 class RecordSet(Event):
-    def __str(self):
+    def __str__(self):
         return 'new record set on map %s by %s: %d - %.2f' % (
             self.properties['map'],
             self.properties['player'],
             self.properties['position'],
             self.properties['result']
+        )
+
+
+class AnonRecordSet(Event):
+    def __str__(self):
+        return 'anon record set by %s: %s' % (
+            self.properties['nickname'],
+            self.properties['time'],
         )

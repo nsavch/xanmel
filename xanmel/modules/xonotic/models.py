@@ -87,6 +87,13 @@ class CTSRecord(BaseModel):
     ip_address = CharField(null=True)
 
 
+class AnonCTSRecord(BaseModel):
+    server = ForeignKeyField(Server)
+    nickname = CharField()
+    nickname_nocolors = CharField()
+    time = CharField()
+    timestamp = DateTimeField(default=current_time)
+
 
 class XDFServer(BaseModel):
     name = CharField()

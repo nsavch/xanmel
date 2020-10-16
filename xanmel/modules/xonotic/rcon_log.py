@@ -333,14 +333,12 @@ class RecordParser(BaseOneLineParser):
                 'stats_id': p.elo_basic and p.elo_basic.get('player_id'),
             }
         else:
-            logger.debug('here')
             logger.debug(self.rcon_server.status)
             try:
                 p = self.rcon_server.players.status[int(entity_id)]
             except KeyError:
                 logger.debug('cant process recordset data {}: no player in status {}'.format(data, self.rcon_server.players.status))
                 return
-            logger.debug("%s" , p)
             player_data = {
                 'nickname': p['nickname'].decode('utf8'),
                 'nickname_nocolors': Color.dp_to_none(p['nickname']).decode('utf8'),
@@ -356,6 +354,19 @@ class RecordParser(BaseOneLineParser):
             player_data=player_data,
             position=int(newpos),
             result=Decimal(result.decode('utf8'))
+        ).fire()
+
+
+class BackupAnonRecordParser(BaseOneLineParser):
+    regex = re.compile(rb'^(.*) scored a new record with (.*), but is anonymous and will be lost.')
+
+    def process(self, data):
+        g = data.group
+        AnonRecordSet(
+            self.rcon_server.module,
+            server=self.rcon_server,
+            nickname=g(1),
+            time=Color.dp_to_none(g(2)).decode('utf8')
         ).fire()
 
 
@@ -376,4 +387,5 @@ class RconLogParser(CombinedParser):
         VoteStopParser,
         # CTS,
         RecordParser,
+        BackupAnonRecordParser
     ]

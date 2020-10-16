@@ -11,7 +11,7 @@ from xanmel import Handler
 from xanmel import current_time
 from xanmel.modules.irc.actions import ChannelMessage, ChannelMessages
 from xanmel.modules.xonotic.cointoss import CointosserState
-from xanmel.modules.xonotic.models import CalledVote, MapRating, Map, AccountTransaction, PlayerAccount, CTSRecord
+from xanmel.modules.xonotic.models import CalledVote, MapRating, Map, AccountTransaction, PlayerAccount, CTSRecord, AnonCTSRecord
 from .chat_user import XonoticChatUser
 from .events import *
 from .rcon_log import GAME_TYPES
@@ -661,6 +661,25 @@ class RecordSetHandlerSaveToDB(Handler):
             crypto_idfp=player_data['crypto_idfp'],
             stats_id=player_data['stats_id'],
             ip_address=player_data['ip_address']
+        )
+
+
+class BackupAnonRecordSetHandler(Handler):
+    events = [AnonRecordSet]
+
+    async def handle(self, event):
+        server = event.properties['server']
+        nickname = event.properties['nickname']
+        time = event.properties['time']
+        db = server.module.xanmel.db
+        if not db.is_up:
+            return
+        await db.mgr.create(
+            AnonRecordSet,
+            server=server.server_db_obj,
+            nickname=nickname.decode('utf8'),
+            nickname_nocolors=Color.dp_to_none(nickname).decode('utf8'),
+            time=time
         )
 
 
