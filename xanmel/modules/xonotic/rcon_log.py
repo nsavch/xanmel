@@ -322,6 +322,7 @@ class RecordParser(BaseOneLineParser):
 
     def process(self, data):
         newpos, player_id, entity_id, result = data.split(b':', 3)
+        logger.debug("%s", (newpos, player_id, entity_id, result))
         if int(player_id) in self.rcon_server.players.players_by_number1.keys():
             p = self.rcon_server.players.players_by_number1[int(player_id)]
             player_data = {
@@ -332,13 +333,13 @@ class RecordParser(BaseOneLineParser):
                 'stats_id': p.elo_basic and p.elo_basic.get('player_id'),
             }
         else:
-            print('here')
+            logger.debug('here')
             try:
                 p = self.rcon_server.players.status[int(entity_id)]
             except KeyError:
-                print('cant process recordset data {}: no player in status {}'.format(data, self.rcon_server.players.status))
+                logger.debug('cant process recordset data {}: no player in status {}'.format(data, self.rcon_server.players.status))
                 return
-            print(p)
+            logger.debug("%s" , p)
             player_data = {
                 'nickname': p['nickname'].decode('utf8'),
                 'nickname_nocolors': Color.dp_to_none(p['nickname']).decode('utf8'),
@@ -346,7 +347,7 @@ class RecordParser(BaseOneLineParser):
                 'ip_address': p['ip'].decode('utf8'),
                 'stats_id': None
             }
-            print(player_data)
+            logger.debug("%s", player_data)
         RecordSet(
             self.rcon_server.module,
             server=self.rcon_server,
