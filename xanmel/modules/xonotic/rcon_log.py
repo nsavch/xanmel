@@ -335,6 +335,7 @@ class RecordParser(BaseOneLineParser):
             try:
                 p = self.rcon_server.players.status[int(entity_id)]
             except KeyError:
+                print('cant process recordset data {}: no player in status {}'.format(data, self.rcon_server.players.status))
                 return
             player_data = {
                 'nickname': p['nickname'].decode('utf8'),
