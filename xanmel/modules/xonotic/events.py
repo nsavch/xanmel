@@ -114,7 +114,7 @@ class RecordSet(Event):
     def __str__(self):
         return 'new record set on map %s by %s: %d - %.2f' % (
             self.properties['map'],
-            self.properties['player'],
+            self.properties['player_data'],
             self.properties['position'],
             self.properties['result']
         )
