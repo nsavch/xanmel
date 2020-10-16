@@ -334,6 +334,7 @@ class RecordParser(BaseOneLineParser):
             }
         else:
             logger.debug('here')
+            logger.debug(self.rcon_server.status)
             try:
                 p = self.rcon_server.players.status[int(entity_id)]
             except KeyError:
