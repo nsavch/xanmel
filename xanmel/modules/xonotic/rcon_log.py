@@ -322,11 +322,32 @@ class RecordParser(BaseOneLineParser):
 
     def process(self, data):
         newpos, player_id, entity_id, result = data.split(b':', 3)
+        if int(player_id) in self.rcon_server.players.players_by_number1.keys():
+            p = self.rcon_server.players.players_by_number1[int(player_id)]
+            player_data = {
+                'nickname': p.nickname.decode('utf8'),
+                'nickname_nocolors': Color.dp_to_none(p.nickname).decode('utf8'),
+                'crypto_idfp': p.crypto_idfp,
+                'ip_address': p.id_address,
+                'stats_id': p.elo_basic and p.elo_basic.get('player_id'),
+            }
+        else:
+            try:
+                p = self.rcon_server.players.status[int(entity_id)]
+            except KeyError:
+                return
+            player_data = {
+                'nickname': p['nickname'].decode('utf8'),
+                'nickname_nocolors': Color.dp_to_none(p['nickname']).decode('utf8'),
+                'crypto_idfp': '',
+                'ip_address': p['ip'].decode('utf8'),
+                'stats_id': None
+            }
         RecordSet(
             self.rcon_server.module,
             server=self.rcon_server,
             map=self.rcon_server.status.get('map', ''),
-            player=self.rcon_server.players.players_by_number1[int(player_id)],
+            player_data=player_data,
             position=int(newpos),
             result=Decimal(result.decode('utf8'))
         ).fire()

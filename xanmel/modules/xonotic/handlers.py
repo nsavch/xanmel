@@ -646,7 +646,7 @@ class RecordSetHandlerSaveToDB(Handler):
     async def handle(self, event):
         server = event.properties['server']
         map_name = event.properties['map']
-        player = event.properties['player']
+        player_data = event.properties['player_data']
         db = server.module.xanmel.db
         if not db.is_up:
             return
@@ -656,11 +656,11 @@ class RecordSetHandlerSaveToDB(Handler):
             server=server.server_db_obj,
             map=map,
             time=event.properties['result'],
-            nickname=player.nickname.decode('utf8'),
-            nickname_nocolors=Color.dp_to_none(player.nickname).decode('utf8'),
-            crypto_idfp=player.crypto_idfp,
-            stats_id=player.elo_basic and player.elo_basic.get('player_id'),
-            ip_address=player.ip_address
+            nickname=player_data['nickname'],
+            nickname_nocolors=player_data['nickname_nocolors'],
+            crypto_idfp=player_data['crypto_idfp'],
+            stats_id=player_data['stats_id'],
+            ip_address=player_data['ip_address']
         )
 
 
@@ -670,7 +670,7 @@ class RecordSetHandlerInform(Handler):
     async def handle(self, event):
         server = event.properties['server']
         map_name = event.properties['map']
-        player = event.properties['player']
+        player_data = event.properties['player_data']
         position = event.properties['position']
         result = event.properties['result']
         if position > 3:
@@ -693,11 +693,11 @@ class RecordSetHandlerInform(Handler):
                 )
         format_args = {
             'map_name': map_name,
-            'name': player.nickname.decode('utf8'),
+            'name': player_data['nickname'],
             'time': __format_time(result)
         }
         in_game_message = '^1\\o/ ^x{color}{map_name} {pos}:^7 {name} - ^x{color}{time}s^7'.format(
-            color=colors[position - 1 ],
+            color=colors[position - 1],
             pos=positions[position - 1],
             **format_args
         )
