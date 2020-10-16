@@ -328,7 +328,7 @@ class RecordParser(BaseOneLineParser):
                 'nickname': p.nickname.decode('utf8'),
                 'nickname_nocolors': Color.dp_to_none(p.nickname).decode('utf8'),
                 'crypto_idfp': p.crypto_idfp,
-                'ip_address': p.id_address,
+                'ip_address': p.ip_address,
                 'stats_id': p.elo_basic and p.elo_basic.get('player_id'),
             }
         else:
