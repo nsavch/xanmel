@@ -3,7 +3,7 @@ import re
 import time
 from decimal import Decimal
 
-from aio_dprcon.parser import BaseMultilineParser, BaseOneLineParser, CombinedParser
+from aio_dprcon.parser import BaseMultilineParser, BaseOneLineParser, CombinedParser, BaseOneLineRegexParser
 
 from .events import *
 from .players import Player
@@ -357,7 +357,7 @@ class RecordParser(BaseOneLineParser):
         ).fire()
 
 
-class BackupAnonRecordParser(BaseOneLineParser):
+class BackupAnonRecordParser(BaseOneLineRegexParser):
     regex = re.compile(rb'^(.*) scored a new record with (.*), but is anonymous and will be lost.')
 
     def process(self, data):
