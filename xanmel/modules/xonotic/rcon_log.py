@@ -358,7 +358,7 @@ class RecordParser(BaseOneLineParser):
 
 
 class BackupAnonRecordParser(BaseOneLineRegexParser):
-    regex = re.compile(rb'^(.*) scored a new record with (.*), but is anonymous and will be lost.')
+    regex = re.compile(rb'^(.*) scored a new record with (.*), but.*will be lost.')
 
     def process(self, data):
         g = data.group
