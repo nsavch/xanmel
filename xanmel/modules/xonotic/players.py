@@ -89,7 +89,7 @@ class Player:
         if not self.crypto_idfp:
             return
         quoted_crypto_idfp = quote(self.crypto_idfp, safe='')
-        self.elo_url = 'http://stats.xonotic.org/skill?hashkey={}'.format(quoted_crypto_idfp)
+        self.elo_url = 'https://stats.xonotic.org/skill?hashkey={}'.format(quoted_crypto_idfp)
         retries_left = 3
         logger.debug('Starting to get elo for %r (%r)', self.nickname, self.elo_url)
         async with aiohttp.ClientSession() as session:
@@ -113,6 +113,14 @@ class Player:
                         if self.server.db.is_up:
                             await self.update_db()
                         logger.debug('DB updated for %r', self.nickname)
+                        if self.elo_basic.get('player_id') is not None:
+                            async with aiohttp.ClientSession() as session1:
+                                async with session1.get(
+                                        'https://stats.xonotic.org/player/{}'.format(self.elo_basic['player_id'])
+                                ) as response1:
+                                    if response1.status == 200:
+                                        data = await response1.json()
+                                        self.elo_advanced = data
                         return
 
     def get_crypto_idfp(self):
@@ -205,7 +213,7 @@ class Player:
             return [
                 ('games', self.elo_advanced.get('games_played', {}).get('cts', {}).get('games', 0)),
                 ('time played', __format_time(
-                self.elo_advanced.get('overall_stats', {}).get('cts', {}).get('total_playing_time_secs', 0)))]
+                self.elo_advanced.get('overall_stats', {}).get('cts', {}).get('total_playing_time', 0)))]
         else:
             return [
                 ('games', self.elo_advanced.get('games_played', {}).get('overall', {}).get('games', 0)),
