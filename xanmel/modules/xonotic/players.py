@@ -102,13 +102,14 @@ class Player:
                         continue
                     else:
                         data = await response.json()
-                        logger.debug('Got skill data for %r', self.nickname)
+                        logger.debug('Got skill data for %r: %s', self.nickname, data)
 
                         self.elo_basic = {}
                         got_player_id = False
                         for i in data:
                             if 'player_id' in i:
                                 self.elo_basic['player_id'] = i['player_id']
+                                got_player_id = True
                             if 'game_type_cd' in i:
                                 self.elo_basic[i['game_type_cd']] = i.get('mu', 0)
                         if not got_player_id:
