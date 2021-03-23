@@ -88,41 +88,30 @@ class Player:
             self.crypto_idfp = self.crypto_idfp.strip()
         if not self.crypto_idfp:
             return
-        quoted_crypto_idfp = quote(quote(quote(self.crypto_idfp, safe='')))
-        self.elo_url = 'http://stats.xonotic.org/player/{}/elo.txt'.format(quoted_crypto_idfp)
-        sig = ELO_REQUEST_SIGNATURE
-        if not sig:
-            return
+        quoted_crypto_idfp = quote(self.crypto_idfp, safe='')
+        self.elo_url = 'http://stats.xonotic.org/skill?hashkey={}'.format(quoted_crypto_idfp)
         retries_left = 3
         logger.debug('Starting to get elo for %r (%r)', self.nickname, self.elo_url)
         async with aiohttp.ClientSession() as session:
             while retries_left > 0:
-                async with session.post(self.elo_url,
-                                        headers={'X-D0-Blind-ID-Detached-Signature': sig},
-                                        data=b'\n') as response:
-                    if response.status != 404:
-                        retries_left = 0
-                    else:
+                async with session.get(self.elo_url, allow_redirects=True) as response:
+                    if response.status != 200:
                         retries_left -= 1
                         logger.debug('404 for %s, %s retries left', self.elo_url, retries_left)
                         await asyncio.sleep(1 + random.random() * 2)
-                    if retries_left == 0:
-                        if response.status != 200:
-                            logger.debug('Got status code %s from %s, %s', response.status, self.elo_url,
-                                         response.text)
-                        else:
-                            text = await response.text()
-                            try:
-                                self.parse_elo(text)
-                            except:
-                                logger.debug('Failed to parse elo %s', text, exc_info=True)
-                            else:
-                                logger.debug('Got basic elo for %r', self.nickname)
-                                if self.server.db.is_up:
-                                    await self.update_db()
-                                    logger.debug('DB updated for %r', self.nickname)
-                                await self.get_elo_advanced()
-                                logger.debug('Got advanced elo for %r', self.nickname)
+                        continue
+                    else:
+                        data = await response.json()
+                        logger.debug('Got skill data for %r', self.nickname)
+                        if self.server.db.is_up:
+                            await self.update_db()
+                        self.elo_basic = {}
+                        for i in data:
+                            if 'player_id' in i:
+                                self.elo_basic['player_id'] = i['player_id']
+                            if 'game_type_cd' in i:
+                                self.elo_basic[i['game_type_cd']] = i.get('mu', 0)
+                        logger.debug('DB updated for %r', self.nickname)
                         return
 
     def get_crypto_idfp(self):
@@ -187,25 +176,6 @@ class Player:
                                             nickname=Color.dp_to_none(self.nickname).decode('utf8'),
                                             **data)
 
-    async def get_elo_advanced(self):
-        url = self.elo_basic.get('url')
-        async with aiohttp.ClientSession() as session:
-            async with session.get(url + '.json') as response:
-                if response.status != 200:
-                    logger.debug('Got status code %s from %s', response.status, self.elo_url)
-                    return
-                try:
-                    self.elo_advanced = await response.json()
-                except:
-                    logger.debug('Could not parse json %s', response.text, exc_info=True)
-        if isinstance(self.elo_advanced, list) and len(self.elo_advanced) > 0:
-            self.elo_advanced = self.elo_advanced[0]
-        else:
-            logger.debug('Strange advanced elo %r', self.elo_advanced)
-        if not isinstance(self.elo_advanced, dict):
-            logger.debug('Strange advanced elo %r', self.elo_advanced)
-            self.elo_advanced = None
-
     def get_mode_stats(self):
         def __format_num(n):
             return '{:.2f}'.format(n)
@@ -242,9 +212,6 @@ class Player:
                  __format_num(self.elo_advanced.get('games_played', {}).get('overall', {}).get('win_pct', 0)) + '%'),
                 ('kill/death',
                  __format_num(self.elo_advanced.get('overall_stats', {}).get('overall', {}).get('k_d_ratio', 0)))]
-
-    def parse_elo(self, elo_txt):
-        self.elo_basic = parse_elo(elo_txt)
 
     @property
     def country(self):
