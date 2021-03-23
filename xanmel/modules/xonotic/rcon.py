@@ -148,25 +148,27 @@ class RconServer(RconClient):
         return res
 
     async def update_server_stats(self):
-        if self.config.get('server_stats_url'):
-            self.server_rating = []
-            while True:
-                async with aiohttp.ClientSession() as session:
-                    async with session.get(self.config['server_stats_url'] + ('/topscorers?last=%s' % len(self.server_rating)),
-                                           headers={'Accept': 'application/json'}) as resp:
-                        if resp.status != 200:
-                            logger.info('Could not download server stats from %s, got status %s',
-                                        self.config.get['server_stats_url'],
-                                        resp.status)
-                            return
-                        try:
-                            players = await resp.json()
-                            if len(players.get('top_scorers', [])) == 0:
-                                break
-                            else:
-                                self.server_rating += players['top_scorers']
-                        except:
-                            logger.info('Could not parse stats', exc_info=True)
+        # doesn't work with new xonstats API :(
+        # if self.config.get('server_stats_url'):
+        #     self.server_rating = []
+        #     while True:
+        #         async with aiohttp.ClientSession() as session:
+        #             async with session.get(self.config['server_stats_url'] + ('/topscorers?last=%s' % len(self.server_rating)),
+        #                                    headers={'Accept': 'application/json'}) as resp:
+        #                 if resp.status != 200:
+        #                     logger.info('Could not download server stats from %s, got status %s',
+        #                                 self.config.get['server_stats_url'],
+        #                                 resp.status)
+        #                     return
+        #                 try:
+        #                     players = await resp.json()
+        #                     if len(players.get('top_scorers', [])) == 0:
+        #                         break
+        #                     else:
+        #                         self.server_rating += players['top_scorers']
+        #                 except:
+        #                     logger.info('Could not parse stats', exc_info=True)
+        return
 
     async def update_server_name(self):
         if not self.db.is_up:
