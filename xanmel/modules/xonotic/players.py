@@ -105,15 +105,18 @@ class Player:
                         logger.debug('Got skill data for %r', self.nickname)
 
                         self.elo_basic = {}
+                        got_player_id = False
                         for i in data:
                             if 'player_id' in i:
                                 self.elo_basic['player_id'] = i['player_id']
                             if 'game_type_cd' in i:
                                 self.elo_basic[i['game_type_cd']] = i.get('mu', 0)
+                        if not got_player_id:
+                            self.elo_basic['player_id'] = None
                         if self.server.db.is_up:
                             await self.update_db()
                         logger.debug('DB updated for %r', self.nickname)
-                        if self.elo_basic.get('player_id') is not None:
+                        if self.elo_basic['player_id'] is not None:
                             async with aiohttp.ClientSession() as session1:
                                 async with session1.get(
                                         'https://stats.xonotic.org/player/{}'.format(self.elo_basic['player_id'])
