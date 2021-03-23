@@ -103,14 +103,15 @@ class Player:
                     else:
                         data = await response.json()
                         logger.debug('Got skill data for %r', self.nickname)
-                        if self.server.db.is_up:
-                            await self.update_db()
+
                         self.elo_basic = {}
                         for i in data:
                             if 'player_id' in i:
                                 self.elo_basic['player_id'] = i['player_id']
                             if 'game_type_cd' in i:
                                 self.elo_basic[i['game_type_cd']] = i.get('mu', 0)
+                        if self.server.db.is_up:
+                            await self.update_db()
                         logger.debug('DB updated for %r', self.nickname)
                         return
 
