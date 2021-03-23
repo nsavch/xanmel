@@ -100,23 +100,6 @@ class XDFPlayer(BaseModel):
     nickname = CharField()
     xanmel_player = ForeignKeyField(Player, null=True)
 
-    @classmethod
-    def get_player(cls, crypto_idfp, raw_nickname, elo_request_signature):
-        nickname = Color.dp_to_none(raw_nickname.encode('utf8')).decode('utf8')
-        try:
-            key = XDFPlayerKey.get(XDFPlayerKey.crypto_idfp == crypto_idfp)
-            player = key.player
-        except DoesNotExist:
-            player = cls.create(raw_nickname=raw_nickname, nickname=nickname)
-            key = XDFPlayerKey.create(player=player, crypto_idfp=crypto_idfp)
-            xanmel_player = Player.from_cryptoidfp(crypto_idfp, elo_request_signature)
-            if xanmel_player:
-                player.xanmel_player = xanmel_player
-                if player.stats_id is None:
-                    player.stats_id = xanmel_player.stats_id
-            player.save()
-        return player
-
 
 class XDFPlayerKey(BaseModel):
     player = ForeignKeyField(XDFPlayer)

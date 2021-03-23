@@ -94,7 +94,11 @@ class Player:
         logger.debug('Starting to get elo for %r (%r)', self.nickname, self.elo_url)
         async with aiohttp.ClientSession() as session:
             while retries_left > 0:
-                async with session.get(self.elo_url, allow_redirects=True) as response:
+                async with session.get(
+                        self.elo_url,
+                        allow_redirects=True,
+                        headers={'Accept': 'application/json'}
+                ) as response:
                     if response.status != 200:
                         retries_left -= 1
                         logger.debug('404 for %s, %s retries left', self.elo_url, retries_left)
@@ -121,7 +125,10 @@ class Player:
                             player_data_url = 'https://stats.xonotic.org/player/{}'.format(self.elo_basic['player_id'])
                             logger.debug('Player URL: %s', player_data_url)
                             async with aiohttp.ClientSession() as session1:
-                                async with session1.get(player_data_url) as response1:
+                                async with session1.get(
+                                        player_data_url,
+                                        headers={'Accept': 'application/json'},
+                                ) as response1:
                                     if response1.status == 200:
                                         data = await response1.json()
                                         logger.debug('Got advanced elo %s', data)
