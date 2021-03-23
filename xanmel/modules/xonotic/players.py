@@ -130,9 +130,12 @@ class Player:
                                         headers={'Accept': 'application/json'},
                                 ) as response1:
                                     if response1.status == 200:
-                                        data = await response1.json()
-                                        logger.debug('Got advanced elo %s', data)
-                                        self.elo_advanced = data
+                                        try:
+                                            data = await response1.json()
+                                            logger.debug('Got advanced elo %s', data)
+                                            self.elo_advanced = data
+                                        except:
+                                            logger.debug('Got strange response for player data %s', await response1.text())
                         return
 
     def get_crypto_idfp(self):
