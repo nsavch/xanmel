@@ -118,10 +118,10 @@ class Player:
                             await self.update_db()
                         logger.debug('DB updated for %r', self.nickname)
                         if self.elo_basic['player_id'] is not None:
+                            player_data_url = 'https://stats.xonotic.org/player/{}'.format(self.elo_basic['player_id'])
+                            logger.debug('Player URL: %s', player_data_url)
                             async with aiohttp.ClientSession() as session1:
-                                async with session1.get(
-                                        'https://stats.xonotic.org/player/{}'.format(self.elo_basic['player_id'])
-                                ) as response1:
+                                async with session1.get(player_data_url) as response1:
                                     if response1.status == 200:
                                         data = await response1.json()
                                         logger.debug('Got advanced elo %s', data)
