@@ -123,6 +123,7 @@ class Player:
                                 ) as response1:
                                     if response1.status == 200:
                                         data = await response1.json()
+                                        logger.debug('Got advanced elo %s', data)
                                         self.elo_advanced = data
                         return
 
