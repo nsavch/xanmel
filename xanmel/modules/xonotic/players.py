@@ -1,3 +1,4 @@
+import json
 import logging
 from concurrent.futures import ThreadPoolExecutor
 from urllib.parse import unquote, quote
@@ -131,9 +132,10 @@ class Player:
                                 ) as response1:
                                     if response1.status == 200:
                                         try:
-                                            data = await response1.json()
-                                            logger.debug('Got advanced elo %s', data)
-                                            self.elo_advanced = data
+                                            data = await response1.text()
+                                            data_json = json.loads(data)
+                                            logger.debug('Got advanced elo %s', data_json)
+                                            self.elo_advanced = data_json
                                         except:
                                             logger.debug('Got strange response for player data %s', await response1.text())
                         return
