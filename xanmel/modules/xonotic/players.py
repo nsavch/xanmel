@@ -115,7 +115,7 @@ class Player:
                                 self.elo_basic['player_id'] = i['player_id']
                                 got_player_id = True
                             if 'game_type_cd' in i:
-                                self.elo_basic[i['game_type_cd']] = i.get('mu', 0)
+                                self.elo_basic[i['game_type_cd']] = i.get('mu', 0) - i.get('sigma', 0) * 3
                         if not got_player_id:
                             self.elo_basic['player_id'] = None
                         if self.server.db.is_up:
