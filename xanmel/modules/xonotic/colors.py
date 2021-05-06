@@ -38,7 +38,6 @@ class Color:
 
     @classmethod
     def irc_to_dp(cls, text):
-        text.replace(b'\xe2\x80\x8b', b'')
         def __repl(matchobj):
             if matchobj.group(2):
                 return cls.from_irc(matchobj.group(2)).dp()

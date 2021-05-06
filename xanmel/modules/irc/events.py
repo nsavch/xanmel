@@ -15,8 +15,7 @@ class ChannelMessage(Event):
     log = False
 
     def __str__(self):
-        return 'Channel message from %s: %r' % (self.properties.get('nick', 'unknown'),
-                                                self.properties.get('message', ''))
+        return 'Channel message from %s' % self.properties.get('nick', 'unknown')
 
 
 class PrivateMessage(Event):

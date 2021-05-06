@@ -191,6 +191,8 @@ class IRCModule(Module):
         kwargs['chat_user'] = IRCChatUser(self,
                                           kwargs['nick'],
                                           irc_user='%s@%s' % (kwargs['user'], kwargs['host']))
+        # d2irc bridge inserts zero width space to nicknames, we don't want that here
+        message = message.replace('\u200b', '')
         if target == self.config['nick']:
             PrivateMessage(self, message=message, **kwargs).fire()
         elif target == self.config['channel']:
