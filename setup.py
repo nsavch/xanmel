@@ -29,7 +29,7 @@ setup(
         'aiopg==0.13.1',
         'peewee==2.10.1',
         'peewee-async==0.5.7',
-        'psycopg2==2.7.3.1',
+        'psycopg2==2.8.6',
         'ipwhois==1.0.0',
         'uvloop==0.15.2',
         'click==6.7',
