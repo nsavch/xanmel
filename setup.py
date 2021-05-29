@@ -26,7 +26,7 @@ setup(
         'maxminddb==1.3.0',
         'pytz==2017.2',
         'PyYAML==5.4.1',
-        'aiopg==1.2.2',
+        'aiopg==1.2.1',
         'peewee==2.10.1',
         'peewee-async==0.5.7',
         'psycopg2==2.8.6',
