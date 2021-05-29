@@ -27,7 +27,7 @@ setup(
         'pytz==2017.2',
         'PyYAML==5.4.1',
         'aiopg==1.2.1',
-        'peewee==2.10.1',
+        'peewee==3.14.4',
         'peewee-async==0.7.1',
         'psycopg2==2.8.6',
         'ipwhois==1.0.0',
