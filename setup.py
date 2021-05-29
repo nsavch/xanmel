@@ -28,7 +28,7 @@ setup(
         'PyYAML==5.4.1',
         'aiopg==1.2.1',
         'peewee==2.10.1',
-        'peewee-async==0.5.7',
+        'peewee-async==0.7.1',
         'psycopg2==2.8.6',
         'ipwhois==1.0.0',
         'uvloop==0.15.2',
