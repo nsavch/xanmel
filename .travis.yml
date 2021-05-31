@@ -1,12 +1,11 @@
 language: python
 python:
-  - "3.5"
-  - "3.6"
+  - "3.8"
+  - "3.9"
 
 install:
-  - pip install pipenv
-  - pipenv install -d
-  - pip install coveralls
+  - python setup.py develop
+  - pip install -r requirements-test.txt
 
 script:
   pytest --cov
