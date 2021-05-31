@@ -18,7 +18,7 @@ setup(
     install_requires=[
         'setuptools',
         'aiodns==1.1.1',
-        'aiohttp==3.4.4',
+        'aiohttp==3.7.4',
         'bottom==2.1.3',
         'cchardet==2.1.7',
         'geoip2==2.5.0',
