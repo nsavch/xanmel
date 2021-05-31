@@ -6,3 +6,4 @@ config.yaml
 /build/
 /dist/
 /xanmel.egg-info/
+.pytest_cache/

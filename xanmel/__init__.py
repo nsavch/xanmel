@@ -114,8 +114,6 @@ class Xanmel:
     def teardown(self):
         for i in self.modules.values():
             i.teardown()
-        for task in asyncio.Task.all_tasks():
-            task.cancel()
 
 
 class Module:

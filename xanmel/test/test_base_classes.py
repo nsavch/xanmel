@@ -48,7 +48,7 @@ def test_event(xanmel, mocker):
         i.handle = asynctest.CoroutineMock()
     event = MentionMessage(irc_module)
     event.fire()
-    pending = asyncio.Task.all_tasks()
+    pending = asyncio.all_tasks(loop=irc_module.loop)
     xanmel.loop.run_until_complete(asyncio.gather(*pending))
     for i in handlers:
         assert i.handle.call_count == 1

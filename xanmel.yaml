@@ -10,7 +10,7 @@ modules:
     nick: xanmel
     realname: Xanmel BOT
     quakenet_auth: ['xanmel', 'xX6T2WYi6z']
-    channel: '#morosophos1'
+    channel: '#xanmel'
     greeting: HELLO WORLD!
     mention_delimeters: [' ', ':', ',']
     admin_users: ['~johndoe@127.0.0.1']
