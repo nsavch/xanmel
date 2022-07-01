@@ -78,7 +78,6 @@ class IRCModule(Module):
 
         done, pending = await asyncio.wait(
             [self.client.wait("RPL_ENDOFMOTD"), self.client.wait("ERR_NOMOTD")],
-            loop=self.loop,
             return_when=asyncio.FIRST_COMPLETED)
         await self.quakenet_auth()
         self.client.send('JOIN', channel=self.config['channel'])
