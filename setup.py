@@ -24,7 +24,7 @@ setup(
         'geoip2==2.5.0',
         'inflection==0.3.1',
         'maxminddb==2.0.3',
-        'pytz==2017.2',
+        'pytz==2022.1',
         'PyYAML==5.4.1',
         'aiopg==1.2.1',
         'peewee==3.14.4',
@@ -34,6 +34,7 @@ setup(
         'uvloop==0.15.2',
         'click==6.7',
         'aio_dprcon>=0.1.6',
+        'matrix-nio==0.18.1',
         'django-echoices'
     ],
     classifiers=[
