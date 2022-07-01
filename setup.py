@@ -19,7 +19,7 @@ setup(
         'setuptools',
         'aiodns==1.1.1',
         'aiohttp==3.7.4',
-        'bottom==2.1.3',
+        'bottom==2.2.0',
         'cchardet==2.1.7',
         'geoip2==2.5.0',
         'inflection==0.3.1',
