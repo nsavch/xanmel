@@ -34,7 +34,7 @@ setup(
         'uvloop==0.15.2',
         'click==6.7',
         'aio_dprcon>=0.1.6',
-        'matrix-nio==0.18.1',
+        'matrix-nio==0.20.0',
         'django-echoices'
     ],
     classifiers=[
