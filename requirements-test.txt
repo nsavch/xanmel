@@ -2,4 +2,4 @@ asynctest==0.13.0
 aioresponses==0.7.6
 pytest-cov==5.0.0
 pytest-mock==3.14.0
-coveralls==3.1.0
+coveralls==4.0.0
